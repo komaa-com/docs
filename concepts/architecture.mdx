@@ -1,27 +1,40 @@
 ---
 title: "Architecture"
-description: "How the media worker, the HMAC WebSocket bridge, the plugin, and your agent fit together."
+description: "How the StandIn media worker, the HMAC WebSocket bridge, the plugin, and your agent fit together."
 ---
 
 Teams real-time call media (`Microsoft.Skype.Bots.Media`) is **Windows/.NET-only**, so rendering and
-RTP are handled by a separate **media worker**. The plugin is the cross-platform **brain**: it
+RTP are handled by a separate **StandIn media worker**. The plugin is the cross-platform **brain**: it
 hosts the WebSocket the worker dials into, runs the dialogue + perception, and emits avatar driver
 cues. **The worker renders; the plugin drives.**
 
-```
-your agent ◀─ plugin (WS server) ──HMAC WebSocket──▶ media worker ──▶ Teams call
-             • hosts the bridge                       • renders the avatar tile
-             • realtime / streaming dialogue          • samples inbound A/V, forwards DTMF
-             • vision ring + budget                   • recording-status compliance gate
-             • emits expression / visemes / image     • places outbound calls
+```mermaid
+flowchart LR
+    A["Your agent<br/>OpenClaw / Hermes"]
+    P["Teams Voice Plugin<br/>(WebSocket server)"]
+    W["StandIn worker<br/>Windows / .NET"]
+    T["Microsoft Teams<br/>call / meeting"]
+
+    A <-->|"consult · tasks"| P
+    P <-->|"HMAC WebSocket"| W
+    W <-->|"Skype.Bots.Media (RTP)"| T
 ```
 
 The **plugin is the WebSocket server** (binds loopback by default — `:9442` on OpenClaw, `:8443` on
-Hermes); the **worker is the client** that connects to it.
+Hermes); the **StandIn worker is the client** that connects to it.
+
+## Who does what
+
+| Component | Role |
+|---|---|
+| **Your agent** (OpenClaw / Hermes) | the dialogue brain — answers consults, runs background tasks, produces vision/image results |
+| **Teams Voice Plugin** (WS server) | hosts the bridge · realtime / streaming dialogue · vision ring + budget · emits `expression` / `speech.marks` / `display.image` cues |
+| **StandIn worker** (Windows / .NET) | renders the avatar tile · samples inbound A/V, forwards DTMF · recording-status compliance gate · places outbound calls |
+| **Microsoft Teams** | the live call / meeting and its media plane |
 
 <Note>
-  The worker is a separate component. Run **one worker identity per gateway**; its multi-identity
-  config lets a single host serve multiple gateways.
+  The StandIn worker is a separate component. Run **one worker identity per gateway**; its
+  multi-identity config lets a single host serve multiple gateways.
 </Note>
 
 ## Wire contract
@@ -37,8 +50,8 @@ The protocol is fixed by the worker — both plugins implement the same contract
 | **Outbound msgs** | `audio.frame` · `expression` · `speech.marks` · `display.image` · `assistant.cancel` · `pong` |
 
 <Warning>
-  The plugin's `sharedSecret` **must byte-match** the worker's shared secret, or the HMAC handshake
-  fails and no call connects.
+  The plugin's `sharedSecret` **must byte-match** the StandIn worker's shared secret, or the HMAC
+  handshake fails and no call connects.
 </Warning>
 
 ## Microsoft Graph permissions
