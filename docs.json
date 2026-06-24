@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Komaa",
+  "name": "Teams Voice Plugin (Stand in)",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
@@ -39,38 +39,13 @@
           "hermes/configuration"
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "GitHub",
-          "href": "https://github.com/komaa-com",
-          "icon": "github"
-        },
-        {
-          "anchor": "npm",
-          "href": "https://www.npmjs.com/package/@komaa/msteams-voice",
-          "icon": "npm"
-        },
-        {
-          "anchor": "PyPI",
-          "href": "https://pypi.org/project/hermes-plugin-teams-voice/",
-          "icon": "python"
-        }
-      ]
-    }
+    ]
   },
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"
   },
   "navbar": {
-    "links": [
-      {
-        "label": "GitHub",
-        "href": "https://github.com/komaa-com"
-      }
-    ],
     "primary": {
       "type": "button",
       "label": "Get started",
@@ -93,6 +68,23 @@
     "socials": {
       "github": "https://github.com/komaa-com",
       "website": "https://komaa.com"
-    }
+    },
+    "links": [
+      {
+        "header": "Resources",
+        "items": [
+          { "label": "GitHub", "href": "https://github.com/komaa-com" },
+          { "label": "npm — @komaa/msteams-voice", "href": "https://www.npmjs.com/package/@komaa/msteams-voice" },
+          { "label": "PyPI — hermes-plugin-teams-voice", "href": "https://pypi.org/project/hermes-plugin-teams-voice/" }
+        ]
+      },
+      {
+        "header": "Channels",
+        "items": [
+          { "label": "OpenClaw Teams channel", "href": "https://docs.openclaw.ai/channels/msteams" },
+          { "label": "Hermes Agent Teams", "href": "https://hermes-agent.nousresearch.com/docs/user-guide/messaging/teams" }
+        ]
+      }
+    ]
   }
 }

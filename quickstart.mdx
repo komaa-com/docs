@@ -25,16 +25,29 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
       <Step title="Configure">
         Add a `msteams-voice` entry to your OpenClaw config — `sharedSecret` must match the worker:
         ```jsonc
-        { "plugins": { "entries": { "msteams-voice": { "config": {
-          "enabled": true,
-          "mode": "realtime",
-          "port": 9442,
-          "path": "/voice/msteams/stream",
-          "sharedSecret": "<same secret as the Teams worker>",
-          "inboundPolicy": "allowlist",
-          "allowFrom": ["<caller AAD object id>"],
-          "realtime": { "provider": "openai", "providers": { "openai": { "apiKey": "<key>", "model": "gpt-realtime" } } }
-        } } } } }
+        {
+          "plugins": {
+            "entries": {
+              "msteams-voice": {
+                "config": {
+                  "enabled": true,
+                  "mode": "realtime",
+                  "port": 9442,
+                  "path": "/voice/msteams/stream",
+                  "sharedSecret": "<same secret as the Teams worker>",
+                  "inboundPolicy": "allowlist",
+                  "allowFrom": ["<caller AAD object id>"],
+                  "realtime": {
+                    "provider": "openai",
+                    "providers": {
+                      "openai": { "apiKey": "<key>", "model": "gpt-realtime" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
         ```
         Full reference → [OpenClaw configuration](/openclaw/configuration).
       </Step>

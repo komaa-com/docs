@@ -15,56 +15,79 @@ call-backs, recording gate, and `sessionScope` agent memory. See [Modes](/concep
 <CodeGroup>
 ```jsonc Realtime (speech-to-speech)
 {
-  "plugins": { "entries": { "msteams-voice": { "config": {
-    "enabled": true,
-    "mode": "realtime",
-    "port": 9442,
-    "path": "/voice/msteams/stream",
-    "sharedSecret": "<same secret as the Teams worker>",
-    "requireRecordingStatus": true,
-    "inboundPolicy": "allowlist",
-    "allowFrom": ["<caller AAD object id or phone number>"],
-    "inboundGreeting": "Hello, this is the assistant.",
-    "maxConcurrentCalls": 4,
-    "maxDurationSeconds": 3600,
-    "groupCall": { "requireAddress": true, "wakePhrases": ["assistant"], "followUpWindowMs": 8000 },
-    "maxVisionPerMinute": 30,
-    "meetingRecap": true,
-    "bilingual": true,
-    "realtime": {
-      "provider": "openai",
-      "providers": { "openai": { "apiKey": "<key>", "model": "gpt-realtime" } },
-      "instructions": "You are a helpful Teams meeting assistant.",
-      "toolPolicy": "safe-read-only",
-      "suppressInputDuringPlayback": true,
-      "echoSuppressionWindowMs": 250,
-      "echoBargeInRms": 0.02
+  "plugins": {
+    "entries": {
+      "msteams-voice": {
+        "config": {
+          "enabled": true,
+          "mode": "realtime",
+          "port": 9442,
+          "path": "/voice/msteams/stream",
+          "sharedSecret": "<same secret as the Teams worker>",
+          "requireRecordingStatus": true,
+          "inboundPolicy": "allowlist",
+          "allowFrom": ["<caller AAD object id or phone number>"],
+          "inboundGreeting": "Hello, this is the assistant.",
+          "maxConcurrentCalls": 4,
+          "maxDurationSeconds": 3600,
+          "groupCall": {
+            "requireAddress": true,
+            "wakePhrases": ["assistant"],
+            "followUpWindowMs": 8000
+          },
+          "maxVisionPerMinute": 30,
+          "meetingRecap": true,
+          "bilingual": true,
+          "realtime": {
+            "provider": "openai",
+            "providers": {
+              "openai": { "apiKey": "<key>", "model": "gpt-realtime" }
+            },
+            "instructions": "You are a helpful Teams meeting assistant.",
+            "toolPolicy": "safe-read-only",
+            "suppressInputDuringPlayback": true,
+            "echoSuppressionWindowMs": 250,
+            "echoBargeInRms": 0.02
+          }
+        }
+      }
     }
-  } } } }
+  }
 }
 ```
 
 ```jsonc Streaming (STT → agent → TTS)
 {
-  "plugins": { "entries": { "msteams-voice": { "config": {
-    "enabled": true,
-    "mode": "streaming",
-    "port": 9442,
-    "path": "/voice/msteams/stream",
-    "sharedSecret": "<same secret as the Teams worker>",
-    "requireRecordingStatus": true,
-    "inboundPolicy": "allowlist",
-    "allowFrom": ["<caller id>"],
-    "inboundGreeting": "Hello, this is the assistant.",
-    "maxConcurrentCalls": 4,
-    "groupCall": { "requireAddress": true, "wakePhrases": ["assistant"] },
-    "maxVisionPerMinute": 30,
-    "meetingRecap": true,
-    "stt": {
-      "provider": "<your-stt-provider>",
-      "providers": { "<your-stt-provider>": { "apiKey": "<key>" } }
+  "plugins": {
+    "entries": {
+      "msteams-voice": {
+        "config": {
+          "enabled": true,
+          "mode": "streaming",
+          "port": 9442,
+          "path": "/voice/msteams/stream",
+          "sharedSecret": "<same secret as the Teams worker>",
+          "requireRecordingStatus": true,
+          "inboundPolicy": "allowlist",
+          "allowFrom": ["<caller id>"],
+          "inboundGreeting": "Hello, this is the assistant.",
+          "maxConcurrentCalls": 4,
+          "groupCall": {
+            "requireAddress": true,
+            "wakePhrases": ["assistant"]
+          },
+          "maxVisionPerMinute": 30,
+          "meetingRecap": true,
+          "stt": {
+            "provider": "<your-stt-provider>",
+            "providers": {
+              "<your-stt-provider>": { "apiKey": "<key>" }
+            }
+          }
+        }
+      }
     }
-  } } } }
+  }
 }
 ```
 </CodeGroup>

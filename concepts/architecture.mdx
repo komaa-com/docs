@@ -4,7 +4,7 @@ description: "How the media worker, the HMAC WebSocket bridge, the plugin, and y
 ---
 
 Teams real-time call media (`Microsoft.Skype.Bots.Media`) is **Windows/.NET-only**, so rendering and
-RTP are handled by a separate **media worker**. The Komaa plugin is the cross-platform **brain**: it
+RTP are handled by a separate **media worker**. The plugin is the cross-platform **brain**: it
 hosts the WebSocket the worker dials into, runs the dialogue + perception, and emits avatar driver
 cues. **The worker renders; the plugin drives.**
 

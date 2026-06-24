@@ -1,41 +1,71 @@
 ---
-title: "Komaa Teams Voice"
-description: "An AI assistant that joins Microsoft Teams calls as a real participant — voice, video (CVI), and chat."
+title: "Teams Voice Plugin (Stand in)"
+description: "Turn a Microsoft Teams call into a two-way video conversation with your AI agent — it sees, converses, and appears as a lip-synced avatar."
 ---
 
-**Komaa Teams Voice** lets your agent **join a Microsoft Teams call as a real participant** — it
-listens, speaks, sees shared video, and drives an on-screen avatar. It ships as a **standalone plugin
-you install on top of your existing agent** (no fork), in two flavors for the two runtimes:
+**Teams Voice Plugin (Stand in)** gives your AI agent a **Conversational Video Interface (CVI)** inside
+Microsoft Teams: it answers and places calls, **sees** the caller's camera and screen-share,
+**converses** in real time, and **appears** as a lip-synced animated avatar — a genuine *stand-in* that
+joins 1:1 and group meetings, speaks only when addressed, and handles Teams chat. All over
+recording-gated, allowlisted, HMAC-authenticated transport.
+
+It ships as a **standalone plugin you add on top of your existing agent** (no fork) — one build per
+runtime:
 
 <CardGroup cols={2}>
   <Card title="OpenClaw plugin" icon="npm" href="/openclaw/installation">
-    `@komaa/msteams-voice` — a TypeScript plugin for **OpenClaw**, installed via npm / `openclaw plugins install`.
+    `@komaa/msteams-voice` — TypeScript plugin for **OpenClaw**, via `openclaw plugins install`.
   </Card>
   <Card title="Hermes plugin" icon="python" href="/hermes/installation">
-    `hermes-plugin-teams-voice` — a Python plugin for **Hermes Agent**, installed via `pip` / `uv`.
+    `hermes-plugin-teams-voice` — Python plugin for **Hermes Agent**, via `pip` / `uv`.
   </Card>
 </CardGroup>
 
-Both share the same Conversational Video Interface (CVI) and the same call architecture — only the
-runtime and packaging differ.
+## The three CVI pillars
 
-## What it does
+A Teams call becomes a true two-way video conversation: the agent watches what you show, talks with
+you in real time, and appears as an animated face.
 
-- 🎙️ **Realtime speech-to-speech** (OpenAI / Azure) **or** streaming **STT → agent → TTS** (any provider)
-- 👁️ **Vision** — the agent can look at screen-share / camera frames, with a per-minute budget
-- 🧑‍🤝‍🧑 **Group-call etiquette** — speaks only when addressed by a wake phrase
-- 📞 **Outbound call-backs** · 📝 **meeting recap / minutes** · 🌐 **bilingual EN/AR** · ⌨️ **DTMF**
-- 🪄 **Avatar driver cues** — expression, viseme lip-sync, show-to-caller
-- 🔐 **HMAC-authenticated media bridge** + caller allowlist + recording-status gate
+| Pillar | Meaning | What you get |
+|---|---|---|
+| **Perception** — *the agent sees* | inbound video vision | camera + screen-share (VBSS) frames; `look_at_screen` on demand, auto-attach per turn (streaming), and **continuous ambient vision** (realtime); per-participant attribution in meetings; per-call vision spend cap |
+| **Dialogue** — *the agent converses* | speech, both ways | **realtime speech-to-speech** *or* streaming **STT → agent → TTS**; barge-in + deterministic verbal interrupts; group "speak only when addressed" gate; DTMF/IVR; bilingual EN/AR; roster greeting by name |
+| **Rendering** — *the agent is seen* | a lip-synced avatar tile | **expression cues** (happy/sad/surprised), **viseme lip-sync** (`speech.marks`), and **`show_to_caller`** image overlays — sent by the plugin, drawn by the companion media worker |
+
+## Capabilities
+
+- 🎙️ **Two dialogue modes** — realtime speech-to-speech (OpenAI / Azure) or streaming STT→agent→TTS (any provider). [Modes →](/concepts/modes)
+- 👁️ **Vision** — camera + screen-share, continuous ambient frames, retroactive keyframe history, budget-capped.
+- 🧑‍🤝‍🧑 **Group/meeting etiquette** — silent until addressed by a wake phrase, with a follow-up window; 1:1 always answers; per-speaker attribution.
+- 📞 **Outbound "call me back"** — speaks the result then hangs up; voicemail fallback when unanswered.
+- 📝 **Meeting recap & minutes** — key points / decisions / action items, plus an on-demand `.docx` with per-person attribution.
+- 🪄 **Avatar driver cues** — expression, viseme lip-sync, picture-in-picture image sharing.
+- 🛡️ **Chat governance** — "Ask about this" message action, voice-message transcription, audit-log mirror, outbound DLP redaction.
+- 🔐 **Secure transport** — HMAC handshake (replay-proof), caller allowlist (closed by default), recording-status gate before any media is processed.
 
 ## How it fits together
 
-A small **media worker** dials an HMAC-authenticated WebSocket that the plugin hosts; the plugin runs
-the dialogue, perception, and avatar cues. See [Architecture](/concepts/architecture).
+A separate **media worker** (Windows/.NET) owns the Graph Calling signalling and the
+`Microsoft.Skype.Bots.Media` socket and renders the avatar tile; it dials the HMAC-authenticated
+WebSocket this plugin hosts. The plugin is the cross-platform **brain** — dialogue, perception, group
+logic, governance, and the avatar cues. [Architecture →](/concepts/architecture)
+
+## Related
+
+This plugin layers **voice/video (CVI)** on top of each runtime's existing **Teams chat** channel:
+
+<CardGroup cols={2}>
+  <Card title="OpenClaw Teams channel" icon="comment" href="https://docs.openclaw.ai/channels/msteams">
+    The OpenClaw `msteams` chat channel docs.
+  </Card>
+  <Card title="Hermes Agent Teams" icon="comment" href="https://hermes-agent.nousresearch.com/docs/user-guide/messaging/teams">
+    The Hermes Agent Teams messaging docs.
+  </Card>
+</CardGroup>
 
 <CardGroup cols={3}>
   <Card title="Quickstart" icon="rocket" href="/quickstart">
-    Install, configure, and place a test call.
+    Install, configure, place a test call.
   </Card>
   <Card title="Modes" icon="shuffle" href="/concepts/modes">
     Realtime vs. streaming — when to use each.
