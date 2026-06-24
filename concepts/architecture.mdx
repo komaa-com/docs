@@ -19,6 +19,11 @@ flowchart LR
     A <-->|"consult · tasks"| P
     P <-->|"HMAC WebSocket"| S
     S <-->|"Teams calling media"| T
+
+    style A fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style P fill:#166534,stroke:#22c55e,color:#dcfce7
+    style S fill:#0e7490,stroke:#06b6d4,color:#cffafe
+    style T fill:#3730a3,stroke:#6366f1,color:#e0e7ff
 ```
 
 The **plugin is the WebSocket server** (default port `:9442` on OpenClaw, `:8443` on Hermes); the
