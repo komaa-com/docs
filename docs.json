@@ -2,6 +2,7 @@
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
   "name": "Teams Voice Plugin (Stand in)",
+  "description": "Docs for Teams Voice Plugin (Stand in): Microsoft Teams voice, video (CVI), and a lip-synced avatar for OpenClaw and Hermes Agent, via the hosted StandIn bridge.",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
