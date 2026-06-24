@@ -1,0 +1,50 @@
+---
+title: "Hermes — installation"
+description: "Install hermes-plugin-teams-voice into a Hermes Agent environment."
+---
+
+`hermes-plugin-teams-voice` (plugin name **`teams_voice`**) is the Python half of the Teams CVI for
+**Hermes Agent**. It hosts the HMAC WebSocket the media worker dials into, runs the dialogue +
+perception, and emits avatar driver cues. Chat-plane features live in the existing Teams adapter.
+
+## Requirements
+
+- A working **Hermes Agent** install (the host).
+- A **Microsoft Teams worker** (Azure Bot) bridging call media to this plugin. See
+  [Architecture](/concepts/architecture).
+- **Realtime mode:** an OpenAI / Azure OpenAI realtime key. **Streaming mode:** needs **`ffmpeg`** on
+  `PATH`.
+
+## Install
+
+Install into the **same Python environment as Hermes** so the `hermes_agent.plugins` entry-point is
+discovered:
+
+```bash
+uv pip install --python /path/to/hermes/venv/bin/python hermes-plugin-teams-voice
+# or: pip install hermes-plugin-teams-voice
+hermes plugins enable teams_voice
+```
+
+## Verify
+
+```bash
+hermes teams-voice status      # show config + readiness
+hermes teams-voice serve       # run the bridge server (foreground)
+```
+
+Point the worker's WebSocket base URL at `ws://<host>:8443/voice/msteams/stream` with a **matching
+shared secret**, then place a Teams call to the bot. One worker identity per gateway.
+
+<Note>
+  Next: the full [configuration reference](/hermes/configuration) — config.yaml + `.env`, realtime
+  backend, and Graph permissions.
+</Note>
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/hermes-plugin-teams-voice" />
+  <Card title="PyPI" icon="python" href="https://pypi.org/project/hermes-plugin-teams-voice/" />
+  <Card title="Configuration" icon="gear" href="/hermes/configuration" />
+</CardGroup>

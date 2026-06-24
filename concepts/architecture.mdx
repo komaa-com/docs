@@ -1,0 +1,55 @@
+---
+title: "Architecture"
+description: "How the media worker, the HMAC WebSocket bridge, the plugin, and your agent fit together."
+---
+
+Teams real-time call media (`Microsoft.Skype.Bots.Media`) is **Windows/.NET-only**, so rendering and
+RTP are handled by a separate **media worker**. The Komaa plugin is the cross-platform **brain**: it
+hosts the WebSocket the worker dials into, runs the dialogue + perception, and emits avatar driver
+cues. **The worker renders; the plugin drives.**
+
+```
+your agent ◀─ plugin (WS server) ──HMAC WebSocket──▶ media worker ──▶ Teams call
+             • hosts the bridge                       • renders the avatar tile
+             • realtime / streaming dialogue          • samples inbound A/V, forwards DTMF
+             • vision ring + budget                   • recording-status compliance gate
+             • emits expression / visemes / image     • places outbound calls
+```
+
+The **plugin is the WebSocket server** (binds loopback by default — `:9442` on OpenClaw, `:8443` on
+Hermes); the **worker is the client** that connects to it.
+
+<Note>
+  The worker is a separate component. Run **one worker identity per gateway**; its multi-identity
+  config lets a single host serve multiple gateways.
+</Note>
+
+## Wire contract
+
+The protocol is fixed by the worker — both plugins implement the same contract:
+
+| Aspect | Value |
+|---|---|
+| **Handshake** | `HMAC-SHA256(sharedSecret, "{timestampMs}.{callId}")`, lowercase hex, sent as `X-OpenClawTeamsBridge-Timestamp` / `-Signature` headers on the WS upgrade. ±60 s window; each `(callId, ts, sig)` is single-use (replay-guarded). |
+| **Path** | `/voice/msteams/stream/{callId}` |
+| **Audio** | PCM 16 kHz, 16-bit, mono, little-endian; 20 ms / 640-byte frames, base64 |
+| **Inbound msgs** | `session.start` · `session.end` · `recording.status` · `audio.frame` · `video.frame` · `participants` · `dtmf` · `ping` |
+| **Outbound msgs** | `audio.frame` · `expression` · `speech.marks` · `display.image` · `assistant.cancel` · `pong` |
+
+<Warning>
+  The plugin's `sharedSecret` **must byte-match** the worker's shared secret, or the HMAC handshake
+  fails and no call connects.
+</Warning>
+
+## Microsoft Graph permissions
+
+The bot's Azure AD app needs these **application** permissions (admin-consented):
+
+| Permission | Enables |
+|---|---|
+| `Calls.JoinGroupCall.All` | answer / join Teams calls and meetings |
+| `Calls.AccessMedia.All` | access real-time audio/video media (`Skype.Bots.Media`) |
+| `Chat.Read.All` | resolve chat / thread ids and read message context |
+| `ChatMessage.Read.Chat` | read messages in chats the bot is installed in |
+| `Sites.ReadWrite.All` | upload files / minutes to SharePoint (OneDrive) for chat attachments |
+| `Calls.InitiateGroupCall.All` | outbound "call me back" (skip if unused) |

@@ -1,47 +1,88 @@
 ---
 title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+description: "Install the plugin, point it at your media worker, and place a test Teams call."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
-
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
+Pick your runtime. Both paths get you to a live Teams call where your agent answers in voice.
 
 ## Prerequisites
 
-Before you begin, you must have:
+- A working **OpenClaw** or **Hermes Agent** install (the host).
+- A **media worker** that bridges the live Teams call into the plugin over an HMAC WebSocket
+  (the worker renders the avatar tile and forwards audio/video; it dials this plugin).
+- A realtime voice provider key (for **realtime** mode) — e.g. OpenAI or Azure OpenAI. Streaming mode
+  uses your host's configured STT/TTS instead.
 
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
-
-<Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
-
-    ```bash
-    npm install your-package
-    ```
-  </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
-
-    ```bash
-    your-cli init
-    ```
-  </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
-
-    ```bash
-    your-cli start
-    ```
-  </Step>
-</Steps>
+<Tabs>
+  <Tab title="OpenClaw (npm)">
+    <Steps>
+      <Step title="Install">
+        ```bash
+        openclaw plugins install clawhub:@komaa/msteams-voice
+        cd extensions/msteams-voice && pnpm install && pnpm build
+        ```
+      </Step>
+      <Step title="Configure">
+        Add a `msteams-voice` entry to your OpenClaw config — `sharedSecret` must match the worker:
+        ```jsonc
+        { "plugins": { "entries": { "msteams-voice": { "config": {
+          "enabled": true,
+          "mode": "realtime",
+          "port": 9442,
+          "path": "/voice/msteams/stream",
+          "sharedSecret": "<same secret as the Teams worker>",
+          "inboundPolicy": "allowlist",
+          "allowFrom": ["<caller AAD object id>"],
+          "realtime": { "provider": "openai", "providers": { "openai": { "apiKey": "<key>", "model": "gpt-realtime" } } }
+        } } } } }
+        ```
+        Full reference → [OpenClaw configuration](/openclaw/configuration).
+      </Step>
+      <Step title="Run + call">
+        Start the gateway (`openclaw gateway run`), point the worker's WebSocket URL at
+        `ws://<host>:9442/voice/msteams/stream` with the matching secret, then place a Teams call to the bot.
+      </Step>
+    </Steps>
+  </Tab>
+  <Tab title="Hermes (pip)">
+    <Steps>
+      <Step title="Install">
+        Into the **same Python environment as Hermes**:
+        ```bash
+        uv pip install --python /path/to/hermes/venv/bin/python hermes-plugin-teams-voice
+        hermes plugins enable teams_voice
+        ```
+      </Step>
+      <Step title="Configure">
+        In `~/.hermes/config.yaml` under `plugins.entries.teams_voice.config` (secrets in `.env`):
+        ```yaml
+        plugins:
+          enabled: [teams_voice]
+          entries:
+            teams_voice:
+              config:
+                shared_secret: ${TEAMS_VOICE_SHARED_SECRET}   # must match the worker
+                host: 127.0.0.1
+                port: 8443
+                realtime:
+                  backend: azure
+                  azure_endpoint: https://<your-azure-resource>.cognitiveservices.azure.com
+                  azure_deployment: gpt-realtime
+                  api_key: ${AZURE_FOUNDRY_API_KEY}
+        ```
+        Full reference → [Hermes configuration](/hermes/configuration).
+      </Step>
+      <Step title="Run + call">
+        ```bash
+        hermes teams-voice serve --handler realtime
+        ```
+        Point the worker's WebSocket URL at `ws://127.0.0.1:8443/voice/msteams/stream` with the matching
+        secret, then place a Teams call to the bot.
+      </Step>
+    </Steps>
+  </Tab>
+</Tabs>
 
 <Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+  Streaming mode (no realtime key needed) is a one-line change — see [Modes](/concepts/modes).
 </Tip>

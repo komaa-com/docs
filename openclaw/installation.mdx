@@ -1,0 +1,50 @@
+---
+title: "OpenClaw — installation"
+description: "Install @komaa/msteams-voice into an OpenClaw host."
+---
+
+`@komaa/msteams-voice` is a self-contained Teams CVI plugin for **OpenClaw**. It depends only on the
+published `openclaw` plugin-sdk + `api.runtime` — no fork, no vendored runtime.
+
+## Requirements
+
+- An **OpenClaw** install — host **≥ `2026.6.9`**.
+- A **Microsoft Teams worker** (Azure Bot) that bridges call audio/video to this plugin's media
+  WebSocket. See [Architecture](/concepts/architecture).
+- **Realtime mode:** a realtime voice provider + key. **Streaming mode:** your openclaw-configured
+  STT / TTS / agent (no realtime key needed).
+
+## Install
+
+```bash
+openclaw plugins install clawhub:@komaa/msteams-voice
+cd extensions/msteams-voice && pnpm install && pnpm build
+```
+
+This is a **source-published** plugin — the npm package ships TypeScript source and builds on install.
+
+## Verify
+
+After building, enable it in your config (`plugins.entries."msteams-voice".config.enabled: true`) and
+start the gateway:
+
+```bash
+openclaw gateway run
+```
+
+The plugin registers a host-managed service and binds its media WebSocket (default
+`ws://<host>:9442/voice/msteams/stream`). Point the Teams worker at that URL with a **matching
+`sharedSecret`**, then place a Teams call to the bot.
+
+<Note>
+  Next: the full [configuration reference](/openclaw/configuration) for realtime, streaming, outbound,
+  and security keys.
+</Note>
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/openclaw-msteams-voice" />
+  <Card title="npm" icon="npm" href="https://www.npmjs.com/package/@komaa/msteams-voice" />
+  <Card title="Configuration" icon="gear" href="/openclaw/configuration" />
+</CardGroup>

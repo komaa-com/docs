@@ -1,7 +1,7 @@
 {
   "$schema": "https://mintlify.com/docs.json",
   "theme": "mint",
-  "name": "Mintlify Starter Kit",
+  "name": "Komaa",
   "colors": {
     "primary": "#16A34A",
     "light": "#07C983",
@@ -16,19 +16,46 @@
           "index",
           "quickstart"
         ]
+      },
+      {
+        "group": "Concepts",
+        "pages": [
+          "concepts/architecture",
+          "concepts/modes",
+          "concepts/features"
+        ]
+      },
+      {
+        "group": "OpenClaw plugin",
+        "pages": [
+          "openclaw/installation",
+          "openclaw/configuration"
+        ]
+      },
+      {
+        "group": "Hermes plugin",
+        "pages": [
+          "hermes/installation",
+          "hermes/configuration"
+        ]
       }
     ],
     "global": {
       "anchors": [
         {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
+          "anchor": "GitHub",
+          "href": "https://github.com/komaa-com",
+          "icon": "github"
         },
         {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
+          "anchor": "npm",
+          "href": "https://www.npmjs.com/package/@komaa/msteams-voice",
+          "icon": "npm"
+        },
+        {
+          "anchor": "PyPI",
+          "href": "https://pypi.org/project/hermes-plugin-teams-voice/",
+          "icon": "python"
         }
       ]
     }
@@ -40,14 +67,14 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
+        "label": "GitHub",
+        "href": "https://github.com/komaa-com"
       }
     ],
     "primary": {
       "type": "button",
-      "label": "Dashboard",
-      "href": "https://app.mintlify.com"
+      "label": "Get started",
+      "href": "/quickstart"
     }
   },
   "contextual": {
@@ -64,9 +91,8 @@
   },
   "footer": {
     "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
+      "github": "https://github.com/komaa-com",
+      "website": "https://komaa.com"
     }
   }
 }
