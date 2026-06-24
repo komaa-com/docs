@@ -4,7 +4,8 @@ description: "Full config reference for @komaa/msteams-voice - realtime, streami
 ---
 
 Config lives under `plugins.entries."msteams-voice".config` in your OpenClaw config.
-**`sharedSecret` must match the Teams worker** that connects to this plugin's media WebSocket.
+**`sharedSecret` must match the secret you set in StandIn** for the hosted bridge that connects to
+this plugin's media WebSocket.
 
 ## Mode selection
 
@@ -103,7 +104,7 @@ transcription. The `realtime.*` block is ignored **except** the echo-guard knobs
 ```jsonc
 "outbound": {
   "enabled": true,
-  "workerBaseUrl": "https://<your-teams-worker>",
+  "workerBaseUrl": "https://<your-standin-endpoint>",
   "tenantId": "<aad-tenant-id>",
   "answerTimeoutMs": 120000,
   "defaultMode": "notify"        // "notify" delivers a message then ends; "conversation" opens a turn
@@ -119,8 +120,8 @@ voicemail / no-answer); the `outbound` block enables it.
 |---|---|---|
 | `enabled` | both | master on/off |
 | `mode` | both | `"realtime"` \| `"streaming"` (auto if omitted) |
-| `port` / `bindAddress` / `path` | both | media WebSocket server the Teams worker connects to |
-| `sharedSecret` | both | HMAC secret - **must match the worker** (secret input) |
+| `port` / `bindAddress` / `path` | both | media WebSocket server the StandIn bridge connects to |
+| `sharedSecret` | both | HMAC secret - **must match the secret set in StandIn** (secret input) |
 | `requireRecordingStatus` | both | only engage once Teams reports recording active |
 | `inboundPolicy` | both | `disabled` \| `allowlist` \| `pairing` \| `open` - **enforced** on inbound |
 | `allowFrom` | both | allowlisted caller ids (Teams aadId or phone digits) |
@@ -137,3 +138,18 @@ voicemail / no-answer); the `outbound` block enables it.
 <Warning>
   Treat `sharedSecret` and all provider `apiKey` values as secrets - keep them out of source control.
 </Warning>
+
+## Microsoft Graph permissions
+
+You bring your own Teams bot: register an **Azure AD app + Azure Bot resource** in your tenant,
+admin-consent the **application** permissions below, and point its calling webhook at StandIn (the URL
+is shown in your StandIn dashboard).
+
+| Permission | Enables |
+|---|---|
+| `Calls.JoinGroupCall.All` | answer / join Teams calls and meetings |
+| `Calls.AccessMedia.All` | access real-time Teams call audio/video media |
+| `Chat.Read.All` | resolve chat / thread ids and read message context |
+| `ChatMessage.Read.Chat` | read messages in chats the bot is installed in |
+| `Sites.ReadWrite.All` | upload files / minutes to SharePoint (OneDrive) for chat attachments |
+| `Calls.InitiateGroupCall.All` | outbound "call me back" (skip if unused) |

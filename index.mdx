@@ -30,7 +30,7 @@ you in real time, and appears as an animated face.
 |---|---|---|
 | **Perception** - *the agent sees* | inbound video vision | camera + screen-share (VBSS) frames; `look_at_screen` on demand, auto-attach per turn (streaming), and **continuous ambient vision** (realtime); per-participant attribution in meetings; per-call vision spend cap |
 | **Dialogue** - *the agent converses* | speech, both ways | **realtime speech-to-speech** *or* streaming **STT → agent → TTS**; barge-in + deterministic verbal interrupts; group "speak only when addressed" gate; DTMF/IVR; bilingual EN/AR; roster greeting by name |
-| **Rendering** - *the agent is seen* | a lip-synced avatar tile | **expression cues** (happy/sad/surprised), **viseme lip-sync** (`speech.marks`), and **`show_to_caller`** image overlays - sent by the plugin, drawn by the companion media worker |
+| **Rendering** - *the agent is seen* | a lip-synced avatar tile | **expression cues** (happy/sad/surprised), **viseme lip-sync** (`speech.marks`), and **`show_to_caller`** image overlays - sent by the plugin, drawn by the hosted StandIn bridge |
 
 ## Capabilities
 
@@ -45,10 +45,11 @@ you in real time, and appears as an animated face.
 
 ## How it fits together
 
-A separate **media worker** (Windows/.NET) owns the Graph Calling signalling and the
-`Microsoft.Skype.Bots.Media` socket and renders the avatar tile; it dials the HMAC-authenticated
-WebSocket this plugin hosts. The plugin is the cross-platform **brain** - dialogue, perception, group
-logic, governance, and the avatar cues. [Architecture →](/concepts/architecture)
+The Teams call media and avatar rendering are handled by **StandIn**, a hosted service at
+[standin.komaa.com](https://standin.komaa.com) - subscribe to the free package, connect your Teams
+bot, and StandIn's managed bridge connects to your plugin. The plugin is the cross-platform **brain**
+- dialogue, perception, group logic, governance, and the avatar cues. No media infrastructure for you
+to run. [Architecture →](/concepts/architecture)
 
 ## Related
 

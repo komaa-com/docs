@@ -1,6 +1,6 @@
 ---
 title: "Quickstart"
-description: "Install the plugin, point it at your media worker, and place a test Teams call."
+description: "Install the plugin, connect it to StandIn, and place a test Teams call."
 ---
 
 Pick your runtime. Both paths get you to a live Teams call where your agent answers in voice.
@@ -8,8 +8,10 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
 ## Prerequisites
 
 - A working **OpenClaw** or **Hermes Agent** install (the host).
-- A **media worker** that bridges the live Teams call into the plugin over an HMAC WebSocket
-  (the worker renders the avatar tile and forwards audio/video; it dials this plugin).
+- A **StandIn** subscription ([standin.komaa.com](https://standin.komaa.com), free package) - the
+  hosted media bridge that joins the Teams call and connects to your plugin. No worker to run.
+- Your own **Microsoft Teams bot** (an Azure AD app) connected to StandIn - see the Graph permissions
+  in [Architecture](/concepts/architecture).
 - A realtime voice provider key (for **realtime** mode) - e.g. OpenAI or Azure OpenAI. Streaming mode
   uses your host's configured STT/TTS instead.
 
@@ -23,7 +25,7 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
         ```
       </Step>
       <Step title="Configure">
-        Add a `msteams-voice` entry to your OpenClaw config - `sharedSecret` must match the worker:
+        Add a `msteams-voice` entry to your OpenClaw config - `sharedSecret` must match the value you set in StandIn:
         ```jsonc
         {
           "plugins": {
@@ -52,8 +54,8 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
         Full reference → [OpenClaw configuration](/openclaw/configuration).
       </Step>
       <Step title="Run + call">
-        Start the gateway (`openclaw gateway run`), point the worker's WebSocket URL at
-        `ws://<host>:9442/voice/msteams/stream` with the matching secret, then place a Teams call to the bot.
+        Start the gateway (`openclaw gateway run`), then in your StandIn dashboard register your
+        plugin's WebSocket (`ws://<host>:9442/voice/msteams/stream`) and the matching secret. Place a Teams call to your bot.
       </Step>
     </Steps>
   </Tab>
@@ -74,7 +76,7 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
           entries:
             teams_voice:
               config:
-                shared_secret: ${TEAMS_VOICE_SHARED_SECRET}   # must match the worker
+                shared_secret: ${TEAMS_VOICE_SHARED_SECRET}   # must match the secret set in StandIn
                 host: 127.0.0.1
                 port: 8443
                 realtime:
@@ -89,8 +91,8 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
         ```bash
         hermes teams-voice serve --handler realtime
         ```
-        Point the worker's WebSocket URL at `ws://127.0.0.1:8443/voice/msteams/stream` with the matching
-        secret, then place a Teams call to the bot.
+        In your StandIn dashboard, register your plugin's WebSocket (`ws://<host>:8443/voice/msteams/stream`)
+        and the matching secret, then place a Teams call to your bot.
       </Step>
     </Steps>
   </Tab>

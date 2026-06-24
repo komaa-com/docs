@@ -4,7 +4,7 @@ description: "Install hermes-plugin-teams-voice into a Hermes Agent environment.
 ---
 
 [`hermes-plugin-teams-voice`](https://pypi.org/project/hermes-plugin-teams-voice/) (plugin name **`teams_voice`**) is the Python half of the Teams CVI for
-**Hermes Agent**. It hosts the HMAC WebSocket the media worker dials into, runs the dialogue +
+**Hermes Agent**. It hosts the HMAC WebSocket that StandIn connects to, runs the dialogue +
 perception, and emits avatar driver cues. Chat-plane features live in the existing Teams adapter.
 
 <Note>
@@ -16,8 +16,8 @@ perception, and emits avatar driver cues. Chat-plane features live in the existi
 ## Requirements
 
 - A working **Hermes Agent** install (the host).
-- A **StandIn** Teams media worker bridging call media to this plugin. See
-  [Architecture](/concepts/architecture).
+- A **StandIn** subscription ([standin.komaa.com](https://standin.komaa.com), free package) - the
+  hosted media bridge connecting to this plugin. See [Architecture](/concepts/architecture).
 - **Realtime mode:** an OpenAI / Azure OpenAI realtime key. **Streaming mode:** needs **`ffmpeg`** on
   `PATH`.
 
@@ -39,8 +39,8 @@ hermes teams-voice status      # show config + readiness
 hermes teams-voice serve       # run the bridge server (foreground)
 ```
 
-Point the worker's WebSocket base URL at `ws://<host>:8443/voice/msteams/stream` with a **matching
-shared secret**, then place a Teams call to the bot. One worker identity per gateway.
+Register your plugin's WebSocket (`ws://<host>:8443/voice/msteams/stream`) and a **matching shared
+secret** in your StandIn dashboard, then place a Teams call to your bot.
 
 <Note>
   Next: the full [configuration reference](/hermes/configuration) - config.yaml + `.env`, realtime

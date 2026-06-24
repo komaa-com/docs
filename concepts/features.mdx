@@ -33,8 +33,8 @@ Both plugins implement the same feature set over the shared CVI bridge.
 
 ## Outbound - "call me back"
 
-- `call_me_back` places an outbound call via the worker's HMAC, SSRF-guarded endpoint;
-  **greets on answer**; correlates the pending result with a TTL. Voicemail fallback is worker-owned.
+- `call_me_back` places an outbound call via StandIn's HMAC, SSRF-guarded endpoint;
+  **greets on answer**; correlates the pending result with a TTL. Voicemail fallback is handled by StandIn.
 
 ## Chat & governance
 
@@ -51,8 +51,8 @@ Both plugins implement the same feature set over the shared CVI bridge.
 
 <CardGroup cols={2}>
   <Card title="HMAC bridge" icon="key">
-    Every worker connection is HMAC-SHA256 signed with a replay guard and a ±60 s window. The
-    `sharedSecret` must byte-match the worker.
+    Every StandIn connection is HMAC-SHA256 signed with a replay guard and a ±60 s window. The
+    `sharedSecret` must byte-match the secret set in StandIn.
   </Card>
   <Card title="Caller allowlist" icon="user-shield">
     Restrict who the bot answers by AAD object id - closed by default when an allowlist is set.
@@ -60,7 +60,7 @@ Both plugins implement the same feature set over the shared CVI bridge.
   <Card title="Recording gate" icon="circle-stop">
     No media-derived data is processed until the call's recording status has been signalled.
   </Card>
-  <Card title="Loopback bind" icon="lock">
-    The bridge binds `127.0.0.1` by default - the worker connects locally, not over the open network.
+  <Card title="Your own bot identity" icon="id-badge">
+    Bring your own Azure AD bot - your tenant owns it, with a per-bot HMAC secret never shared across tenants.
   </Card>
 </CardGroup>

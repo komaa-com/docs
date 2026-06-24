@@ -14,8 +14,9 @@ published `openclaw` plugin-sdk + `api.runtime` - no fork, no vendored runtime.
 ## Requirements
 
 - An **OpenClaw** install - host **≥ `2026.6.9`**.
-- A **StandIn** Teams media worker that bridges call audio/video to this plugin's media
-  WebSocket. See [Architecture](/concepts/architecture).
+- A **StandIn** subscription ([standin.komaa.com](https://standin.komaa.com), free package) - the
+  hosted media bridge that joins the Teams call and connects to this plugin. See
+  [Architecture](/concepts/architecture).
 - **Realtime mode:** a realtime voice provider + key. **Streaming mode:** your openclaw-configured
   STT / TTS / agent (no realtime key needed).
 
@@ -38,8 +39,8 @@ openclaw gateway run
 ```
 
 The plugin registers a host-managed service and binds its media WebSocket (default
-`ws://<host>:9442/voice/msteams/stream`). Point the Teams worker at that URL with a **matching
-`sharedSecret`**, then place a Teams call to the bot.
+`ws://<host>:9442/voice/msteams/stream`). Register that URL with a **matching `sharedSecret`** in your
+StandIn dashboard, then place a Teams call to your bot.
 
 <Note>
   Next: the full [configuration reference](/openclaw/configuration) for realtime, streaming, outbound,

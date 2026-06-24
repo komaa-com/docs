@@ -21,7 +21,7 @@ plugins:
   entries:
     teams_voice:
       config:
-        shared_secret: ${TEAMS_VOICE_SHARED_SECRET}   # must equal the worker's secret
+        shared_secret: ${TEAMS_VOICE_SHARED_SECRET}   # must equal the secret set in StandIn
         host: 127.0.0.1
         port: 8443
         # Attach meeting-minutes .docx to the Teams chat (needs Graph
@@ -45,7 +45,7 @@ plugins:
 A fully env-only setup works too:
 
 ```bash
-TEAMS_VOICE_SHARED_SECRET=...        # must equal the worker's shared-secret setting
+TEAMS_VOICE_SHARED_SECRET=...        # must equal the secret set in StandIn
 AZURE_FOUNDRY_API_KEY=...            # realtime key (also used by the gateway)
 # SharePoint (OneDrive) site for attaching files/minutes - host,siteGuid,webGuid
 # (the bot AAD app needs Graph Sites.ReadWrite.All, admin-consented):
@@ -74,8 +74,8 @@ hermes teams-voice serve --handler realtime     # or: streaming  (needs ffmpeg)
 python -m hermes_teams_voice.bridge_server
 ```
 
-Point the worker's WebSocket base URL at `ws://<host>:8443/voice/msteams/stream` with a matching
-shared secret.
+Register your plugin's WebSocket (`ws://<host>:8443/voice/msteams/stream`) and a matching shared
+secret in your StandIn dashboard.
 
 ## Microsoft Graph permissions
 
@@ -84,13 +84,13 @@ The bot's Azure AD app needs these **application** permissions (admin-consented)
 | Permission | Enables |
 |---|---|
 | `Calls.JoinGroupCall.All` | answer / join Teams calls and meetings |
-| `Calls.AccessMedia.All` | access real-time audio/video media (`Skype.Bots.Media`) |
+| `Calls.AccessMedia.All` | access real-time Teams call audio/video media |
 | `Chat.Read.All` | resolve chat / thread ids and read message context |
 | `ChatMessage.Read.Chat` | read messages in chats the bot is installed in |
 | `Sites.ReadWrite.All` | upload files / minutes to SharePoint (OneDrive) for chat attachments |
 | `Calls.InitiateGroupCall.All` | outbound "call me back" (skip if unused) |
 
 <Warning>
-  The `shared_secret` **must byte-match** the worker's setting, or the HMAC handshake fails and no
+  The `shared_secret` **must byte-match** the secret set in StandIn, or the HMAC handshake fails and no
   call connects.
 </Warning>
