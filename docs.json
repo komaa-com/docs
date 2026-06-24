@@ -68,23 +68,6 @@
     "socials": {
       "github": "https://github.com/komaa-com",
       "website": "https://komaa.com"
-    },
-    "links": [
-      {
-        "header": "Resources",
-        "items": [
-          { "label": "GitHub", "href": "https://github.com/komaa-com" },
-          { "label": "npm — @komaa/msteams-voice", "href": "https://www.npmjs.com/package/@komaa/msteams-voice" },
-          { "label": "PyPI — hermes-plugin-teams-voice", "href": "https://pypi.org/project/hermes-plugin-teams-voice/" }
-        ]
-      },
-      {
-        "header": "Channels",
-        "items": [
-          { "label": "OpenClaw Teams channel", "href": "https://docs.openclaw.ai/channels/msteams" },
-          { "label": "Hermes Agent Teams", "href": "https://hermes-agent.nousresearch.com/docs/user-guide/messaging/teams" }
-        ]
-      }
-    ]
+    }
   }
 }
