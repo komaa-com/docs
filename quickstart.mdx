@@ -10,7 +10,7 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
 - A working **OpenClaw** or **Hermes Agent** install (the host).
 - A **media worker** that bridges the live Teams call into the plugin over an HMAC WebSocket
   (the worker renders the avatar tile and forwards audio/video; it dials this plugin).
-- A realtime voice provider key (for **realtime** mode) — e.g. OpenAI or Azure OpenAI. Streaming mode
+- A realtime voice provider key (for **realtime** mode) - e.g. OpenAI or Azure OpenAI. Streaming mode
   uses your host's configured STT/TTS instead.
 
 <Tabs>
@@ -23,7 +23,7 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
         ```
       </Step>
       <Step title="Configure">
-        Add a `msteams-voice` entry to your OpenClaw config — `sharedSecret` must match the worker:
+        Add a `msteams-voice` entry to your OpenClaw config - `sharedSecret` must match the worker:
         ```jsonc
         {
           "plugins": {
@@ -97,5 +97,5 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
 </Tabs>
 
 <Tip>
-  Streaming mode (no realtime key needed) is a one-line change — see [Modes](/concepts/modes).
+  Streaming mode (no realtime key needed) is a one-line change - see [Modes](/concepts/modes).
 </Tip>

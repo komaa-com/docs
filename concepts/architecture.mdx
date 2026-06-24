@@ -20,14 +20,14 @@ flowchart LR
     W <-->|"Skype.Bots.Media (RTP)"| T
 ```
 
-The **plugin is the WebSocket server** (binds loopback by default — `:9442` on OpenClaw, `:8443` on
+The **plugin is the WebSocket server** (binds loopback by default - `:9442` on OpenClaw, `:8443` on
 Hermes); the **StandIn worker is the client** that connects to it.
 
 ## Who does what
 
 | Component | Role |
 |---|---|
-| **Your agent** (OpenClaw / Hermes) | the dialogue brain — answers consults, runs background tasks, produces vision/image results |
+| **Your agent** (OpenClaw / Hermes) | the dialogue brain - answers consults, runs background tasks, produces vision/image results |
 | **Teams Voice Plugin** (WS server) | hosts the bridge · realtime / streaming dialogue · vision ring + budget · emits `expression` / `speech.marks` / `display.image` cues |
 | **StandIn worker** (Windows / .NET) | renders the avatar tile · samples inbound A/V, forwards DTMF · recording-status compliance gate · places outbound calls |
 | **Microsoft Teams** | the live call / meeting and its media plane |
@@ -39,7 +39,7 @@ Hermes); the **StandIn worker is the client** that connects to it.
 
 ## Wire contract
 
-The protocol is fixed by the worker — both plugins implement the same contract:
+The protocol is fixed by the worker - both plugins implement the same contract:
 
 | Aspect | Value |
 |---|---|

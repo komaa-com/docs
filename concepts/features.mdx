@@ -8,21 +8,21 @@ Both plugins implement the same feature set over the shared CVI bridge.
 ## Voice
 
 - **Realtime** (speech-to-speech) **and streaming** (STT → agent → TTS), both with **barge-in**.
-- **Bilingual Arabic / English** — wake-phrase + filler stripping, whole-utterance verbal interrupts.
+- **Bilingual Arabic / English** - wake-phrase + filler stripping, whole-utterance verbal interrupts.
 - **DTMF / IVR** keypad input.
 - **Roster greeting by first name** + a "thinking" expression while it works.
-- **Realtime delegation** — `consult` (inline) and `agent_task` (background) hand work to your agent.
+- **Realtime delegation** - `consult` (inline) and `agent_task` (background) hand work to your agent.
 
 ## Vision
 
 - `look_at_screen` over **camera + screen-share** frames.
-- **Continuous vision** — the latest *changed* frame is pushed (~6 s) with no forced response.
+- **Continuous vision** - the latest *changed* frame is pushed (~6 s) with no forced response.
 - **Scene-change ambient** notices + **retroactive** lookback (16-keyframe ring, attributed).
 - **Per-call spend cap** via `maxVisionPerMinute` to bound cost.
 
 ## Avatar (CVI rendering cues)
 
-- **Expression cues** — neutral / happy / sad / surprised + thinking.
+- **Expression cues** - neutral / happy / sad / surprised + thinking.
 - **Viseme `speech.marks`** lip-sync.
 - **`show_to_caller`** → fullscreen or picture-in-picture image, captions, paced slideshow.
 
@@ -31,7 +31,7 @@ Both plugins implement the same feature set over the shared CVI bridge.
 - Per-participant attribution; **speaks only when addressed** (2+ humans → wake phrase + follow-up
   window; 1:1 always responds). Race-free on realtime (auto-response off in meetings).
 
-## Outbound — "call me back"
+## Outbound - "call me back"
 
 - `call_me_back` places an outbound call via the worker's HMAC, SSRF-guarded endpoint;
   **greets on answer**; correlates the pending result with a TTL. Voicemail fallback is worker-owned.
@@ -55,12 +55,12 @@ Both plugins implement the same feature set over the shared CVI bridge.
     `sharedSecret` must byte-match the worker.
   </Card>
   <Card title="Caller allowlist" icon="user-shield">
-    Restrict who the bot answers by AAD object id — closed by default when an allowlist is set.
+    Restrict who the bot answers by AAD object id - closed by default when an allowlist is set.
   </Card>
   <Card title="Recording gate" icon="circle-stop">
     No media-derived data is processed until the call's recording status has been signalled.
   </Card>
   <Card title="Loopback bind" icon="lock">
-    The bridge binds `127.0.0.1` by default — the worker connects locally, not over the open network.
+    The bridge binds `127.0.0.1` by default - the worker connects locally, not over the open network.
   </Card>
 </CardGroup>

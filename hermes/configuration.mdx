@@ -41,13 +41,13 @@ plugins:
 
 ## .env
 
-`%LOCALAPPDATA%\hermes\.env` / `~/.hermes/.env` — the secret store (used directly, or referenced above).
+`%LOCALAPPDATA%\hermes\.env` / `~/.hermes/.env` - the secret store (used directly, or referenced above).
 A fully env-only setup works too:
 
 ```bash
 TEAMS_VOICE_SHARED_SECRET=...        # must equal the worker's shared-secret setting
 AZURE_FOUNDRY_API_KEY=...            # realtime key (also used by the gateway)
-# SharePoint (OneDrive) site for attaching files/minutes — host,siteGuid,webGuid
+# SharePoint (OneDrive) site for attaching files/minutes - host,siteGuid,webGuid
 # (the bot AAD app needs Graph Sites.ReadWrite.All, admin-consented):
 TEAMS_SHAREPOINT_SITE_ID=contoso.sharepoint.com,<siteGuid>,<webGuid>
 # fully env-only is fine too:
@@ -61,7 +61,7 @@ TEAMS_VOICE_REALTIME_VOICE=cedar
 ```
 
 <Tip>
-  `backend: openai` uses public OpenAI instead of Azure — set the OpenAI key in place of the Azure
+  `backend: openai` uses public OpenAI instead of Azure - set the OpenAI key in place of the Azure
   endpoint/deployment fields.
 </Tip>
 

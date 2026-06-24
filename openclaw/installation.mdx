@@ -4,16 +4,16 @@ description: "Install @komaa/msteams-voice into an OpenClaw host."
 ---
 
 [`@komaa/msteams-voice`](https://www.npmjs.com/package/@komaa/msteams-voice) is a self-contained Teams CVI plugin for **OpenClaw**. It depends only on the
-published `openclaw` plugin-sdk + `api.runtime` — no fork, no vendored runtime.
+published `openclaw` plugin-sdk + `api.runtime` - no fork, no vendored runtime.
 
 <Note>
   This adds **voice/video (CVI)** on top of OpenClaw's existing
-  [Microsoft Teams chat channel](https://docs.openclaw.ai/channels/msteams) — run both for chat + calls.
+  [Microsoft Teams chat channel](https://docs.openclaw.ai/channels/msteams) - run both for chat + calls.
 </Note>
 
 ## Requirements
 
-- An **OpenClaw** install — host **≥ `2026.6.9`**.
+- An **OpenClaw** install - host **≥ `2026.6.9`**.
 - A **StandIn** Teams media worker that bridges call audio/video to this plugin's media
   WebSocket. See [Architecture](/concepts/architecture).
 - **Realtime mode:** a realtime voice provider + key. **Streaming mode:** your openclaw-configured
@@ -26,7 +26,7 @@ openclaw plugins install clawhub:@komaa/msteams-voice
 cd extensions/msteams-voice && pnpm install && pnpm build
 ```
 
-This is a **source-published** plugin — the npm package ships TypeScript source and builds on install.
+This is a **source-published** plugin - the npm package ships TypeScript source and builds on install.
 
 ## Verify
 

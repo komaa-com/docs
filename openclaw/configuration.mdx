@@ -1,6 +1,6 @@
 ---
 title: "Configuration"
-description: "Full config reference for @komaa/msteams-voice — realtime, streaming, outbound, and security."
+description: "Full config reference for @komaa/msteams-voice - realtime, streaming, outbound, and security."
 ---
 
 Config lives under `plugins.entries."msteams-voice".config` in your OpenClaw config.
@@ -93,7 +93,7 @@ call-backs, recording gate, and `sessionScope` agent memory. See [Modes](/concep
 </CodeGroup>
 
 In **streaming** mode, **TTS and the agent/model come from your OpenClaw configuration**. STT uses a
-live transcription session — selected by `stt.provider` / `stt.providers` if set, else your
+live transcription session - selected by `stt.provider` / `stt.providers` if set, else your
 openclaw-configured transcription provider; if none resolves it falls back to VAD-segmented file
 transcription. The `realtime.*` block is ignored **except** the echo-guard knobs
 (`suppressInputDuringPlayback`, `echoSuppressionWindowMs`, `echoBargeInRms`), which apply in both modes.
@@ -120,9 +120,9 @@ voicemail / no-answer); the `outbound` block enables it.
 | `enabled` | both | master on/off |
 | `mode` | both | `"realtime"` \| `"streaming"` (auto if omitted) |
 | `port` / `bindAddress` / `path` | both | media WebSocket server the Teams worker connects to |
-| `sharedSecret` | both | HMAC secret — **must match the worker** (secret input) |
+| `sharedSecret` | both | HMAC secret - **must match the worker** (secret input) |
 | `requireRecordingStatus` | both | only engage once Teams reports recording active |
-| `inboundPolicy` | both | `disabled` \| `allowlist` \| `pairing` \| `open` — **enforced** on inbound |
+| `inboundPolicy` | both | `disabled` \| `allowlist` \| `pairing` \| `open` - **enforced** on inbound |
 | `allowFrom` | both | allowlisted caller ids (Teams aadId or phone digits) |
 | `inboundGreeting` | both | opening line |
 | `sessionScope` | both | `per-phone` \| `per-call` \| `per-thread` agent-memory scope |
@@ -135,5 +135,5 @@ voicemail / no-answer); the `outbound` block enables it.
 | `outbound.{enabled,workerBaseUrl,tenantId,answerTimeoutMs,defaultMode}` | both | outbound call-backs / voicemail |
 
 <Warning>
-  Treat `sharedSecret` and all provider `apiKey` values as secrets — keep them out of source control.
+  Treat `sharedSecret` and all provider `apiKey` values as secrets - keep them out of source control.
 </Warning>
