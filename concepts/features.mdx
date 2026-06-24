@@ -42,6 +42,11 @@ Both plugins implement the same feature set over the shared CVI bridge.
   **audit-log channel** (opt-in, loop-guarded) · **DLP outbound redaction** (opt-in) on text,
   adaptive cards, and captions.
 
+<Note>
+  These live in the Teams **messaging** adapter, not the voice bridge - enable your runtime's Teams
+  chat channel/plugin alongside the voice plugin to get them.
+</Note>
+
 ## Meeting productivity
 
 - **End-of-meeting recap** (opt-in) + on-demand **`post_meeting_minutes`**, posted to the Teams chat

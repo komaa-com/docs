@@ -24,7 +24,7 @@ call-backs, recording gate, and `sessionScope` agent memory. See [Modes](/concep
           "mode": "realtime",
           "port": 9442,
           "path": "/voice/msteams/stream",
-          "sharedSecret": "<same secret as the Teams worker>",
+          "sharedSecret": "<same secret as in your StandIn dashboard>",
           "requireRecordingStatus": true,
           "inboundPolicy": "allowlist",
           "allowFrom": ["<caller AAD object id or phone number>"],
@@ -67,7 +67,7 @@ call-backs, recording gate, and `sessionScope` agent memory. See [Modes](/concep
           "mode": "streaming",
           "port": 9442,
           "path": "/voice/msteams/stream",
-          "sharedSecret": "<same secret as the Teams worker>",
+          "sharedSecret": "<same secret as in your StandIn dashboard>",
           "requireRecordingStatus": true,
           "inboundPolicy": "allowlist",
           "allowFrom": ["<caller id>"],
@@ -113,6 +113,10 @@ transcription. The `realtime.*` block is ignored **except** the echo-guard knobs
 
 `placeCall(userObjectId, { message, mode })` is implemented on the runtime (no-answer / declined →
 voicemail / no-answer); the `outbound` block enables it.
+
+<Note>
+  `workerBaseUrl` is **StandIn's outbound API URL from your dashboard** - not a server you host.
+</Note>
 
 ## Key reference
 

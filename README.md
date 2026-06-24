@@ -1,55 +1,30 @@
-# Mintlify Starter Kit
+# Teams Voice Plugin (Stand in) — documentation
 
-Use the starter kit to get your docs deployed and ready to customize.
+Source for **[docs.komaa.com](https://docs.komaa.com)** — the docs for the Microsoft Teams voice/video
+(CVI) plugin that runs on **OpenClaw** (`@komaa/msteams-voice`) and **Hermes Agent**
+(`hermes-plugin-teams-voice`), connected to the hosted **StandIn** media bridge
+([standin.komaa.com](https://standin.komaa.com)).
 
-Click the green **Use this template** button at the top of this repo to copy the Mintlify starter kit. The starter kit contains examples with
+Built with [Mintlify](https://mintlify.com); pushes to `main` auto-deploy to production.
 
-- Guide pages
-- Navigation
-- Customizations
-- API reference pages
-- Use of popular components
+## Structure
 
-**[Follow the full quickstart guide](https://starter.mintlify.com/quickstart)**
+| Path | Contents |
+|---|---|
+| `docs.json` | site config + navigation |
+| `index.mdx`, `quickstart.mdx` | Getting Started |
+| `concepts/` | architecture · modes · features |
+| `openclaw/`, `hermes/` | per-runtime installation + configuration |
+| `logo/`, `favicon.svg` | brand assets |
 
-## AI-assisted writing
-
-Set up your AI coding tool to work with Mintlify:
+## Local preview
 
 ```bash
-npx skills add https://mintlify.com/docs
-```
-
-This command installs Mintlify's documentation skill for your configured AI tools like Claude Code, Cursor, Windsurf, and others. The skill includes component reference, writing standards, and workflow guidance.
-
-See the [AI tools guides](/ai-tools) for tool-specific setup.
-
-## Development
-
-Install the [Mintlify CLI](https://www.npmjs.com/package/mint) to preview your documentation changes locally. To install, use the following command:
-
-```
 npm i -g mint
+mint dev          # http://localhost:3000  (run where docs.json lives)
 ```
 
-Run the following command at the root of your documentation, where your `docs.json` is located:
+## Scope
 
-```
-mint dev
-```
-
-View your local preview at `http://localhost:3000`.
-
-## Publishing changes
-
-Install our GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app) to propagate changes from your repo to your deployment. Changes are deployed to production automatically after pushing to the default branch.
-
-## Need help?
-
-### Troubleshooting
-
-- If your dev environment isn't running: Run `mint update` to ensure you have the most recent version of the CLI.
-- If a page loads as a 404: Make sure you are running in a folder with a valid `docs.json`.
-
-### Resources
-- [Mintlify documentation](https://mintlify.com/docs)
+This repo documents the **plugins + the hosted StandIn evaluation flow** only. Internal worker /
+control-plane runbooks live elsewhere and are intentionally not part of this site.

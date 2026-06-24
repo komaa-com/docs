@@ -36,7 +36,7 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
                   "mode": "realtime",
                   "port": 9442,
                   "path": "/voice/msteams/stream",
-                  "sharedSecret": "<same secret as the Teams worker>",
+                  "sharedSecret": "<same secret as in your StandIn dashboard>",
                   "inboundPolicy": "allowlist",
                   "allowFrom": ["<caller AAD object id>"],
                   "realtime": {
@@ -97,6 +97,13 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
     </Steps>
   </Tab>
 </Tabs>
+
+<Warning>
+  **StandIn connects to your plugin from the internet**, so its WebSocket must be reachable - expose it
+  via a public URL or a tunnel (e.g. Tailscale), not loopback-only. Default ports **9442** (OpenClaw) /
+  **8443** (Hermes); path `/voice/msteams/stream`. A `sharedSecret` mismatch fails the HMAC handshake
+  **silently** - the most common first-call issue.
+</Warning>
 
 <Tip>
   Streaming mode (no realtime key needed) is a one-line change - see [Modes](/concepts/modes).
