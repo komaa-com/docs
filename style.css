@@ -1,0 +1,7 @@
+/* Hide the duplicated brand logo in the site footer (the header/sidebar already shows it). */
+#footer img,
+#footer svg,
+footer img,
+footer svg {
+  display: none;
+}
