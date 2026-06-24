@@ -17,6 +17,38 @@ they differ only in how speech becomes a reply.
   </Card>
 </CardGroup>
 
+## How each mode flows
+
+Both modes share the same inbound/outbound media path through StandIn; they differ only in the middle -
+how speech becomes a reply.
+
+```mermaid
+flowchart LR
+    IN["Caller audio<br/>(via StandIn)"] --> P["Plugin"]
+
+    subgraph RT["Realtime"]
+      RM["Realtime model<br/>speech-to-speech"]
+    end
+    subgraph ST["Streaming"]
+      direction LR
+      STT["STT"] --> AG["Your agent"] --> TTS["TTS"]
+    end
+
+    P -->|realtime| RM
+    P -->|streaming| STT
+    RM -.->|"delegate real work"| AG
+    RM --> OUT["Reply audio<br/>(via StandIn)"]
+    TTS --> OUT
+
+    style IN fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style OUT fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style P fill:#166534,stroke:#22c55e,color:#dcfce7
+    style RM fill:#0e7490,stroke:#06b6d4,color:#cffafe
+    style STT fill:#c2410c,stroke:#fb923c,color:#fed7aa
+    style TTS fill:#c2410c,stroke:#fb923c,color:#fed7aa
+    style AG fill:#3730a3,stroke:#6366f1,color:#e0e7ff
+```
+
 ## Choosing
 
 | If you want… | Use |

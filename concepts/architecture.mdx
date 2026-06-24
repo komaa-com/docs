@@ -31,6 +31,34 @@ The **plugin is the WebSocket server** (default port `:9442` on OpenClaw, `:8443
 and shared secret in your StandIn dashboard - expose it so the hosted bridge can reach it (a public
 URL, or a tunnel such as Tailscale).
 
+## Call flow
+
+A single call: the HMAC handshake, the recording-status gate, then the per-turn dialogue loop.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Caller
+    participant S as StandIn
+    participant P as Plugin
+    participant A as Agent
+
+    C->>S: joins / places a Teams call
+    S->>P: WS upgrade + HMAC(timestamp.callId)
+    Note over S,P: ±60s window · single-use · replay-guarded
+    S->>P: session.start
+    S->>P: recording.status
+    Note over P: gate - no media processed until recording is active
+    loop each turn
+        S->>P: audio.frame / video.frame
+        P->>A: consult / task
+        A-->>P: result
+        P-->>S: audio.frame + expression / speech.marks
+        S-->>C: avatar speaks
+    end
+    S->>P: session.end
+```
+
 ## Who does what
 
 | Component | Role |
