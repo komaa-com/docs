@@ -16,6 +16,30 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
 - A realtime voice provider key (for **realtime** mode) - e.g. OpenAI or Azure OpenAI. Streaming mode
   uses your host's configured STT/TTS instead.
 
+## Install (one line)
+
+The installer detects your **OpenClaw** or **Hermes** install, adds the matching plugin, and prompts
+for the settings (mode, shared secret, provider API key + model).
+
+**Linux / macOS / WSL**
+
+```bash
+curl -fsSL https://standin.komaa.com/install.sh | bash
+```
+
+**Windows (PowerShell)**
+
+```powershell
+irm https://standin.komaa.com/install.ps1 | iex
+```
+
+It also runs non-interactively - pass flags (`--runtime`, `--mode`, `--secret`, `--provider`,
+`--api-key`, `--model`, `--port`) or set the matching `STANDIN_*` environment variables.
+
+## Manual install
+
+Prefer to wire it up by hand? Pick your runtime:
+
 <Tabs>
   <Tab title="OpenClaw (npm)">
     <Steps>
