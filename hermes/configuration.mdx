@@ -67,8 +67,10 @@ TEAMS_VOICE_REALTIME_VOICE=cedar
 </Tip>
 
 <Warning>
-  For the **hosted StandIn** bridge to connect, set **`allow_remote_worker: true`** and bind a
-  reachable address (`host: 0.0.0.0` or a tunnel) - the default `127.0.0.1` only accepts a local bridge.
+  For the **hosted StandIn** bridge to connect, bind a reachable address: set `host: 0.0.0.0` (or
+  keep `127.0.0.1` behind a tunnel that forwards to it) - the default loopback bind is only reachable
+  from the same machine. `allow_remote_worker` has **no effect on inbound connections**; it only
+  governs where *outbound* "call me back" requests may be sent (see the key reference below).
 </Warning>
 
 ## Key reference
@@ -80,7 +82,7 @@ matching `TEAMS_VOICE_*` env var.
 |---|---|
 | `shared_secret` | HMAC secret - **must match the secret set in StandIn** (keep in `.env`) |
 | `host` / `port` / `path` | media WebSocket the StandIn bridge connects to (default `127.0.0.1` : `8443`, `/voice/msteams/stream`) |
-| `allow_remote_worker` | **`true` for hosted StandIn** - accept a non-localhost bridge (default `false`) |
+| `allow_remote_worker` | SSRF guard for **outbound** "call me back": permit dialing a non-loopback `worker_base_url` (default `false` = loopback only). Does not affect inbound bridge connections |
 | `require_recording_status` | only engage once Teams reports recording active (default `true`) |
 | `allowlist` / `allowlist_allow_names` | allowlisted caller AAD ids (closed when set); also match by display name |
 | `wake_phrases` | group-call "speak only when addressed" wake words (default `assistant`, `hermes`) |

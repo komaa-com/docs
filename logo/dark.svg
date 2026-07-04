@@ -15,5 +15,5 @@
   <!-- wordmark -->
   <text x="52" y="27.5" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="23" font-weight="700" fill="#FFFFFF" letter-spacing="-0.6">Komaa</text>
   <line x1="147" y1="12" x2="147" y2="28" stroke="#4B5563" stroke-width="1.4"/>
-  <text x="157" y="27" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="500" fill="#9CA3AF" letter-spacing="-0.2">Standin</text>
+  <text x="157" y="27" font-family="Inter, 'Helvetica Neue', Arial, sans-serif" font-size="17" font-weight="500" fill="#9CA3AF" letter-spacing="-0.2">StandIn</text>
 </svg>

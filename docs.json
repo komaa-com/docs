@@ -27,8 +27,9 @@
         "pages": [
           "index",
           "quickstart",
+          "teams-app",
           "community",
-          "teams-app"
+          "troubleshooting"
         ]
       },
       {

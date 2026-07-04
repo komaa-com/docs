@@ -1,0 +1,91 @@
+---
+title: "Troubleshooting"
+description: "Fix the most common issues: silent HMAC failures, an unreachable agent, community-tier daily limits, port/path mix-ups, and the ClawHub install."
+keywords: ["StandIn troubleshooting","HMAC handshake failed","shared secret mismatch","bot could not join","agent is not reachable","daily budget","port 9442","port 8443","ClawHub npm"]
+---
+
+The issues below cover almost every failed first call. Work top to bottom: secret, reachability, limits, address.
+
+## The bot joins but never speaks (HMAC mismatch)
+
+**Symptom:** the bot joins the call (or the bridge connects), then nothing: no greeting, no
+response, no error in your plugin logs.
+
+The `sharedSecret` (OpenClaw) / `shared_secret` (Hermes) must **byte-match** the secret set in your
+StandIn dashboard. A mismatch fails the HMAC handshake **silently** - the bridge simply drops the
+connection, so both sides look "up" while no audio flows. This is the #1 first-call issue.
+
+**Fix:**
+
+- Re-paste the secret on both sides. Watch for a trailing newline or whitespace picked up when
+  copying, and for shell quoting that swallows characters like `$` or `!`.
+- If the secret lives in `.env`, confirm the variable actually resolves (Hermes:
+  `hermes teams-voice status`).
+- Rotate the secret in the StandIn dashboard and set the new value in the plugin config, then retry.
+
+## Bot does not join: "agent is not reachable"
+
+**Symptom:** the call never gets a bot, and the sandbox console shows
+**"Bot could not join... agent is not reachable"**.
+
+StandIn connects **to your plugin** from the internet. If it cannot reach your `wss://` endpoint,
+the bot has nothing to bridge to and does not join.
+
+**Fix, in order:**
+
+1. **Is the plugin running?** Start it (`openclaw gateway run` / `hermes teams-voice serve --handler realtime`)
+   and confirm it is listening on its port.
+2. **Is the tunnel up?** If you expose the endpoint via a tunnel (e.g. Tailscale), a dropped tunnel
+   is the most common cause. Restart it and test the public URL from outside your network.
+3. **Is the bind reachable?** A loopback-only bind (`127.0.0.1`) is invisible from the internet
+   unless a tunnel forwards to it - bind `0.0.0.0` or keep the tunnel in front.
+4. **Does the registered URL match?** The URL in your StandIn dashboard must point at the live
+   endpoint, including port and path (see below).
+
+## Community tier: bot leaves or will not join (daily budget)
+
+The community tier is metered: **5 minutes of bot time per day, per room**, and up to **5 new rooms
+per day** per account. When a room's budget runs out, the bot leaves and returns the next day; once
+the room cap is hit, new rooms fail until tomorrow. Reusing an existing room does not count toward
+the room cap.
+
+If you need more time or inbound calls to your own identity, use the standard setup in the
+[Quickstart](/quickstart) with your own Teams bot.
+
+## Wrong port or path (and callId confusion)
+
+The two runtimes listen on **different default ports** but the **same path**:
+
+| Runtime | Default port | Path |
+|---|---|---|
+| OpenClaw | `9442` | `/voice/msteams/stream` |
+| Hermes | `8443` | `/voice/msteams/stream` |
+
+Registering the OpenClaw URL with the Hermes port (or vice versa) is a frequent mix-up: the bridge
+connects to a closed port and the call never reaches your agent. Double-check the full URL you
+registered in the StandIn dashboard, e.g. `ws://<host>:9442/voice/msteams/stream` for OpenClaw or
+`ws://<host>:8443/voice/msteams/stream` for Hermes.
+
+<Note>
+  Each call carries its own `callId`, and the HMAC handshake signs it per call - you never configure
+  a `callId` yourself. If logs show signature failures for a specific `callId`, that is the shared
+  secret (see above), not the id.
+</Note>
+
+## ClawHub install fails (listing pending)
+
+`openclaw plugins install clawhub:@komaa/msteams-voice` fails because the ClawHub listing is still
+publishing. Until it lands, install from **npm** instead:
+
+```bash
+npm install @komaa/msteams-voice
+```
+
+The plugin is published as [`@komaa/msteams-voice`](https://www.npmjs.com/package/@komaa/msteams-voice);
+see the [plugin README](https://github.com/komaa-com/openclaw-msteams-voice#install) for the full steps.
+
+<Tip>
+  Still stuck? Recheck the [Quickstart](/quickstart) end to end - most remaining issues are a config
+  key living in the wrong section, or a Graph permission that was never admin-consented
+  (see [Hermes configuration](/hermes/configuration#microsoft-graph-permissions)).
+</Tip>
