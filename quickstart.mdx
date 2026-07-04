@@ -43,6 +43,26 @@ irm https://standin.komaa.com/install.ps1 | iex
 It also runs non-interactively - pass flags (`--runtime`, `--mode`, `--secret`, `--provider`,
 `--api-key`, `--model`, `--port`) or set the matching `STANDIN_*` environment variables.
 
+<Note>
+For **secrets** (`--secret`, `--api-key`), prefer the `STANDIN_SECRET` / `STANDIN_API_KEY` environment variables over
+CLI flags, so the values do not land in your shell history. The installer never transmits your secrets: they are only
+written to your local plugin config.
+</Note>
+
+## Verify (optional)
+
+To review the script before running it, download it, check its SHA-256, then run it:
+
+```bash
+curl -fsSL https://standin.komaa.com/install.sh -o install.sh
+echo "17b9a5b936a14a5953b8400378368123b447f3f22fc2a2efb3de8ad2d8f444d3  install.sh" | sha256sum -c -   # macOS: shasum -a 256 -c -
+bash install.sh
+```
+
+On Windows, download with `irm https://standin.komaa.com/install.ps1 -OutFile install.ps1`, then `Get-FileHash install.ps1`
+should equal `7C1BFC1479BE41F0F00069AE27E953DBB9BA3E8146EC2548CB386128D5D8A870`. Checksums are for the current release and
+change when the installer is updated; always fetch over HTTPS from `standin.komaa.com`.
+
 ## Manual install
 
 Prefer to wire it up by hand? Pick your runtime:
