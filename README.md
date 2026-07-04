@@ -1,6 +1,6 @@
-# Teams Voice Plugin (StandIn) — documentation
+# Teams Voice Plugin (StandIn) - documentation
 
-Source for **[docs.komaa.com](https://docs.komaa.com)** — the docs for the Microsoft Teams voice/video
+Source for **[docs.komaa.com](https://docs.komaa.com)** - the docs for the Microsoft Teams voice/video
 (CVI) plugin that runs on **OpenClaw** (`@komaa/msteams-voice`) and **Hermes Agent**
 (`hermes-plugin-teams-voice`), connected to the hosted **StandIn** media bridge
 ([standin.komaa.com](https://standin.komaa.com)).
