@@ -108,16 +108,8 @@ secret in your StandIn dashboard.
 
 ## Microsoft Graph permissions
 
-The bot's Azure AD app needs these **application** permissions (admin-consented):
-
-| Permission | Enables |
-|---|---|
-| `Calls.JoinGroupCall.All` | answer / join Teams calls and meetings |
-| `Calls.AccessMedia.All` | access real-time Teams call audio/video media |
-| `Chat.Read.All` | resolve chat / thread ids and read message context |
-| `ChatMessage.Read.Chat` | read messages in chats the bot is installed in |
-| `Sites.ReadWrite.All` | upload files / minutes to SharePoint (OneDrive) for chat attachments |
-| `Calls.InitiateGroupCall.All` | outbound "call me back" (skip if unused) |
+The bot's Azure AD app needs admin-consented **application** permissions - see the canonical
+[Graph permissions table](/teams-app#graph-permissions) on the Teams app setup page.
 
 <Warning>
   The `shared_secret` **must byte-match** the secret set in StandIn, or the HMAC handshake fails and no

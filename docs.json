@@ -14,7 +14,7 @@
     "metatags": {
       "og:type": "website",
       "og:site_name": "Teams Voice Plugin (StandIn)",
-      "og:image": "https://raw.githubusercontent.com/komaa-com/docs/main/assets/og.png",
+      "og:image": "https://www.komaa.com/opengraph-image",
       "og:image:width": "1200",
       "og:image:height": "630",
       "twitter:card": "summary_large_image"

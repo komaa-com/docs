@@ -95,14 +95,7 @@ and Hermes plugins implement:
 ## Microsoft Graph permissions
 
 You bring your own Teams bot (BYO): register an **Azure AD app + Azure Bot resource** in your tenant,
-admin-consent the **application** permissions below, and point its calling webhook at StandIn (the URL
+admin-consent the required **application** permissions, and point its calling webhook at StandIn (the URL
 is shown in your StandIn dashboard). These apply to both the OpenClaw and Hermes plugins.
 
-| Permission | Enables |
-|---|---|
-| `Calls.JoinGroupCall.All` | answer / join Teams calls and meetings |
-| `Calls.AccessMedia.All` | access real-time Teams call audio/video media |
-| `Chat.Read.All` | resolve chat / thread ids and read message context |
-| `ChatMessage.Read.Chat` | read messages in chats the bot is installed in |
-| `Sites.ReadWrite.All` | upload files / minutes to SharePoint (OneDrive) for chat attachments |
-| `Calls.InitiateGroupCall.All` | outbound "call me back" (skip if unused) |
+See the canonical [Graph permissions table](/teams-app#graph-permissions) on the Teams app setup page.

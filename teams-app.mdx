@@ -13,9 +13,11 @@ flow using our example manifest. It's the same for the OpenClaw and Hermes plugi
   placeholders with your own values before you build and upload the package.
 </Note>
 
-<Card title="Download the example package" icon="download" href="https://raw.githubusercontent.com/komaa-com/docs/main/assets/standin-teams-manifest.zip">
-  `standin-teams-manifest.zip` - `manifest.json` + placeholder icons + a README. Replace the
-  placeholder GUIDs and icons, then import it in the Developer Portal or upload it to Teams.
+<Card title="Download your Teams app package" icon="download" href="https://standin.komaa.com">
+  No need to hand-build the zip: your StandIn dashboard generates a **per-identity** app package.
+  Open your identity and click **Download Teams app package (.zip)** (served by
+  `/api/identities/:id/manifest`), then import it in the Developer Portal or upload it to Teams.
+  The [example manifest](#example-manifest) below shows what's inside.
 </Card>
 
 ## Steps
@@ -28,7 +30,8 @@ flow using our example manifest. It's the same for the OpenClaw and Hermes plugi
   </Step>
   <Step title="Open the Teams Developer Portal">
     Go to **[dev.teams.microsoft.com](https://dev.teams.microsoft.com/)** → **Apps**. Either **Import
-    an app** (upload a zip of the manifest below) or **New app** and paste the fields in the GUI. The
+    an app** (upload the package from your StandIn dashboard, or a zip of the
+    [example manifest](#example-manifest)) or **New app** and paste the fields in the GUI. The
     portal validates the manifest and manages versions for you.
   </Step>
   <Step title="Fill in the manifest">
@@ -125,17 +128,16 @@ app is installed in a team; it does **not** replace the tenant-wide Graph permis
 ## Graph permissions
 
 Set these as **application** permissions on the **same Entra app** as `botId`, then admin-consent them
-in your tenant (this matches the [OpenClaw](/openclaw/configuration#microsoft-graph-permissions) and
-[Hermes](/hermes/configuration#microsoft-graph-permissions) configuration pages):
+in your tenant. This is the canonical list - it applies to both the OpenClaw and Hermes plugins:
 
 | Permission | Purpose |
 |---|---|
 | `Calls.JoinGroupCall.All` | answer / join Teams calls and meetings |
-| `Calls.AccessMedia.All` | real-time call audio/video media |
+| `Calls.AccessMedia.All` | access real-time Teams call audio/video media |
 | `Calls.InitiateGroupCall.All` | outbound "call me back" (skip if unused) |
-| `Chat.Read.All` | chat / thread context |
-| `ChatMessage.Read.Chat` | read messages in chats the bot is in |
-| `Sites.ReadWrite.All` | SharePoint / OneDrive file cards for meeting minutes (optional) |
+| `Chat.Read.All` | resolve chat / thread ids and read message context |
+| `ChatMessage.Read.Chat` | read messages in chats the bot is installed in |
+| `Sites.ReadWrite.All` | upload files / minutes to SharePoint (OneDrive) for chat attachments (optional) |
 
 ## Packaging it manually
 

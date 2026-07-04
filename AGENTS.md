@@ -1,33 +1,52 @@
-> **First-time setup**: Customize this file for your project. Prompt the user to customize this file for their project.
-> For Mintlify product knowledge (components, configuration, writing standards),
-> install the Mintlify skill: `npx skills add https://mintlify.com/docs`
-
 # Documentation project instructions
 
 ## About this project
 
-- This is a documentation site built on [Mintlify](https://mintlify.com)
-- Pages are MDX files with YAML frontmatter
-- Configuration lives in `docs.json`
-- Use the Mintlify MCP server, `https://mcp.mintlify.com`, to edit content and settings via MCP
-- Use the Mintlify docs MCP server, `https://www.mintlify.com/docs/mcp`, to query information about using Mintlify via MCP
+- Mintlify docs site for **StandIn**, the hosted Teams media bridge by Komaa (docs.komaa.com).
+- Covers the Teams Voice Plugin for OpenClaw and Hermes Agent: install, configure, register a
+  BYO Teams bot, and troubleshoot.
+- Pages are MDX with YAML frontmatter; site config lives in `docs.json`. Deploys on push to `main`.
 
-## Terminology
+## Page inventory
 
-{/* Add product-specific terms and preferred usage */}
-{/* Example: Use "workspace" not "project", "member" not "user" */}
+| Page | Purpose |
+|---|---|
+| `index.mdx` | Landing page: what StandIn is, CVI pillars, capabilities |
+| `quickstart.mdx` | Install the plugin, connect to StandIn, place a test call |
+| `teams-app.mdx` | Register a BYO Teams bot; canonical Microsoft Graph permissions table |
+| `community.mdx` | Free community tier (shared bot, public Teams meeting) |
+| `troubleshooting.mdx` | HMAC mismatch, unreachable agent, daily limits, port/path, ClawHub |
+| `concepts/architecture.mdx` | StandIn bridge, HMAC WebSocket wire contract, call flow |
+| `concepts/modes.mdx` | Realtime (speech-to-speech) vs. streaming (STT -> agent -> TTS) |
+| `concepts/features.mdx` | Vision, group etiquette, outbound, recap, governance, security |
+| `openclaw/installation.mdx`, `openclaw/configuration.mdx` | OpenClaw plugin (`@komaa/msteams-voice`) |
+| `hermes/installation.mdx`, `hermes/configuration.mdx` | Hermes plugin (`hermes-plugin-teams-voice`) |
 
-## Style preferences
+## Navigation (docs.json)
 
-{/* Add any project-specific style rules below */}
+- Four groups: Getting Started, Concepts, OpenClaw plugin, Hermes plugin.
+- New pages must be added to `navigation.pages` in `docs.json` or they will not appear.
+- Internal links are root-relative without extension, e.g. `/teams-app#graph-permissions`.
 
-- Use active voice and second person ("you")
-- Keep sentences concise — one idea per sentence
-- Use sentence case for headings
-- Bold for UI elements: Click **Settings**
-- Code formatting for file names, commands, paths, and code references
+## Style rules
+
+- **No em dashes (the U+2014 character) anywhere.** This is client-facing content: use "-" or
+  rewrite the sentence.
+- Casing: **StandIn** (capital S, capital I), never "Standin" or "standin" in prose.
+  Also: OpenClaw, Hermes Agent, ClawHub, Komaa.
+- Use active voice and second person ("you"); sentence case for headings.
+- Bold for UI elements (Click **Settings**); code formatting for files, commands, paths, keys.
+
+## Single sources of truth
+
+- The Microsoft Graph permissions table lives ONLY in `teams-app.mdx#graph-permissions`.
+  Other pages (`concepts/architecture.mdx`, `openclaw/configuration.mdx`,
+  `hermes/configuration.mdx`) link to it; do not re-add copies.
+- Installer checksums in `quickstart.mdx#verify-optional` (SHA-256 for `install.sh` and
+  `install.ps1`) MUST be refreshed whenever `public/install.sh` / `public/install.ps1` change in
+  the standin-portal repo. Stale checksums break the documented verify step for users.
 
 ## Content boundaries
 
-{/* Define what should and shouldn't be documented */}
-{/* Example: Don't document internal admin features */}
+- Do not document internal infrastructure (AKS cluster, MediaNode internals, portal admin APIs).
+- Never publish real GUIDs, secrets, or tenant IDs in examples; use obvious placeholders.
