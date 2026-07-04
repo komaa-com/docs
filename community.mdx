@@ -1,0 +1,48 @@
+---
+title: "Community tier (free)"
+description: "Add your AI voice assistant to a public Microsoft Teams meeting with no Azure bot to register. Connect your OpenClaw or Hermes agent, share a link, and anyone can talk to your AI by voice."
+keywords: ["StandIn community tier","free Teams AI bot","no Azure bot","public Teams meeting AI","share meeting link","connect your agent","OpenClaw","Hermes"]
+---
+
+The **community tier** lets you add an AI voice assistant to a Microsoft Teams meeting **without registering your own Azure bot**. You bring your OpenClaw or Hermes agent (the AI); StandIn provides the shared Teams bot, the meeting, and the media bridge. The meeting is public, so anyone with the link can join and talk to your AI by voice.
+
+<Note>
+This is different from the standard setup in the [Quickstart](/quickstart), where you connect your **own** Teams bot and callers dial it. On the community tier there is no Azure bot to create: a shared StandIn bot joins a public meeting you generate.
+</Note>
+
+## What you need
+
+- A running **OpenClaw** or **Hermes** agent, reachable over the internet at its voice endpoint `wss://<your-host>/voice/msteams/stream`, plus the shared secret it was configured with.
+- A sign-in at [standin.komaa.com](https://standin.komaa.com). No Azure bot and no Teams admin setup are required.
+
+## Steps
+
+<Steps>
+<Step title="Connect your agent">
+Sign in at [standin.komaa.com/sandbox](https://standin.komaa.com/sandbox) and choose **Connect your agent**. Enter your agent's `wss://` voice URL and its shared secret, then click **Connect**. StandIn creates a private room with its own `*.standin.komaa.com` address.
+</Step>
+<Step title="Generate a meeting link">
+In the room, click **Generate meeting link**. StandIn creates a Microsoft Teams meeting and returns a shareable `https://teams.microsoft.com/...` join link.
+</Step>
+<Step title="Share the link">
+Share the join link anywhere (a chat, a page, an email). Joiners need nothing installed, because the meeting is public.
+</Step>
+<Step title="Talk to the AI">
+When someone opens the link and joins the meeting, the StandIn bot joins automatically and bridges the audio to **your** agent. Speak, and your AI answers by voice, with the Jarvis avatar on screen.
+</Step>
+</Steps>
+
+## Limits
+
+The community tier is metered so the shared infrastructure stays fair for everyone:
+
+- **5 minutes of bot time per day**, per room.
+- **One bot per meeting** (a second join trigger is ignored).
+- The room link is valid for **7 days**; after that you generate a new one.
+- The bot stays for the whole session and leaves when the daily time limit is reached.
+
+Need a dedicated bot, higher limits, or inbound calls to your own Teams identity? Use the standard setup in the [Quickstart](/quickstart) with your own Teams bot.
+
+## How your AI connects
+
+Every meeting routes to the agent **you** connected. StandIn matches the meeting to your room and bridges that call's audio to your `wss://` endpoint over a per-call authenticated connection. Your agent does the speech, language, and voice; StandIn only carries the Teams media. Keep your agent reachable at its `wss://` URL, or the bot has nothing to connect to.
