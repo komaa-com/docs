@@ -26,7 +26,8 @@ up to 5 new rooms per day, one bot per meeting, and a 7-day room link, with the 
 ## Install (one line)
 
 The installer detects your **OpenClaw** or **Hermes** install, adds the matching plugin, and prompts
-for the settings (mode, shared secret, provider API key + model).
+for the settings (mode, shared secret, provider API key + model, inbound call policy). On a re-run
+every prompt defaults to your current configuration, so pressing Enter keeps each value.
 
 **Linux / macOS / WSL**
 
@@ -64,7 +65,7 @@ To review the script before running it, download it first, check its SHA-256, th
     Check the SHA-256 (must print `install.sh: OK`; on macOS use `shasum -a 256 -c -`):
 
     ```bash
-    echo "12ce9e2bbddb621efa7df49311d8addce301bc03d1dbc6e92ce9c237a9a4a501  install.sh" | sha256sum -c -
+    echo "9a38cdf251fd9f6de188a7d7dc7ee26153a1d343da77ec91bec48f7eddc22316  install.sh" | sha256sum -c -
     ```
 
     Run it:
@@ -83,7 +84,7 @@ To review the script before running it, download it first, check its SHA-256, th
     Check the SHA-256 (must print `True`):
 
     ```powershell
-    (Get-FileHash install.ps1).Hash -eq "5B2A3DF29C38A3BA9501341D38CECF8FEA37407929672900CB2E930F5C2E98AB"
+    (Get-FileHash install.ps1).Hash -eq "ADA60C038F82942A04E474F3D42551F85781860203CB916BA4F9CFA7A41B0DE9"
     ```
 
     Run it:
