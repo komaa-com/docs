@@ -51,27 +51,27 @@ written to your local plugin config.
 
 ## Verify (optional)
 
-To review the script before running it, download it first:
+To review the script before running it, download it first, check its SHA-256, then run it:
 
-```bash
-curl -fsSL https://standin.komaa.com/install.sh -o install.sh
-```
+<Tabs>
+  <Tab title="macOS / Linux">
+    ```bash
+    curl -fsSL https://standin.komaa.com/install.sh -o install.sh
+    echo "e2a3950df9182f1019af79171751fcab33712e41e69469c9e63ae360c4ca3daa  install.sh" | sha256sum -c -   # macOS: shasum -a 256 -c -
+    bash install.sh
+    ```
+  </Tab>
+  <Tab title="Windows (PowerShell)">
+    ```powershell
+    irm https://standin.komaa.com/install.ps1 -OutFile install.ps1
+    (Get-FileHash install.ps1).Hash -eq "3126129CF90BB42B4B320724A4A5FACB1E1D976AA87640FE78B3B4AF6306200A"   # must print True
+    ./install.ps1
+    ```
+  </Tab>
+</Tabs>
 
-Check its SHA-256 (on macOS use `shasum -a 256 -c -`):
-
-```bash
-echo "e2a3950df9182f1019af79171751fcab33712e41e69469c9e63ae360c4ca3daa  install.sh" | sha256sum -c -
-```
-
-Then run it:
-
-```bash
-bash install.sh
-```
-
-On Windows, download with `irm https://standin.komaa.com/install.ps1 -OutFile install.ps1`, then `Get-FileHash install.ps1`
-should equal `3126129CF90BB42B4B320724A4A5FACB1E1D976AA87640FE78B3B4AF6306200A`. Checksums are for the current release and
-change when the installer is updated; always fetch over HTTPS from `standin.komaa.com`.
+Checksums are for the current release and change when the installer is updated; always fetch over
+HTTPS from `standin.komaa.com`.
 
 ## Manual install
 
