@@ -55,16 +55,40 @@ To review the script before running it, download it first, check its SHA-256, th
 
 <Tabs>
   <Tab title="macOS / Linux">
+    Download:
+
     ```bash
     curl -fsSL https://standin.komaa.com/install.sh -o install.sh
-    echo "e2a3950df9182f1019af79171751fcab33712e41e69469c9e63ae360c4ca3daa  install.sh" | sha256sum -c -   # macOS: shasum -a 256 -c -
+    ```
+
+    Check the SHA-256 (must print `install.sh: OK`; on macOS use `shasum -a 256 -c -`):
+
+    ```bash
+    echo "e2a3950df9182f1019af79171751fcab33712e41e69469c9e63ae360c4ca3daa  install.sh" | sha256sum -c -
+    ```
+
+    Run it:
+
+    ```bash
     bash install.sh
     ```
   </Tab>
   <Tab title="Windows (PowerShell)">
+    Download:
+
     ```powershell
     irm https://standin.komaa.com/install.ps1 -OutFile install.ps1
-    (Get-FileHash install.ps1).Hash -eq "3126129CF90BB42B4B320724A4A5FACB1E1D976AA87640FE78B3B4AF6306200A"   # must print True
+    ```
+
+    Check the SHA-256 (must print `True`):
+
+    ```powershell
+    (Get-FileHash install.ps1).Hash -eq "3126129CF90BB42B4B320724A4A5FACB1E1D976AA87640FE78B3B4AF6306200A"
+    ```
+
+    Run it:
+
+    ```powershell
     ./install.ps1
     ```
   </Tab>
