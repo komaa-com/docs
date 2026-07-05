@@ -59,8 +59,32 @@ openclaw gateway run
 ```
 
 The plugin registers a host-managed service and binds its media WebSocket (default
-`ws://<host>:9442/voice/msteams/stream`). Register that URL with a **matching `sharedSecret`** in your
-StandIn dashboard, then place a Teams call to your bot.
+`ws://<host>:9442/voice/msteams/stream`).
+
+## Expose the WebSocket (AGENT DOMAIN)
+
+StandIn connects to your plugin **from the internet**, so port `9442` must be reachable - a public
+host, or a tunnel. With Tailscale Funnel:
+
+```bash
+tailscale funnel --bg 9442
+```
+
+Your AGENT DOMAIN is then:
+
+```
+wss://<machine>.<tailnet>.ts.net/voice/msteams/stream
+```
+
+Register that URL with a **matching `sharedSecret`** in the
+[StandIn sandbox](https://standin.komaa.com/sandbox), then place a Teams call to your bot.
+
+<Note>
+  Also running the **Hermes** plugin on the same machine? Funnel serves up to 3 external ports
+  (443, 8443, 10000) - keep Hermes on 443 and put OpenClaw on another slot:
+  `tailscale funnel --bg --https=8443 9442` → `wss://<machine>.<tailnet>.ts.net:8443/voice/msteams/stream`.
+  Register each runtime as its own agent, each with its own secret.
+</Note>
 
 <Note>
   Next: the full [configuration reference](/openclaw/configuration) for realtime, streaming, outbound,
