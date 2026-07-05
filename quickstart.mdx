@@ -51,11 +51,21 @@ written to your local plugin config.
 
 ## Verify (optional)
 
-To review the script before running it, download it, check its SHA-256, then run it:
+To review the script before running it, download it first:
 
 ```bash
 curl -fsSL https://standin.komaa.com/install.sh -o install.sh
-echo "1854142a3c5b102811242c09e488e6ec4f61651a52e5fddfab5c993ca51824ba  install.sh" | sha256sum -c -   # macOS: shasum -a 256 -c -
+```
+
+Check its SHA-256 (on macOS use `shasum -a 256 -c -`):
+
+```bash
+echo "1854142a3c5b102811242c09e488e6ec4f61651a52e5fddfab5c993ca51824ba  install.sh" | sha256sum -c -
+```
+
+Then run it:
+
+```bash
 bash install.sh
 ```
 
@@ -73,7 +83,16 @@ Prefer to wire it up by hand? Pick your runtime:
       <Step title="Install">
         ```bash
         openclaw plugins install clawhub:@komaa/msteams-voice
-        cd extensions/msteams-voice && pnpm install && pnpm build
+        ```
+        Then build the published source:
+        ```bash
+        cd extensions/msteams-voice
+        ```
+        ```bash
+        pnpm install
+        ```
+        ```bash
+        pnpm build
         ```
         <Note>
         The ClawHub listing is publishing soon. Until it lands, the plugin is available on npm as
@@ -122,6 +141,9 @@ Prefer to wire it up by hand? Pick your runtime:
         Into the **same Python environment as Hermes**:
         ```bash
         uv pip install --python /path/to/hermes/venv/bin/python hermes-plugin-teams-voice
+        ```
+        Then enable the plugin:
+        ```bash
         hermes plugins enable teams_voice
         ```
       </Step>

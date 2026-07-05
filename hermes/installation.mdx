@@ -29,15 +29,32 @@ discovered:
 
 ```bash
 uv pip install --python /path/to/hermes/venv/bin/python hermes-plugin-teams-voice
-# or: pip install hermes-plugin-teams-voice
+```
+
+Or with `pip`:
+
+```bash
+pip install hermes-plugin-teams-voice
+```
+
+Then enable the plugin:
+
+```bash
 hermes plugins enable teams_voice
 ```
 
 ## Verify
 
+Show config + readiness:
+
 ```bash
-hermes teams-voice status      # show config + readiness
-hermes teams-voice serve       # run the bridge server (foreground)
+hermes teams-voice status
+```
+
+Run the bridge server (foreground):
+
+```bash
+hermes teams-voice serve
 ```
 
 Register your plugin's WebSocket (`ws://<host>:8443/voice/msteams/stream`) and a **matching shared

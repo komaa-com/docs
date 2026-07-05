@@ -96,10 +96,21 @@ matching `TEAMS_VOICE_*` env var.
 
 ## Run
 
+Show config + readiness:
+
 ```bash
-hermes teams-voice status                       # show config + readiness
-hermes teams-voice serve --handler realtime     # or: streaming  (needs ffmpeg)
-# or standalone:
+hermes teams-voice status
+```
+
+Serve the bridge (use `--handler streaming` for streaming mode, which needs ffmpeg):
+
+```bash
+hermes teams-voice serve --handler realtime
+```
+
+Or run it standalone:
+
+```bash
 python -m hermes_teams_voice.bridge_server
 ```
 

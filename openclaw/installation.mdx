@@ -25,7 +25,26 @@ published `openclaw` plugin-sdk + `api.runtime` - no fork, no vendored runtime.
 
 ```bash
 openclaw plugins install clawhub:@komaa/msteams-voice
-cd extensions/msteams-voice && pnpm install && pnpm build
+```
+
+<Note>
+  The ClawHub listing is publishing soon. Until it lands, install from npm instead:
+  [`@komaa/msteams-voice`](https://www.npmjs.com/package/@komaa/msteams-voice) - see the
+  [plugin README](https://github.com/komaa-com/openclaw-msteams-voice#install).
+</Note>
+
+Then build the published source:
+
+```bash
+cd extensions/msteams-voice
+```
+
+```bash
+pnpm install
+```
+
+```bash
+pnpm build
 ```
 
 This is a **source-published** plugin - the npm package ships TypeScript source and builds on install.
