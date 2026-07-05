@@ -60,7 +60,7 @@ curl -fsSL https://standin.komaa.com/install.sh -o install.sh
 Check its SHA-256 (on macOS use `shasum -a 256 -c -`):
 
 ```bash
-echo "1854142a3c5b102811242c09e488e6ec4f61651a52e5fddfab5c993ca51824ba  install.sh" | sha256sum -c -
+echo "e2a3950df9182f1019af79171751fcab33712e41e69469c9e63ae360c4ca3daa  install.sh" | sha256sum -c -
 ```
 
 Then run it:
@@ -70,7 +70,7 @@ bash install.sh
 ```
 
 On Windows, download with `irm https://standin.komaa.com/install.ps1 -OutFile install.ps1`, then `Get-FileHash install.ps1`
-should equal `91CF55D83FA1B768F7251A2E42C7FB71A6BFB22B58272C0DC058769663D43657`. Checksums are for the current release and
+should equal `3126129CF90BB42B4B320724A4A5FACB1E1D976AA87640FE78B3B4AF6306200A`. Checksums are for the current release and
 change when the installer is updated; always fetch over HTTPS from `standin.komaa.com`.
 
 ## Manual install
