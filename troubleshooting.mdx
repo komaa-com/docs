@@ -72,17 +72,17 @@ registered in the StandIn dashboard, e.g. `ws://<host>:9442/voice/msteams/stream
   secret (see above), not the id.
 </Note>
 
-## ClawHub install fails (listing pending)
+## ClawHub install fails
 
-`openclaw plugins install clawhub:@komaa/msteams-voice` fails because the ClawHub listing is still
-publishing. Until it lands, install from **npm** instead:
+If `openclaw plugins install clawhub:@komaa/msteams-voice` fails (an older OpenClaw that predates ClawHub,
+or a registry hiccup), install the same plugin from **npm** instead:
 
 ```bash
 npm install @komaa/msteams-voice
 ```
 
-The plugin is published as [`@komaa/msteams-voice`](https://www.npmjs.com/package/@komaa/msteams-voice);
-see the [plugin README](https://github.com/komaa-com/openclaw-msteams-voice#install) for the full steps.
+The plugin is [`@komaa/msteams-voice`](https://www.npmjs.com/package/@komaa/msteams-voice) on both ClawHub
+and npm; see the [plugin README](https://github.com/komaa-com/openclaw-msteams-voice#install) for the full steps.
 
 <Tip>
   Still stuck? Recheck the [Quickstart](/quickstart) end to end - most remaining issues are a config
