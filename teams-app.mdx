@@ -46,6 +46,13 @@ flow using our example manifest. It's the same for the OpenClaw and Hermes plugi
     On the Azure Bot (same Entra app as `botId`): set the Teams channel **calling webhook** and the
     **messaging endpoint** to the URLs shown in your StandIn dashboard, and admin-consent the
     [Graph permissions](#graph-permissions).
+
+    <Note>
+      The **messaging endpoint** powers Teams *chat* and is optional. Chat only works after you set
+      your **agent chat URL** in the StandIn dashboard (the full `https://` URL where your agent
+      serves Bot Framework chat messages). Voice calling works without it; until a chat URL is set,
+      chat messages to your bot get a "chat endpoint not configured" reply.
+    </Note>
   </Step>
   <Step title="Publish or download">
     In the Developer Portal, **Publish → Publish to your org** (admin approves in Teams Admin Center),
@@ -53,7 +60,9 @@ flow using our example manifest. It's the same for the OpenClaw and Hermes plugi
   </Step>
   <Step title="Register your plugin in StandIn">
     Finally, in your StandIn dashboard register your plugin's WebSocket URL and the matching HMAC
-    `sharedSecret`. Then place a Teams call to your bot.
+    `sharedSecret`. If you also want Teams chat, set the optional **agent chat URL** (where your
+    agent serves Bot Framework chat messages; leave it empty if you only use voice). Then place a
+    Teams call to your bot.
   </Step>
 </Steps>
 
