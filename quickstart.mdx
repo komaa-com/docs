@@ -52,7 +52,7 @@ written to your local plugin config.
 
 ## Verify (optional)
 
-To review the script before running it, download it first, check its SHA-256, then run it:
+Prefer not to pipe a script straight into your shell? Download it, review it, then run it:
 
 <Tabs>
   <Tab title="macOS / Linux">
@@ -62,10 +62,10 @@ To review the script before running it, download it first, check its SHA-256, th
     curl -fsSL https://standin.komaa.com/install.sh -o install.sh
     ```
 
-    Check the SHA-256 (must print `install.sh: OK`; on macOS use `shasum -a 256 -c -`):
+    Review it:
 
     ```bash
-    echo "9a38cdf251fd9f6de188a7d7dc7ee26153a1d343da77ec91bec48f7eddc22316  install.sh" | sha256sum -c -
+    less install.sh
     ```
 
     Run it:
@@ -81,10 +81,10 @@ To review the script before running it, download it first, check its SHA-256, th
     irm https://standin.komaa.com/install.ps1 -OutFile install.ps1
     ```
 
-    Check the SHA-256 (must print `True`):
+    Review it:
 
     ```powershell
-    (Get-FileHash install.ps1).Hash -eq "ADA60C038F82942A04E474F3D42551F85781860203CB916BA4F9CFA7A41B0DE9"
+    notepad install.ps1
     ```
 
     Run it:
@@ -95,8 +95,8 @@ To review the script before running it, download it first, check its SHA-256, th
   </Tab>
 </Tabs>
 
-Checksums are for the current release and change when the installer is updated; always fetch over
-HTTPS from `standin.komaa.com`.
+Always fetch over HTTPS from `standin.komaa.com`. The installer never transmits your secrets; they
+are only written to your local plugin config.
 
 ## Manual install
 
