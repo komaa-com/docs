@@ -50,6 +50,37 @@ CLI flags, so the values do not land in your shell history. The installer never 
 written to your local plugin config.
 </Note>
 
+## Connect your agent by pairing (recommended)
+
+Pairing is the zero-config way to connect a **subscribed** identity: the installer exposes your voice
+endpoint, sends StandIn the exact `wss://host:<voicePort>` URL, and delivers the generated shared secret back
+to the installer automatically. There are **no ports to configure** and nothing to copy by hand, which avoids
+the most common first-call issue (a domain saved without its voice port, so StandIn dials the wrong port and
+the bot silently never joins).
+
+<Steps>
+  <Step title="Run the installer and choose Pair">
+    Run the [one-line installer](#install-one-line) on the machine your agent runs on. When it asks
+    **"Pair this agent with StandIn now?"**, choose **Pair**. It prints an 8-character code.
+  </Step>
+  <Step title="Enter the code at standin.komaa.com/pair">
+    Sign in at [standin.komaa.com/pair](https://standin.komaa.com/pair) and enter the code. StandIn shows you
+    the exact voice endpoint and port your agent proposed - confirm it, add your Azure bot App ID and client
+    secret, and approve.
+  </Step>
+  <Step title="Done">
+    The installer picks up the shared secret on its next poll and finishes. Your identity provisions and
+    StandIn dials your agent - you never type a voice URL, a port, or a secret.
+  </Step>
+</Steps>
+
+<Note>
+Pairing consumes one identity slot on a **paid** plan. To try an agent for free with **no Azure bot**, use
+the sandbox: connect your agent manually at [standin.komaa.com/sandbox](https://standin.komaa.com/sandbox)
+(paste your public agent host - StandIn adds the `/voice/msteams/stream` path for you) and see the
+[Community tier (free)](/community).
+</Note>
+
 ## Verify (optional)
 
 Prefer not to pipe a script straight into your shell? Download it, review it, then run it:
