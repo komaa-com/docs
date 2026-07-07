@@ -82,8 +82,11 @@ the sandbox: connect your agent manually at [standin.komaa.com/sandbox](https://
 </Note>
 
 <Note>
-**First chat message ignored?** OpenClaw's chat channel drops DMs from unapproved senders by default
-(`dmPolicy: pairing`). Approve yourself once with `openclaw pairing approve msteams <CODE>` - see
+**First chat message ignored?** The two runtimes gate DMs differently. **OpenClaw** drops DMs from
+unapproved senders **silently** by default (`dmPolicy: pairing`) - approve yourself once with
+`openclaw pairing approve msteams <CODE>`. **Hermes** replies to an unknown sender with a
+**pairing code** instead of silence - approve it with `hermes pairing approve teams <CODE>`; only
+when `TEAMS_ALLOWED_USERS` is set are unlisted senders dropped silently. See
 [Troubleshooting](/troubleshooting#the-bot-answers-calls-but-ignores-teams-chat-dm-pairing).
 </Note>
 
@@ -211,6 +214,10 @@ Prefer to wire it up by hand? Pick your runtime:
                 shared_secret: ${TEAMS_VOICE_SHARED_SECRET}   # must match the secret set in StandIn
                 host: 127.0.0.1
                 port: 8443
+                # Inbound caller policy: Hermes has no `inboundPolicy` key and no
+                # pairing mode for calls - the allowlist IS the policy. Empty means
+                # deny all inbound callers (set `allow_all: true` to opt out).
+                allowlist: ["<caller AAD object id>"]
                 realtime:
                   backend: azure
                   azure_endpoint: https://<your-azure-resource>.cognitiveservices.azure.com

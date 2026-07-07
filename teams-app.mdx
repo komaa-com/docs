@@ -68,8 +68,14 @@ flow using our example manifest. It's the same for the OpenClaw and Hermes plugi
     <Note>
       Using **OpenClaw**? Its chat channel drops direct messages from senders you have not approved
       (`dmPolicy: pairing`, the default) - so your first chat message may be silently ignored while a
-      pairing request waits. Approve yourself with `openclaw pairing approve msteams <CODE>` - see
-      [the bot ignores Teams chat](/troubleshooting#the-bot-answers-calls-but-ignores-teams-chat-dm-pairing).
+      pairing request waits. Approve yourself with `openclaw pairing approve msteams <CODE>`.
+
+      Using **Hermes**? Chat is served by the Hermes gateway's Teams platform, and it gates DMs too -
+      but visibly by default: an unknown sender gets a **pairing-code reply** instead of an answer.
+      Approve it with `hermes pairing approve teams <CODE>`. If you set `TEAMS_ALLOWED_USERS`,
+      unlisted senders are dropped silently instead.
+
+      Details for both: [the bot ignores Teams chat](/troubleshooting#the-bot-answers-calls-but-ignores-teams-chat-dm-pairing).
     </Note>
   </Step>
 </Steps>
