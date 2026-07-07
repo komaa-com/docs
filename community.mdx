@@ -15,6 +15,14 @@ This is different from the standard setup in the [Quickstart](/quickstart), wher
 - A running **OpenClaw** or **Hermes** agent, reachable over the internet at its voice endpoint `wss://<your-host>/voice/msteams/stream`, plus the shared secret it was configured with.
 - A sign-in at [standin.komaa.com](https://standin.komaa.com). No Azure bot and no Teams admin setup are required.
 
+<Note>
+Running **Hermes**? Start the voice endpoint with `hermes teams-voice serve --handler realtime`. It
+listens on port **8443**, so the URL you connect in the sandbox is
+`wss://<your-public-host>:8443/voice/msteams/stream`, with the `shared_secret` from your Hermes
+config (`hermes teams-voice status` shows both). OpenClaw (`openclaw gateway run`) listens on
+**9442** locally; either way, connect the **public** `wss://` URL with its port, not the local bind.
+</Note>
+
 ## Steps
 
 <Steps>
@@ -37,6 +45,11 @@ When someone opens the link and joins the meeting, the StandIn bot joins automat
 The community tier is metered so the shared infrastructure stays fair for everyone:
 
 - **5 minutes of bot time per day, per room.** Each room has its own daily budget; when it runs out, the bot leaves and returns the next day.
+
+  <Warning>
+  The cutoff is **abrupt**: at the 5-minute mark the bot leaves immediately, even mid-sentence, with
+  no warning announcement. Plan demos around it - do not save the important question for minute five.
+  </Warning>
 - **Up to 5 new rooms per day** per account. Reuse your existing room any time (it stays live for its 7 days at no extra cost); only creating a brand-new room counts toward this daily limit.
 - **One bot per meeting** (a second join trigger is ignored).
 - The room link is valid for **7 days**; after that you generate a new one.
@@ -46,3 +59,5 @@ Need a dedicated bot, higher limits, or inbound calls to your own Teams identity
 ## How your AI connects
 
 Every meeting routes to the agent **you** connected. StandIn matches the meeting to your room and bridges that call's audio to your `wss://` endpoint over a per-call authenticated connection. Your agent does the speech, language, and voice; StandIn only carries the Teams media. Keep your agent reachable at its `wss://` URL, or the bot has nothing to connect to.
+
+One direction only: the bot joins **meetings StandIn generates**, which live in StandIn's tenant. It cannot join a meeting created in your own organization - Microsoft Graph blocks cross-tenant bot joins (error 7505) - see [the troubleshooting entry](/troubleshooting#community-tier-the-bot-cannot-join-a-meeting-in-your-own-tenant) if that is what you tried.

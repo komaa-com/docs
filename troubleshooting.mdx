@@ -1,7 +1,7 @@
 ---
 title: "Troubleshooting"
 description: "Fix the most common issues: silent HMAC failures, an unreachable agent, community-tier daily limits, port/path mix-ups, and the ClawHub install."
-keywords: ["StandIn troubleshooting","HMAC handshake failed","shared secret mismatch","bot could not join","agent is not reachable","daily budget","port 9442","port 8443","ClawHub npm"]
+keywords: ["StandIn troubleshooting","HMAC handshake failed","shared secret mismatch","bot could not join","agent is not reachable","daily budget","port 9442","port 8443","ClawHub npm","hermes pairing approve teams","TEAMS_ALLOWED_USERS","Graph error 7505","tenant mismatch"]
 ---
 
 The issues below cover almost every failed first call. Work top to bottom: secret, reachability, limits, address.
@@ -21,7 +21,11 @@ connection, so both sides look "up" while no audio flows. This is the #1 first-c
   copying, and for shell quoting that swallows characters like `$` or `!`.
 - If the secret lives in `.env`, confirm the variable actually resolves (Hermes:
   `hermes teams-voice status`).
-- Rotate the secret in the StandIn dashboard and set the new value in the plugin config, then retry.
+- Rotate the secret in the StandIn dashboard and set the new value in the plugin config. A rotated
+  secret is **not picked up hot** yet (hot-reload is being worked on): restart your plugin after
+  changing it - `openclaw gateway run` again (OpenClaw) or `hermes teams-voice serve` again (Hermes).
+  On the StandIn side, a **paid** identity's caller also holds the old secret until its pod restarts -
+  contact StandIn support to restart it after a rotation (any StandIn re-deploy also picks it up).
 
 ## Bot does not join: "agent is not reachable"
 
@@ -47,13 +51,14 @@ the bot has nothing to bridge to and does not join.
 **Symptom:** voice works end to end, chat messages reach your agent (the gateway log shows
 `received message`), but the bot never replies.
 
-OpenClaw's `msteams` chat channel is **closed by default**: with `dmPolicy: pairing` (the default), DMs
-from senders you have not approved are dropped with `dropping dm (not allowlisted)`, and a pairing
-request is queued silently. StandIn delivered the message; your agent declined to act on it.
+Both runtimes gate direct messages from senders they do not know. StandIn delivered the message;
+your agent declined to act on it. What you see differs per runtime:
 
-**Fix:**
+**OpenClaw: closed by default, and silent.** With `dmPolicy: pairing` (the default), DMs from
+senders you have not approved are dropped with `dropping dm (not allowlisted)`, and a pairing
+request is queued silently - the sender gets nothing back.
 
-List the pending requests:
+**Fix (OpenClaw):** list the pending requests:
 
 ```bash
 openclaw pairing list msteams
@@ -68,6 +73,26 @@ openclaw pairing approve msteams <CODE>
 Then send the message again. Alternatively set `channels.msteams.dmPolicy: "open"` in
 `openclaw.json` to accept DMs from anyone (less safe; pairing is recommended).
 
+**Hermes: gated too, but visible by default.** Teams chat runs through the Hermes gateway's Teams
+platform (`hermes gateway run`), not the `teams_voice` plugin. With no allowlist configured, an
+unknown sender is not ignored: the bot **replies with a pairing code** ("I don't recognize you
+yet!") instead of answering. Approve that code once:
+
+```bash
+hermes pairing approve teams <CODE>
+```
+
+Hermes goes **silent** only when an allowlist is configured: with `TEAMS_ALLOWED_USERS` (or the
+global `GATEWAY_ALLOWED_USERS`) set, DMs from senders not on the list are dropped with an
+`Unauthorized user: ... on teams` warning in the gateway log and **no pairing code is offered** -
+add the sender's AAD object ID (or UPN) to `TEAMS_ALLOWED_USERS` and restart the gateway
+(`hermes gateway restart`). `TEAMS_ALLOW_ALL_USERS=true` accepts DMs from anyone (dev only).
+
+<Note>
+  Hermes rate-limits pairing replies to one per sender per 10 minutes, so a rapid second test
+  message getting no answer is expected - wait, or approve the code you already received.
+</Note>
+
 ## Community tier: bot leaves or will not join (daily budget)
 
 The community tier is metered: **5 minutes of bot time per day, per room**, and up to **5 new rooms
@@ -75,8 +100,32 @@ per day** per account. When a room's budget runs out, the bot leaves and returns
 the room cap is hit, new rooms fail until tomorrow. Reusing an existing room does not count toward
 the room cap.
 
+The cutoff is **abrupt**: when the 5 minutes run out the bot leaves immediately, even mid-sentence,
+with no warning announcement. A bot that "hung up on me out of nowhere" at around the 5-minute mark
+is the daily budget, not a failure.
+
 If you need more time or inbound calls to your own identity, use the standard setup in the
 [Quickstart](/quickstart) with your own Teams bot.
+
+## Community tier: the bot cannot join a meeting in your own tenant
+
+**Symptom:** instead of using the generated link, you try to get the community bot into one of
+**your own** Teams meetings (pasting your meeting's link, or inviting the shared bot from inside
+your organization's meeting) - and no bot ever joins, with no visible error. This bites second
+tenants especially: a teammate in another organization tries the sandbox against their own meeting
+and it looks simply broken.
+
+This is a Microsoft Graph restriction, not a StandIn bug: a bot can only join meetings hosted in
+**its own tenant**. Cross-tenant joins are rejected by Graph with error **7505**
+("authorization tenant mismatch") - the bot app, its token, the meeting, and the organizer must all
+live in the same tenant. The shared community bot lives in StandIn's tenant, so it can never join a
+meeting created in yours.
+
+**Fix:** use the flow the community tier is built around. Click **Generate meeting link** in your
+sandbox room and share **that** link: the meeting is created in StandIn's tenant (where the bot is
+allowed to operate), and anyone - from any tenant, or with no Microsoft account at all - joins it as
+a regular guest. If you need a bot that answers calls or joins meetings in **your own** tenant,
+that is the standard setup with your own Teams bot: see the [Quickstart](/quickstart).
 
 ## Wrong port or path (and callId confusion)
 
