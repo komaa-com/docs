@@ -42,6 +42,32 @@ the bot has nothing to bridge to and does not join.
 4. **Does the registered URL match?** The URL in your StandIn dashboard must point at the live
    endpoint, including port and path (see below).
 
+## The bot answers calls but ignores Teams chat (DM pairing)
+
+**Symptom:** voice works end to end, chat messages reach your agent (the gateway log shows
+`received message`), but the bot never replies.
+
+OpenClaw's `msteams` chat channel is **closed by default**: with `dmPolicy: pairing` (the default), DMs
+from senders you have not approved are dropped with `dropping dm (not allowlisted)`, and a pairing
+request is queued silently. StandIn delivered the message; your agent declined to act on it.
+
+**Fix:**
+
+List the pending requests:
+
+```bash
+openclaw pairing list msteams
+```
+
+Approve your sender code:
+
+```bash
+openclaw pairing approve msteams <CODE>
+```
+
+Then send the message again. Alternatively set `channels.msteams.dmPolicy: "open"` in
+`openclaw.json` to accept DMs from anyone (less safe; pairing is recommended).
+
 ## Community tier: bot leaves or will not join (daily budget)
 
 The community tier is metered: **5 minutes of bot time per day, per room**, and up to **5 new rooms
