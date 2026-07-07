@@ -81,6 +81,12 @@ the sandbox: connect your agent manually at [standin.komaa.com/sandbox](https://
 [Community tier (free)](/community).
 </Note>
 
+<Note>
+**First chat message ignored?** OpenClaw's chat channel drops DMs from unapproved senders by default
+(`dmPolicy: pairing`). Approve yourself once with `openclaw pairing approve msteams <CODE>` - see
+[Troubleshooting](/troubleshooting#the-bot-answers-calls-but-ignores-teams-chat-dm-pairing).
+</Note>
+
 ## Verify (optional)
 
 Prefer not to pipe a script straight into your shell? Download it, review it, then run it:
@@ -138,21 +144,13 @@ Prefer to wire it up by hand? Pick your runtime:
     <Steps>
       <Step title="Install">
         ```bash
-        openclaw plugins install clawhub:@komaa/msteams-voice
+        openclaw plugins install npm:@komaa/msteams-voice
         ```
-        Then build the published source:
-        ```bash
-        cd extensions/msteams-voice
-        ```
-        ```bash
-        pnpm install
-        ```
-        ```bash
-        pnpm build
-        ```
+        The package ships prebuilt (v0.1.10+), so there is no build step - install and go.
         <Note>
-        Also on npm as [`@komaa/msteams-voice`](https://www.npmjs.com/package/@komaa/msteams-voice) if you
-        prefer `npm`; see the [plugin README](https://github.com/komaa-com/openclaw-msteams-voice#install).
+        Also on ClawHub: `openclaw plugins install clawhub:@komaa/msteams-voice` (OpenClaw falls back to
+        npm automatically if the ClawHub fetch fails). See the
+        [plugin README](https://github.com/komaa-com/openclaw-msteams-voice#install).
         </Note>
       </Step>
       <Step title="Configure">
@@ -186,7 +184,7 @@ Prefer to wire it up by hand? Pick your runtime:
       </Step>
       <Step title="Run + call">
         Start the gateway (`openclaw gateway run`), then in your StandIn dashboard register your
-        plugin's WebSocket (`ws://<host>:9442/voice/msteams/stream`) and the matching secret. Place a Teams call to your bot.
+        **Agent voice URL** (`wss://<your-public-host>:8443/voice/msteams/stream` via the funnel; local bind `ws://<host>:9442/...`) and the matching secret. Place a Teams call to your bot.
       </Step>
     </Steps>
   </Tab>
@@ -225,7 +223,7 @@ Prefer to wire it up by hand? Pick your runtime:
         ```bash
         hermes teams-voice serve --handler realtime
         ```
-        In your StandIn dashboard, register your plugin's WebSocket (`ws://<host>:8443/voice/msteams/stream`)
+        In your StandIn dashboard, register your **Agent voice URL** (`wss://<your-public-host>:8443/voice/msteams/stream` via the funnel; local bind `ws://<host>:8443/...`)
         and the matching secret, then place a Teams call to your bot.
       </Step>
     </Steps>

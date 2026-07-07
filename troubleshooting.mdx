@@ -89,8 +89,9 @@ The two runtimes listen on **different default ports** but the **same path**:
 
 Registering the OpenClaw URL with the Hermes port (or vice versa) is a frequent mix-up: the bridge
 connects to a closed port and the call never reaches your agent. Double-check the full URL you
-registered in the StandIn dashboard, e.g. `ws://<host>:9442/voice/msteams/stream` for OpenClaw or
-`ws://<host>:8443/voice/msteams/stream` for Hermes.
+registered in the StandIn dashboard, e.g. `wss://<your-public-host>:8443/voice/msteams/stream` (the
+public funnel URL; locally OpenClaw binds `9442` and Hermes binds `8443`). Always the public `wss://`
+URL with its port, never the local `ws://` bind.
 
 <Note>
   Each call carries its own `callId`, and the HMAC handshake signs it per call - you never configure
@@ -100,15 +101,18 @@ registered in the StandIn dashboard, e.g. `ws://<host>:9442/voice/msteams/stream
 
 ## ClawHub install fails
 
-If `openclaw plugins install clawhub:@komaa/msteams-voice` fails (an older OpenClaw that predates ClawHub,
-or a registry hiccup), install the same plugin from **npm** instead:
+If `openclaw plugins install clawhub:@komaa/msteams-voice` fails (a registry hiccup, or an older
+OpenClaw that predates ClawHub), OpenClaw usually falls back to npm automatically. If it does not,
+install the same plugin from **npm** explicitly:
 
 ```bash
-npm install @komaa/msteams-voice
+openclaw plugins install npm:@komaa/msteams-voice
 ```
 
-The plugin is [`@komaa/msteams-voice`](https://www.npmjs.com/package/@komaa/msteams-voice) on both ClawHub
-and npm; see the [plugin README](https://github.com/komaa-com/openclaw-msteams-voice#install) for the full steps.
+(Not plain `npm install` - that only downloads the package into the current folder without registering
+it as an OpenClaw plugin.) The plugin is
+[`@komaa/msteams-voice`](https://www.npmjs.com/package/@komaa/msteams-voice) on both ClawHub and npm;
+see the [plugin README](https://github.com/komaa-com/openclaw-msteams-voice#install) for the full steps.
 
 <Tip>
   Still stuck? Recheck the [Quickstart](/quickstart) end to end - most remaining issues are a config

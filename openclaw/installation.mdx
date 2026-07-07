@@ -24,29 +24,16 @@ published `openclaw` plugin-sdk + `api.runtime` - no fork, no vendored runtime.
 ## Install
 
 ```bash
-openclaw plugins install clawhub:@komaa/msteams-voice
+openclaw plugins install npm:@komaa/msteams-voice
 ```
+
+The package ships **prebuilt** (v0.1.10+): no build step, install and go.
 
 <Note>
-  Prefer npm? The same plugin is [`@komaa/msteams-voice`](https://www.npmjs.com/package/@komaa/msteams-voice)
-  - see the [plugin README](https://github.com/komaa-com/openclaw-msteams-voice#install).
+  Also on ClawHub: `openclaw plugins install clawhub:@komaa/msteams-voice` - OpenClaw falls back to npm
+  automatically if the ClawHub fetch fails. See the
+  [plugin README](https://github.com/komaa-com/openclaw-msteams-voice#install).
 </Note>
-
-Then build the published source:
-
-```bash
-cd extensions/msteams-voice
-```
-
-```bash
-pnpm install
-```
-
-```bash
-pnpm build
-```
-
-This is a **source-published** plugin - the npm package ships TypeScript source and builds on install.
 
 ## Verify
 
@@ -60,29 +47,33 @@ openclaw gateway run
 The plugin registers a host-managed service and binds its media WebSocket (default
 `ws://<host>:9442/voice/msteams/stream`).
 
-## Expose the WebSocket (AGENT DOMAIN)
+## Expose the WebSocket (Agent voice URL)
 
 StandIn connects to your plugin **from the internet**, so port `9442` must be reachable - a public
-host, or a tunnel. With Tailscale Funnel:
+host, or a tunnel. With Tailscale Funnel, put voice on the **8443** slot (this is what the installer
+does, and it keeps the 443 slot free for the Teams **chat** webhook):
 
 ```bash
-tailscale funnel --bg 9442
+tailscale funnel --bg --https=8443 9442
 ```
 
-Your AGENT DOMAIN is then:
+Your **Agent voice URL** is then:
 
 ```
-wss://<machine>.<tailnet>.ts.net/voice/msteams/stream
+wss://<machine>.<tailnet>.ts.net:8443/voice/msteams/stream
 ```
 
-Register that URL with a **matching `sharedSecret`** in the
-[StandIn sandbox](https://standin.komaa.com/sandbox), then place a Teams call to your bot.
+Register that URL (with a **matching `sharedSecret`**) in the
+[StandIn sandbox](https://standin.komaa.com/sandbox) or on your identity in the
+[dashboard](https://standin.komaa.com/dashboard), then place a Teams call to your bot. Include the
+port - a bare host means the 443 slot, which is normally your chat webhook, not voice.
 
 <Note>
-  Also running the **Hermes** plugin on the same machine? Funnel serves up to 3 external ports
-  (443, 8443, 10000) - keep Hermes on 443 and put OpenClaw on another slot:
-  `tailscale funnel --bg --https=8443 9442` → `wss://<machine>.<tailnet>.ts.net:8443/voice/msteams/stream`.
-  Register each runtime as its own agent, each with its own secret.
+  Funnel serves up to 3 external ports (443, 8443, 10000). The usual layout on one machine:
+  **443 -> 3978** (Teams chat webhook), **8443 -> 9442** (OpenClaw voice). Running the **Hermes**
+  plugin too? Put it on the remaining slot: `tailscale funnel --bg --https=10000 8443` →
+  `wss://<machine>.<tailnet>.ts.net:10000/voice/msteams/stream`, and register each runtime as its own
+  agent with its own secret.
 </Note>
 
 <Note>

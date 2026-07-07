@@ -49,9 +49,10 @@ flow using our example manifest. It's the same for the OpenClaw and Hermes plugi
 
     <Note>
       The **messaging endpoint** powers Teams *chat* and is optional. Chat only works after you set
-      your **agent chat URL** in the StandIn dashboard (the full `https://` URL where your agent
-      serves Bot Framework chat messages). Voice calling works without it; until a chat URL is set,
-      chat messages to your bot get a "chat endpoint not configured" reply.
+      your **Agent chat URL** in the StandIn dashboard - the `https://` URL where your agent serves
+      Bot Framework chat messages, e.g. `https://<your-public-host>/api/messages` (paste the bare host
+      and StandIn appends `/api/messages` for you). Voice calling works without it; until a chat URL
+      is set, chat messages to your bot get a "chat endpoint not configured" reply.
     </Note>
   </Step>
   <Step title="Publish or download">
@@ -59,10 +60,17 @@ flow using our example manifest. It's the same for the OpenClaw and Hermes plugi
     or **Download the app package** and sideload it for testing.
   </Step>
   <Step title="Register your plugin in StandIn">
-    Finally, in your StandIn dashboard register your plugin's WebSocket URL and the matching HMAC
-    `sharedSecret`. If you also want Teams chat, set the optional **agent chat URL** (where your
-    agent serves Bot Framework chat messages; leave it empty if you only use voice). Then place a
+    Finally, in your StandIn dashboard register your **Agent voice URL** and the matching HMAC
+    `sharedSecret`. If you also want Teams chat, set the optional **Agent chat URL**
+    (`https://<your-public-host>/api/messages`; leave it empty if you only use voice). Then place a
     Teams call to your bot.
+
+    <Note>
+      Using **OpenClaw**? Its chat channel drops direct messages from senders you have not approved
+      (`dmPolicy: pairing`, the default) - so your first chat message may be silently ignored while a
+      pairing request waits. Approve yourself with `openclaw pairing approve msteams <CODE>` - see
+      [the bot ignores Teams chat](/troubleshooting#the-bot-answers-calls-but-ignores-teams-chat-dm-pairing).
+    </Note>
   </Step>
 </Steps>
 

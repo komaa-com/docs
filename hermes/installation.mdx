@@ -59,28 +59,31 @@ hermes teams-voice serve
 
 The bridge binds its media WebSocket (default `ws://<host>:8443/voice/msteams/stream`).
 
-## Expose the WebSocket (AGENT DOMAIN)
+## Expose the WebSocket (Agent voice URL)
 
 StandIn connects to your plugin **from the internet**, so port `8443` must be reachable - a public
-host, or a tunnel. With Tailscale Funnel:
+host, or a tunnel. With Tailscale Funnel, put voice on the **8443** slot (keeps the 443 slot free
+for a Teams chat webhook):
 
 ```bash
-tailscale funnel --bg 8443
+tailscale funnel --bg --https=8443 8443
 ```
 
-Your AGENT DOMAIN is then:
+Your **Agent voice URL** is then:
 
 ```
-wss://<machine>.<tailnet>.ts.net/voice/msteams/stream
+wss://<machine>.<tailnet>.ts.net:8443/voice/msteams/stream
 ```
 
-Register that URL with a **matching shared secret** in the
-[StandIn sandbox](https://standin.komaa.com/sandbox), then place a Teams call to your bot.
+Register that URL (with a **matching shared secret**) in the
+[StandIn sandbox](https://standin.komaa.com/sandbox) or on your identity in the
+[dashboard](https://standin.komaa.com/dashboard), then place a Teams call to your bot. Include the
+port - a bare host means the 443 slot, which is normally a chat webhook, not voice.
 
 <Note>
-  Also running the **OpenClaw** plugin on the same machine? Funnel serves up to 3 external ports
-  (443, 8443, 10000) - keep Hermes on 443 and put OpenClaw on another slot:
-  `tailscale funnel --bg --https=8443 9442` → `wss://<machine>.<tailnet>.ts.net:8443/voice/msteams/stream`.
+  Funnel serves up to 3 external ports (443, 8443, 10000). Also running the **OpenClaw** plugin on
+  the same machine? Keep Hermes voice on 8443 and put OpenClaw on the remaining slot:
+  `tailscale funnel --bg --https=10000 9442` → `wss://<machine>.<tailnet>.ts.net:10000/voice/msteams/stream`.
   Register each runtime as its own agent, each with its own secret.
 </Note>
 
