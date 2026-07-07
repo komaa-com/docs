@@ -128,7 +128,7 @@ voicemail / no-answer); the `outbound` block enables it.
 | `port` / `bindAddress` / `path` | both | media WebSocket server the StandIn bridge connects to |
 | `sharedSecret` | both | HMAC secret - **must match the secret set in StandIn** (secret input) |
 | `requireRecordingStatus` | both | only engage once Teams reports recording active |
-| `inboundPolicy` | both | `disabled` \| `allowlist` \| `pairing` \| `open` - **enforced** on inbound |
+| `inboundPolicy` | both | `disabled` \| `allowlist` \| `pairing` \| `open` - **enforced** on inbound. Today `pairing` behaves **exactly like `allowlist`** in this plugin (see the note below) |
 | `allowFrom` | both | allowlisted caller ids (Teams aadId or phone digits) |
 | `inboundGreeting` | both | opening line |
 | `sessionScope` | both | `per-phone` \| `per-call` \| `per-thread` agent-memory scope |
@@ -139,6 +139,17 @@ voicemail / no-answer); the `outbound` block enables it.
 | `realtime.{provider,providers,instructions,toolPolicy,…}` | realtime (echo knobs: both) | realtime voice provider + behavior; provider key is a secret input |
 | `stt.{provider,providers}` | streaming | live transcription provider (else openclaw STT / file fallback); provider key is a secret input |
 | `outbound.{enabled,workerBaseUrl,tenantId,answerTimeoutMs,defaultMode}` | both | outbound call-backs / voicemail |
+
+<Note>
+  **What `inboundPolicy: "pairing"` actually does today.** The plugin issues no pairing codes,
+  expirations, or approval prompts for inbound **calls**: with `"pairing"`, a caller is accepted only
+  if their AAD object id (or phone number) is already in `allowFrom` - exactly the same check as
+  `"allowlist"`. A rejected caller is logged with their caller id and the call is closed. The
+  `openclaw pairing approve msteams ...` flow you may know from the **chat** channel manages chat DM
+  approvals only; it does not populate this voice `allowFrom`. Until a real call-pairing flow ships,
+  prefer `"allowlist"` and manage `allowFrom` yourself; `"pairing"` is accepted so such configs keep
+  working with identical (allowlist) behavior.
+</Note>
 
 <Warning>
   Treat `sharedSecret` and all provider `apiKey` values as secrets - keep them out of source control.
