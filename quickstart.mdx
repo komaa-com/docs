@@ -9,15 +9,16 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
 ## Prerequisites
 
 - A working **OpenClaw** or **Hermes Agent** install (the host).
-- A **StandIn** subscription ([standin.komaa.com](https://standin.komaa.com)) - the hosted media bridge that
-  joins the Teams call and connects to your plugin. No worker to run.
+- A **StandIn** account ([standin.komaa.com](https://standin.komaa.com)) - the hosted media bridge that
+  joins the Teams call and connects to your plugin. No worker to run. A paid plan is not required to
+  start: the **free identity** gives you one BYO-bot identity with 5 minutes of call time per day included.
 - Your own **Microsoft Teams bot** (an Azure AD app) connected to StandIn - see [Teams app setup](/teams-app)
   to create and submit it.
 
 <Note>
 This quickstart is the **standard setup**: you connect your **own** Microsoft Teams bot and callers dial it. To try
 StandIn with **no Azure bot** (a shared bot joins a public meeting you generate), use the
-[Community tier (free)](/community) instead. The community tier is metered: 5 minutes of bot time per day per room,
+[Sandbox (community tier)](/community) instead. The sandbox is metered: 5 minutes of bot time per day per room,
 up to 5 new rooms per day, one bot per meeting, and a 7-day room link, with the call ending at the daily limit.
 </Note>
 - A realtime voice provider key (for **realtime** mode) - e.g. OpenAI or Azure OpenAI. Streaming mode
@@ -81,7 +82,7 @@ the bot silently never joins).
 At the approve step you choose what the pairing becomes: a **paid identity** (consumes a plan slot), a
 **free identity** (your own Azure bot, 5 minutes/day included, one per account), or the **sandbox**
 (no Azure bot at all - a shared StandIn bot joins a meeting StandIn generates; see the
-[Community tier (free)](/community)).
+[Sandbox (community tier)](/community)).
 </Note>
 
 ## Free identity vs Sandbox: which am I?
@@ -93,7 +94,7 @@ Two free ways to run StandIn - pick by whether you have an Azure bot:
   as paid - your own bot, your own tenant, inbound calls to your own Teams identity - with
   **5 minutes of call time per day** included, one free identity per account, held alongside any paid identities.
 - **You have no Azure bot** (you never installed the msteams channel plugin and just want to hear your
-  agent talk): use the **[sandbox / community tier](/community)**. A shared StandIn bot joins a public
+  agent talk): use the **[sandbox (community tier)](/community)**. A shared StandIn bot joins a public
   meeting StandIn generates - zero Azure setup.
 
 <Warning>
