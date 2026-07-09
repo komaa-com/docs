@@ -42,9 +42,10 @@
 - The Microsoft Graph permissions table lives ONLY in `teams-app.mdx#graph-permissions`.
   Other pages (`concepts/architecture.mdx`, `openclaw/configuration.mdx`,
   `hermes/configuration.mdx`) link to it; do not re-add copies.
-- Installer checksums in `quickstart.mdx#verify-optional` (SHA-256 for `install.sh` and
-  `install.ps1`) MUST be refreshed whenever `public/install.sh` / `public/install.ps1` change in
-  the standin-portal repo. Stale checksums break the documented verify step for users.
+- The `quickstart.mdx#verify-optional` section documents downloading `install.sh` / `install.ps1`
+  and reviewing them before running. It intentionally carries **no SHA-256 checksums** - a pinned
+  hash goes stale on every installer change and silently breaks the documented verify step, so it was
+  removed. Do not re-add checksums here.
 
 ## Content boundaries
 

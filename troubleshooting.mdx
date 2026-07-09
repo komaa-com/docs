@@ -24,8 +24,8 @@ connection, so both sides look "up" while no audio flows. This is the #1 first-c
 - Rotate the secret in the StandIn dashboard and set the new value in the plugin config. A rotated
   secret is **not picked up hot** yet (hot-reload is being worked on): restart your plugin after
   changing it - `openclaw gateway run` again (OpenClaw) or `hermes teams-voice serve` again (Hermes).
-  On the StandIn side, a **paid** identity's caller also holds the old secret until its pod restarts -
-  contact StandIn support to restart it after a rotation (any StandIn re-deploy also picks it up).
+  On the StandIn side the rotated secret is picked up automatically: the caller hot-reloads it within
+  about a minute, so no pod restart or support request is needed.
 
 ## Bot does not join: "agent is not reachable"
 

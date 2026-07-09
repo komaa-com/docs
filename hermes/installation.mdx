@@ -82,9 +82,11 @@ port - a bare host means the 443 slot, which is normally a chat webhook, not voi
 
 <Note>
   Funnel serves up to 3 external ports (443, 8443, 10000). Also running the **OpenClaw** plugin on
-  the same machine? Keep Hermes voice on 8443 and put OpenClaw on the remaining slot:
-  `tailscale funnel --bg --https=10000 9442` → `wss://<machine>.<tailnet>.ts.net:10000/voice/msteams/stream`.
-  Register each runtime as its own agent, each with its own secret.
+  the same machine? Use one canonical layout so the two runtimes never fight over a slot: keep
+  **OpenClaw voice on 8443 -> 9442** and move **Hermes voice to the 10000 slot**:
+  `tailscale funnel --bg --https=10000 8443` → `wss://<machine>.<tailnet>.ts.net:10000/voice/msteams/stream`.
+  Register each runtime as its own agent, each with its own secret. This matches the OpenClaw page, so
+  following both guides sets the same funnel map instead of overwriting the already-registered 8443 slot.
 </Note>
 
 <Note>
