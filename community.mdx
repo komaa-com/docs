@@ -10,6 +10,19 @@ The **community tier** lets you add an AI voice assistant to a Microsoft Teams m
 This is different from the standard setup in the [Quickstart](/quickstart), where you connect your **own** Teams bot and callers dial it. On the community tier there is no Azure bot to create: a shared StandIn bot joins a public meeting you generate.
 </Note>
 
+## Free identity vs Sandbox: which am I?
+
+The sandbox (this page) is for users **without** the official `msteams` channel plugin - no Azure bot at
+all. If you **do** run the msteams plugin, you already have an Azure Bot App ID + secret, and the better
+free path is a **Free identity**: the same BYO-bot setup as paid (your own bot, your own tenant, inbound
+calls), capped at 5 minutes of call time per day, one per account. Choose it on the
+[dashboard](https://standin.komaa.com/dashboard) ("Free - capped") or at the pairing approve step.
+
+<Warning>
+If you already run the Teams `msteams` plugin, use a Free identity instead of the sandbox - the sandbox
+joins a **second** (shared) bot, so two bots will be in the meeting, both wired to the same agent.
+</Warning>
+
 ## What you need
 
 - A running **OpenClaw** or **Hermes** agent, reachable over the internet at its voice endpoint `wss://<your-host>/voice/msteams/stream`, plus the shared secret it was configured with.
