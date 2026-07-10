@@ -1,10 +1,10 @@
 ---
 title: "Installation"
-description: "Install hermes-plugin-teams-voice into a Hermes Agent environment."
-keywords: ["hermes-plugin-teams-voice","Hermes Agent plugin","pip install Teams voice","teams_voice","uv pip"]
+description: "Install hermes-msteams-bridge into a Hermes Agent environment."
+keywords: ["hermes-msteams-bridge","Hermes Agent plugin","pip install Teams voice","teams_voice","uv pip"]
 ---
 
-[`hermes-plugin-teams-voice`](https://pypi.org/project/hermes-plugin-teams-voice/) (plugin name **`teams_voice`**) is the Python half of the Teams CVI for
+[`hermes-msteams-bridge`](https://pypi.org/project/hermes-msteams-bridge/) (plugin name **`teams_voice`**) is the Python half of the Teams CVI for
 **Hermes Agent**. It hosts the HMAC WebSocket that StandIn connects to, runs the dialogue +
 perception, and emits avatar driver cues. Chat-plane features live in the existing Teams adapter.
 
@@ -28,13 +28,13 @@ Install into the **same Python environment as Hermes** so the `hermes_agent.plug
 discovered:
 
 ```bash
-uv pip install --python /path/to/hermes/venv/bin/python hermes-plugin-teams-voice
+uv pip install --python /path/to/hermes/venv/bin/python hermes-msteams-bridge
 ```
 
 Or with `pip`:
 
 ```bash
-pip install hermes-plugin-teams-voice
+pip install hermes-msteams-bridge
 ```
 
 Then enable the plugin:
@@ -97,7 +97,7 @@ port - a bare host means the 443 slot, which is normally a chat webhook, not voi
 ## Links
 
 <CardGroup cols={3}>
-  <Card title="Source" icon="github" href="https://github.com/komaa-com/hermes-plugin-teams-voice" />
-  <Card title="PyPI" icon="python" href="https://pypi.org/project/hermes-plugin-teams-voice/" />
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/hermes-msteams-bridge" />
+  <Card title="PyPI" icon="python" href="https://pypi.org/project/hermes-msteams-bridge/" />
   <Card title="Configuration" icon="gear" href="/hermes/configuration" />
 </CardGroup>

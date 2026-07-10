@@ -19,8 +19,8 @@
 | `concepts/architecture.mdx` | StandIn bridge, HMAC WebSocket wire contract, call flow |
 | `concepts/modes.mdx` | Realtime (speech-to-speech) vs. streaming (STT -> agent -> TTS) |
 | `concepts/features.mdx` | Vision, group etiquette, outbound, recap, governance, security |
-| `openclaw/installation.mdx`, `openclaw/configuration.mdx` | OpenClaw plugin (`@komaa/msteams-voice`) |
-| `hermes/installation.mdx`, `hermes/configuration.mdx` | Hermes plugin (`hermes-plugin-teams-voice`) |
+| `openclaw/installation.mdx`, `openclaw/configuration.mdx` | OpenClaw plugin (`@komaa/msteams-bridge`) |
+| `hermes/installation.mdx`, `hermes/configuration.mdx` | Hermes plugin (`hermes-msteams-bridge`) |
 
 ## Navigation (docs.json)
 
