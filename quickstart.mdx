@@ -168,13 +168,13 @@ Prefer to wire it up by hand? Pick your runtime:
     <Steps>
       <Step title="Install">
         ```bash
-        openclaw plugins install npm:@komaa/msteams-voice
+        openclaw plugins install npm:@komaa/msteams-bridge
         ```
         The package ships prebuilt (v0.1.10+), so there is no build step - install and go.
         <Note>
-        Also on ClawHub: `openclaw plugins install clawhub:@komaa/msteams-voice` (OpenClaw falls back to
+        Also on ClawHub: `openclaw plugins install clawhub:@komaa/msteams-bridge` (OpenClaw falls back to
         npm automatically if the ClawHub fetch fails). See the
-        [plugin README](https://github.com/komaa-com/openclaw-msteams-voice#install).
+        [plugin README](https://github.com/komaa-com/openclaw-msteams-bridge#install).
         </Note>
       </Step>
       <Step title="Configure">
@@ -217,7 +217,7 @@ Prefer to wire it up by hand? Pick your runtime:
       <Step title="Install">
         Into the **same Python environment as Hermes**:
         ```bash
-        uv pip install --python /path/to/hermes/venv/bin/python hermes-plugin-teams-voice
+        uv pip install --python /path/to/hermes/venv/bin/python hermes-msteams-bridge
         ```
         Then enable the plugin:
         ```bash
