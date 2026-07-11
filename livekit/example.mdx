@@ -32,6 +32,56 @@ bridge dispatches it into a per-call room. Budget about **15 minutes** once the
   [dashboard](https://standin.komaa.com/dashboard)). The [sandbox](/community) works too if you have
   no Teams bot yet.
 
+## Set up the LiveKit project and agent
+
+Unlike a hosted agent, a LiveKit "agent" is a **worker you run** - the example in `examples/agents`
+is a complete, ready-to-run one. You need two things: a LiveKit project for it to connect to, and an
+**agent name** so the bridge can dispatch it.
+
+### Create a LiveKit project
+
+Sign in to [LiveKit Cloud](https://cloud.livekit.io) (or run a self-hosted server) and create a
+project. From its settings, copy three values - they go in **both** the agent's `.env` (step 1) and
+the bridge (step 2):
+
+| Value | Env variable |
+|---|---|
+| Project URL (`wss://<project>.livekit.cloud`) | `LIVEKIT_URL` |
+| API key | `LIVEKIT_API_KEY` |
+| API secret | `LIVEKIT_API_SECRET` |
+
+<Warning>
+  The agent worker and the bridge must point at the **same LiveKit project**. If they use different
+  projects, dispatch never reaches the agent and the caller hears silence - the single most common
+  setup mistake.
+</Warning>
+
+### The agent name is the contract
+
+The bridge dispatches by **agent name** (explicit dispatch). The example voice agent registers itself
+as `teams-voice-agent`:
+
+```python
+cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, agent_name="teams-voice-agent"))
+```
+
+That name must equal the bridge's `LIVEKIT_AGENT_NAME` (step 2). Nothing else about the agent is
+Teams-specific - and unlike a hosted agent, there is **no audio-format setting to get right**, because
+the bridge and the LiveKit SDK resample to 16 kHz for you.
+
+### Use your own agent instead
+
+Any existing LiveKit agent works - give its worker an `agent_name`, point it at the same project, and
+run it in place of the example:
+
+```python
+cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, agent_name="my-teams-agent"))
+```
+
+Read the caller's details from `ctx.job.metadata` and react to the `teams.context` / `teams.goodbye`
+data topics if you want (all shown in the example agents). See
+[Agents and dispatch](https://komaa-com.github.io/livekit-msteams-bridge/agents-and-dispatch/).
+
 ## 1. Run the voice agent
 
 Clone the repo and enter the agents example:
