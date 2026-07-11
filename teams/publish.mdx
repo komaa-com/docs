@@ -1,0 +1,82 @@
+---
+title: "Upload to Teams and go live"
+description: "Upload the app package as a custom app or publish it to your organization, register your agent in StandIn, and place the first call."
+keywords: ["upload custom app Teams","sideload Teams app","publish Teams app to org","Teams admin center","Teams Developer Portal import","test Teams calling bot"]
+---
+
+Part 3 of the [Teams setup](/teams/overview). You have the [app package](/teams/app-package) -
+now put it in front of Teams users. Pick the route that matches how widely the bot should be
+available.
+
+## Choose an upload route
+
+<Tabs>
+  <Tab title="Teams client (fastest)">
+    Best for testing and personal use. In Teams, go to **Apps → Manage your apps → Upload an app**:
+
+    <Frame caption="Teams: Apps > Manage your apps > Upload an app.">
+      <img src="/images/teams/teams-upload-an-app.png" alt="Microsoft Teams Apps page with Manage your apps and the Upload an app button highlighted" />
+    </Frame>
+
+    Choose **Upload a custom app** and select the zip. The bot is then available to **you**; open
+    it and call.
+
+    <Frame caption="Pick Upload a custom app for a package you built or downloaded from StandIn.">
+      <img src="/images/teams/teams-upload-custom-app.png" alt="Teams Upload an app dialog with the Upload a custom app option highlighted" />
+    </Frame>
+
+    This requires **custom app upload** to be allowed for your account - if the button is missing,
+    ask your Teams admin (policy reference:
+    [Manage custom app policies and settings](https://learn.microsoft.com/en-us/microsoftteams/teams-custom-app-policies-and-settings)).
+
+    Official walkthrough: [Upload your app in Teams](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/deploy-and-publish/apps-upload).
+  </Tab>
+  <Tab title="Developer Portal">
+    Best when you want validation and versioning. Go to
+    [dev.teams.microsoft.com](https://dev.teams.microsoft.com/) → **Apps → Import app** and upload
+    the zip (or **New app** and paste the manifest fields in the GUI). The portal validates the
+    manifest, hosts the icons, and can then **Preview in Teams**, **Download** the finished
+    package, or **Publish → Publish to your org**.
+
+    Official reference: [Teams Developer Portal](https://learn.microsoft.com/en-us/microsoftteams/platform/concepts/build-and-test/teams-developer-portal).
+  </Tab>
+  <Tab title="Publish to your org">
+    Best for making the bot callable by **everyone in your tenant**. Either publish from the
+    Developer Portal (**Publish → Publish to your org**) or have an admin upload the zip directly
+    in the **Teams admin center** (**Teams apps → Manage apps → Upload new app**). A Teams admin
+    approves the pending app before it appears for users.
+
+    Official reference: [Publish a custom app to your organization](https://learn.microsoft.com/en-us/microsoftteams/upload-custom-apps).
+  </Tab>
+</Tabs>
+
+## Register your agent in StandIn
+
+In your StandIn dashboard, register your **Agent voice URL** and the matching HMAC `sharedSecret`
+(done automatically if you used [pairing](/quickstart#connect-your-agent-by-pairing-recommended)).
+If you also want Teams chat, set the optional **Agent chat URL**
+(`https://<your-public-host>/api/messages`; leave it empty if you only use voice).
+
+## Place the first call
+
+Search for the app in Teams (or open it under **Apps → Built for your org** after an org publish),
+then **call the bot**. StandIn answers, connects to your bridge, and your agent speaks.
+
+<Note>
+  **First chat message ignored?** Using **OpenClaw**, its chat channel drops direct messages from
+  senders you have not approved (`dmPolicy: pairing`, the default) - approve yourself with
+  `openclaw pairing approve msteams <CODE>`. Using **Hermes**, an unknown sender gets a
+  **pairing-code reply** instead of an answer - approve it with `hermes pairing approve teams <CODE>`
+  (with `TEAMS_ALLOWED_USERS` set, unlisted senders are dropped silently instead). Details:
+  [the bot ignores Teams chat](/troubleshooting#the-bot-answers-calls-but-ignores-teams-chat-dm-pairing).
+</Note>
+
+## If something does not work
+
+- Bot never joins the call → check the **calling webhook** on the
+  [Teams channel](/teams/azure-bot#6-enable-calling-and-set-the-webhook) and that
+  [Graph permissions](/teams/azure-bot#8-grant-graph-permissions) are admin-consented.
+- Bot joins but stays silent → usually a `sharedSecret` mismatch or an unreachable Agent voice URL;
+  see [Troubleshooting](/troubleshooting).
+- Upload rejected → re-check the [package layout](/teams/app-package#packaging-it-manually) (files
+  at the zip root) and bump the manifest `version` on republish.

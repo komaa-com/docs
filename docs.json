@@ -27,9 +27,17 @@
         "pages": [
           "index",
           "quickstart",
-          "teams-app",
           "community",
           "troubleshooting"
+        ]
+      },
+      {
+        "group": "Teams setup",
+        "pages": [
+          "teams/overview",
+          "teams/azure-bot",
+          "teams/app-package",
+          "teams/publish"
         ]
       },
       {
@@ -58,6 +66,7 @@
         "group": "ElevenLabs bridge",
         "pages": [
           "elevenlabs/installation",
+          "elevenlabs/example",
           "elevenlabs/configuration"
         ]
       },
@@ -65,11 +74,18 @@
         "group": "LiveKit bridge",
         "pages": [
           "livekit/installation",
+          "livekit/example",
           "livekit/configuration"
         ]
       }
     ]
   },
+  "redirects": [
+    {
+      "source": "/teams-app",
+      "destination": "/teams/azure-bot"
+    }
+  ],
   "logo": {
     "light": "/logo/light.svg",
     "dark": "/logo/dark.svg"

@@ -1,0 +1,140 @@
+---
+title: "Run the example"
+description: "A step-by-step walkthrough of the basic-bridge example: clone, configure, expose, connect to StandIn, and put an ElevenLabs agent on a Teams call."
+keywords: ["elevenlabs-msteams-bridge example","basic-bridge","ElevenLabs agent Teams tutorial","VisionDescriber look tool","Tailscale Funnel ngrok"]
+---
+
+The fastest way to understand the bridge is to run its example project - a minimal, working
+embedding you can copy straight into your own repo. Budget about **10 minutes** once the
+[Teams setup](/teams/overview) is done.
+
+<Card title="examples/basic-bridge" icon="play" href="https://github.com/komaa-com/elevenlabs-msteams-bridge/tree/main/examples/basic-bridge">
+  `loadConfig()` + `startServer()` in a few lines, with a custom vision hook (your own model answers
+  the agent's `look` tool - the raw frame never leaves your process). Env-file config and graceful
+  shutdown are built in.
+</Card>
+
+## What you need first
+
+- **Node.js `>= 20`**.
+- An **ElevenLabs agent** ([Agents dashboard](https://elevenlabs.io/app/agents)) with audio input
+  **and** output format set to **PCM 16000 Hz**, plus an **API key**.
+- A **StandIn identity** with its **shared secret** (from
+  [pairing](/quickstart#connect-your-agent-by-pairing-recommended) or the
+  [dashboard](https://standin.komaa.com/dashboard)). The [sandbox](/community) works too if you have
+  no Teams bot yet.
+
+## 1. Clone and install
+
+```bash
+git clone https://github.com/komaa-com/elevenlabs-msteams-bridge
+```
+
+```bash
+cd elevenlabs-msteams-bridge/examples/basic-bridge
+```
+
+```bash
+npm install
+```
+
+## 2. Configure the environment
+
+```bash
+cp .env.example .env
+```
+
+Open `.env` and fill in the three required values:
+
+| Variable | What to put there |
+|---|---|
+| `ELEVENLABS_API_KEY` | Your ElevenLabs API key (server-side only; never sent to the Teams side). |
+| `ELEVENLABS_AGENT_ID` | The agent that should answer calls, from the Agents dashboard. |
+| `WORKER_SHARED_SECRET` | The shared secret from StandIn pairing - both sides must match exactly. |
+
+The example still boots with dummy values, so you can check the wiring before the credentials are
+real. Everything else (`PORT`, `MAX_CALL_MINUTES`, goodbye behavior, regional hosts) has sensible
+defaults - see the [configuration reference](/elevenlabs/configuration).
+
+## 3. Start it
+
+```bash
+npm start
+```
+
+The bridge prints the WebSocket URL to give StandIn:
+
+```
+Point your StandIn identity's agent WebSocket URL at ws://<this-host>:8080/voice/msteams/stream
+```
+
+## 4. Expose port 8080
+
+StandIn connects **from the internet**, so the port needs a public `wss://` URL. Any tunnel works:
+
+<Tabs>
+  <Tab title="Tailscale Funnel">
+    ```bash
+    tailscale funnel --bg --https=8080 8080
+    ```
+    Your URL: `wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream`
+  </Tab>
+  <Tab title="cloudflared">
+    ```bash
+    cloudflared tunnel --url http://localhost:8080
+    ```
+    Use the printed hostname: `wss://<hostname>/voice/msteams/stream`
+  </Tab>
+  <Tab title="ngrok">
+    ```bash
+    ngrok http 8080
+    ```
+    Use the printed hostname: `wss://<hostname>/voice/msteams/stream`
+  </Tab>
+</Tabs>
+
+## 5. Connect it to StandIn and call
+
+1. In your [StandIn dashboard](https://standin.komaa.com/dashboard), set the identity's
+   **Agent voice URL** to the `wss://` URL from step 4.
+2. Make sure the identity's shared secret equals `WORKER_SHARED_SECRET`.
+3. Place a Teams call to your bot (or join the sandbox meeting). StandIn joins, connects to the
+   bridge, and your ElevenLabs agent answers.
+
+## The vision hook
+
+The example ships a custom `VisionDescriber` stub in `index.mjs`. When your agent calls its `look`
+client tool, the bridge hands your function the current camera or screen-share frame and returns
+your text description to the agent - the raw frame never leaves your process. Replace the stub with
+a call to any vision-capable model. If you prefer configuration over code, the
+`VISION_API_URL` / `VISION_API_KEY` / `VISION_MODEL` variables do the same against any
+OpenAI-compatible endpoint - see [Vision](/elevenlabs/configuration#vision-the-look-tool).
+
+## From example to your own project
+
+Depend on the published package instead of the local checkout:
+
+```bash
+npm install @komaa/elevenlabs-msteams-bridge
+```
+
+Then copy the example's `index.mjs` as your starting point. The
+[library API](https://komaa-com.github.io/elevenlabs-msteams-bridge/library-api/) documents the
+programmatic surface (config, server handle, hooks).
+
+## If something does not work
+
+- **WebSocket rejected with `401`** - `WORKER_SHARED_SECRET` does not match the secret in StandIn.
+- **Bot joins the call but stays silent** - the Agent voice URL is unreachable from the internet or
+  points at the wrong port; re-check the tunnel.
+- **Agent audio garbled or missing** - the ElevenLabs agent's audio input/output format is not
+  **PCM 16000 Hz**.
+- More: [Troubleshooting](/troubleshooting).
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Example README" icon="github" href="https://github.com/komaa-com/elevenlabs-msteams-bridge/blob/main/examples/basic-bridge/README.md" />
+  <Card title="Configuration" icon="sliders" href="/elevenlabs/configuration" />
+  <Card title="Library API" icon="book" href="https://komaa-com.github.io/elevenlabs-msteams-bridge/library-api/" />
+</CardGroup>

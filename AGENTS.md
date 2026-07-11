@@ -13,7 +13,10 @@
 |---|---|
 | `index.mdx` | Landing page: what StandIn is, CVI pillars, capabilities |
 | `quickstart.mdx` | Install the plugin, connect to StandIn, place a test call |
-| `teams-app.mdx` | Register a BYO Teams bot; canonical Microsoft Graph permissions table |
+| `teams/overview.mdx` | Teams setup landing: what you create, setup path, applies to all four bridges |
+| `teams/azure-bot.mdx` | Entra app + Azure Bot + Teams channel/calling (redacted portal screenshots); canonical Microsoft Graph permissions table |
+| `teams/app-package.mdx` | Download the generated manifest zip from StandIn; example manifest, placeholders, manual packaging |
+| `teams/publish.mdx` | Upload routes (client / Developer Portal / org publish), register in StandIn, first call |
 | `community.mdx` | Free community tier (shared bot, public Teams meeting) |
 | `troubleshooting.mdx` | HMAC mismatch, unreachable agent, daily limits, port/path, ClawHub |
 | `concepts/architecture.mdx` | StandIn bridge, HMAC WebSocket wire contract, call flow |
@@ -21,12 +24,17 @@
 | `concepts/features.mdx` | Vision, group etiquette, outbound, recap, governance, security |
 | `openclaw/installation.mdx`, `openclaw/configuration.mdx` | OpenClaw plugin (`@komaa/openclaw-msteams-bridge`) |
 | `hermes/installation.mdx`, `hermes/configuration.mdx` | Hermes plugin (`hermes-msteams-bridge`) |
+| `elevenlabs/example.mdx` | Step-by-step basic-bridge example walkthrough (clone, env, tunnel, StandIn, vision hook) |
+| `livekit/example.mdx` | Step-by-step examples walkthrough (voice agent + bridge, avatar variant, Docker, integration points) |
 
 ## Navigation (docs.json)
 
-- Four groups: Getting Started, Concepts, OpenClaw plugin, Hermes plugin.
+- Groups: Getting Started, Teams setup, Concepts, OpenClaw plugin, Hermes plugin, ElevenLabs
+  bridge, LiveKit bridge.
 - New pages must be added to `navigation.pages` in `docs.json` or they will not appear.
-- Internal links are root-relative without extension, e.g. `/teams-app#graph-permissions`.
+- Internal links are root-relative without extension, e.g. `/teams/azure-bot#8-grant-graph-permissions`.
+- `/teams-app` (the old single-page Teams setup) redirects to `/teams/azure-bot` via
+  `redirects` in `docs.json`; do not recreate the page.
 
 ## Style rules
 
@@ -39,9 +47,12 @@
 
 ## Single sources of truth
 
-- The Microsoft Graph permissions table lives ONLY in `teams-app.mdx#graph-permissions`.
-  Other pages (`concepts/architecture.mdx`, `openclaw/configuration.mdx`,
-  `hermes/configuration.mdx`) link to it; do not re-add copies.
+- The Microsoft Graph permissions table lives ONLY in
+  `teams/azure-bot.mdx#8-grant-graph-permissions`. Other pages (`concepts/architecture.mdx`,
+  `openclaw/configuration.mdx`, `hermes/configuration.mdx`) link to it; do not re-add copies.
+- The example Teams manifest and placeholders table live ONLY in `teams/app-package.mdx`.
+- Screenshots in `images/teams/` are pre-redacted (placeholder GUIDs, generic labels, no tenant
+  or account info). Never add raw portal screenshots; regenerate redacted ones instead.
 - The `quickstart.mdx#verify-optional` section documents downloading `install.sh` / `install.ps1`
   and reviewing them before running. It intentionally carries **no SHA-256 checksums** - a pinned
   hash goes stale on every installer change and silently breaks the documented verify step, so it was

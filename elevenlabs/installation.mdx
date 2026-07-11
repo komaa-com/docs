@@ -38,6 +38,9 @@ agents, maps caller barge-in to ElevenLabs interruptions, and injects caller con
 - A **StandIn** subscription ([standin.komaa.com](https://standin.komaa.com), free package works) -
   the hosted media bridge that joins the Teams call and connects to this service. See
   [Architecture](/concepts/architecture).
+- Your own **Microsoft Teams bot** connected to StandIn - the [Teams setup](/teams/overview) walks
+  through the Azure bot, the app package, and the upload. To try it without one, use the
+  [sandbox](/community).
 
 ## Run
 
@@ -89,46 +92,10 @@ Register that URL (with a **matching shared secret**) on your identity in the
 The fastest way to understand the bridge is to run its example project - a minimal, working
 embedding you can copy straight into your own repo.
 
-<Card title="examples/basic-bridge" icon="play" href="https://github.com/komaa-com/elevenlabs-msteams-bridge/tree/main/examples/basic-bridge">
-  `loadConfig()` + `startServer()` in a few lines, with a custom vision hook (your own model answers
-  the agent's `look` tool - the raw frame never leaves your process). Env-file config and graceful
-  shutdown are built in.
+<Card title="Run the example, step by step" icon="play" href="/elevenlabs/example">
+  Clone `examples/basic-bridge`, fill in three environment variables, expose the port, connect it
+  to StandIn, and place a call - with the vision hook explained along the way.
 </Card>
-
-Clone the repo and run it:
-
-```bash
-git clone https://github.com/komaa-com/elevenlabs-msteams-bridge
-```
-
-```bash
-cd elevenlabs-msteams-bridge/examples/basic-bridge
-```
-
-```bash
-npm install
-```
-
-```bash
-cp .env.example .env
-```
-
-Fill in `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID`, and `WORKER_SHARED_SECRET` (the example still
-boots with dummy values, so you can check the wiring first), then:
-
-```bash
-npm start
-```
-
-It prints the WebSocket URL to give StandIn. Expose port `8080` with a tunnel (see above), point your
-identity's Agent voice URL there, and place a call - your ElevenLabs agent answers.
-
-<Note>
-  The example's [README](https://github.com/komaa-com/elevenlabs-msteams-bridge/blob/main/examples/basic-bridge/README.md)
-  walks through every `.env` variable and the vision hook (OpenAI or Azure OpenAI). In your own
-  project, depend on the published package instead of the local checkout:
-  `npm install @komaa/elevenlabs-msteams-bridge`.
-</Note>
 
 <Note>
   Next: the full [configuration reference](/elevenlabs/configuration) - every environment variable,
