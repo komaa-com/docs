@@ -24,6 +24,49 @@ embedding you can copy straight into your own repo. Budget about **10 minutes** 
   [dashboard](https://standin.komaa.com/dashboard)). The [sandbox](/community) works too if you have
   no Teams bot yet.
 
+## Create the ElevenLabs agent
+
+The bridge relays audio **verbatim at 16 kHz**, so the one thing that must be right on the ElevenLabs
+side is the agent's **audio format**. Create an agent in the
+[Agents dashboard](https://elevenlabs.io/app/agents), then set:
+
+| Setting | Value | Why it matters |
+|---|---|---|
+| **Output audio format** | **PCM 16000 Hz** | The agent's voice reaches Teams as-is; any other rate is garbled / wrong-pitch. This is the one people miss. |
+| **Input (ASR) audio format** | **PCM 16000 Hz** | Caller audio arrives at 16 kHz. |
+| **Model** | `eleven_turbo_v2` or `eleven_flash_v2` | An **English** agent rejects `eleven_turbo_v2_5` - use turbo or flash v2. |
+| **Language** | your call language | Set it explicitly (e.g. English) so the model choice above is validated. |
+
+<Warning>
+  The dashboard has more than one "output format" control - the **widget / embed** format is not the
+  same as the **conversation** format the bridge actually uses (`tts.agent_output_audio_format`). If a
+  call is garbled even though the UI looks like 16 kHz, the conversation format is still wrong. Set it
+  explicitly and re-check with the snippet below.
+</Warning>
+
+Then grab two values for your `.env` in the next steps:
+
+- **Agent ID** (`agent_...`) from the agent's page, for `ELEVENLABS_AGENT_ID`.
+- **API key** from [dashboard -> API keys](https://elevenlabs.io/app/settings/api-keys), for `ELEVENLABS_API_KEY`.
+
+<Accordion title="Verify (or fix) the conversation audio format from the terminal">
+  Check the format the bridge will actually get, regardless of what the UI shows:
+
+  ```bash
+  curl -s -H "xi-api-key: $ELEVENLABS_API_KEY" \
+    https://api.elevenlabs.io/v1/convai/agents/$ELEVENLABS_AGENT_ID \
+    | grep -o '"agent_output_audio_format":"[^"]*"'
+  ```
+
+  If that is not `pcm_16000`, set it directly:
+
+  ```bash
+  curl -s -X PATCH -H "xi-api-key: $ELEVENLABS_API_KEY" -H "content-type: application/json" \
+    -d '{"conversation_config":{"tts":{"agent_output_audio_format":"pcm_16000"}}}' \
+    https://api.elevenlabs.io/v1/convai/agents/$ELEVENLABS_AGENT_ID
+  ```
+</Accordion>
+
 ## 1. Clone and install
 
 ```bash
