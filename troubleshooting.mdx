@@ -154,17 +154,17 @@ URL with its port, never the local `ws://` bind.
 
 ## ClawHub install fails
 
-If `openclaw plugins install clawhub:@komaa/msteams-bridge` fails (a registry hiccup, or an older
+If `openclaw plugins install clawhub:@komaa/openclaw-msteams-bridge` fails (a registry hiccup, or an older
 OpenClaw that predates ClawHub), OpenClaw usually falls back to npm automatically. If it does not,
 install the same plugin from **npm** explicitly:
 
 ```bash
-openclaw plugins install npm:@komaa/msteams-bridge
+openclaw plugins install npm:@komaa/openclaw-msteams-bridge
 ```
 
 (Not plain `npm install` - that only downloads the package into the current folder without registering
 it as an OpenClaw plugin.) The plugin is
-[`@komaa/msteams-bridge`](https://www.npmjs.com/package/@komaa/msteams-bridge) on both ClawHub and npm;
+[`@komaa/openclaw-msteams-bridge`](https://www.npmjs.com/package/@komaa/openclaw-msteams-bridge) on both ClawHub and npm;
 see the [plugin README](https://github.com/komaa-com/openclaw-msteams-bridge#install) for the full steps.
 
 <Tip>
