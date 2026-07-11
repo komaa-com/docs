@@ -1,0 +1,103 @@
+---
+title: "Installation"
+description: "Run livekit-msteams-bridge and put a LiveKit agent - including avatar agents - on Microsoft Teams calls through StandIn."
+keywords: ["LiveKit agent Teams","livekit-msteams-bridge","LiveKit avatar agent","agent dispatch","StandIn agent backend"]
+---
+
+[`@komaa/livekit-msteams-bridge`](https://www.npmjs.com/package/@komaa/livekit-msteams-bridge)
+puts a [LiveKit Agent](https://docs.livekit.io/agents/) - including
+[avatar agents](https://github.com/livekit/agents/tree/main/examples/avatar_agents) (bitHuman,
+Tavus, and friends) - onto a Microsoft Teams call. It is the LiveKit analogue of the
+[OpenClaw](/openclaw/installation) and [Hermes](/hermes/installation) plugins and the
+[ElevenLabs bridge](/elevenlabs/installation): it hosts the HMAC WebSocket that StandIn connects to,
+then bridges the call into a LiveKit room where your agent runs.
+
+<Note>
+  Like the ElevenLabs bridge, this is a **standalone Node service**, not a framework plugin. You do
+  not install it into an agent runtime - you run the bridge and point StandIn at it. Your LiveKit
+  agent runs as its own worker and is dispatched into a per-call room.
+</Note>
+
+## How it works
+
+Per call, the bridge creates **one LiveKit room**, **dispatches your agent into it** (explicit
+dispatch by `agentName`), joins as a participant, publishes the caller's audio, and relays the
+agent's audio back to Teams. Both sides speak 16 kHz mono PCM16 - the wire protocol natively, the
+room via the SDK's resampling `AudioSource`/`AudioStream` - so the bridge itself never transcodes.
+
+<Note>
+  Turn-taking (VAD, interruption, endpointing) runs **inside your LiveKit agent session**, exactly
+  as it does for WebRTC callers. Your agent needs no Teams-specific code - it receives per-call
+  metadata (caller name, tenant, direction, AAD id when known) and can listen on two data topics.
+</Note>
+
+## Requirements
+
+- **Node.js `>= 20`**.
+- A **LiveKit server** - a [LiveKit Cloud](https://cloud.livekit.io) project or self-hosted - with
+  an **API key and secret**.
+- A **LiveKit agent** registered with an **agent name** for explicit dispatch.
+- A **StandIn** subscription ([standin.komaa.com](https://standin.komaa.com), free package works) -
+  the hosted media bridge that joins the Teams call and connects to this service. See
+  [Architecture](/concepts/architecture).
+
+## Run
+
+Env-configured, no install step needed:
+
+```bash
+LIVEKIT_URL=wss://your-project.livekit.cloud \
+LIVEKIT_API_KEY=API... \
+LIVEKIT_API_SECRET=... \
+LIVEKIT_AGENT_NAME=my-teams-agent \
+WORKER_SHARED_SECRET=... \
+npx @komaa/livekit-msteams-bridge
+```
+
+Or add it to a project (`npm i @komaa/livekit-msteams-bridge`) and embed it - see the
+[library API](https://komaa-com.github.io/livekit-msteams-bridge/library-api/) for the programmatic
+surface and how to inject a fake room in tests.
+
+The bridge binds its media WebSocket (default `ws://<host>:8080/voice/msteams/stream`; StandIn
+appends `/{callId}` per call).
+
+## Expose the WebSocket (Agent voice URL)
+
+StandIn connects to the bridge **from the internet**, so the port must be reachable - a public host
+or a tunnel. With Tailscale Funnel:
+
+```bash
+tailscale funnel --bg --https=8080 8080
+```
+
+Your **Agent voice URL** is then:
+
+```
+wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream
+```
+
+## Connect it to StandIn
+
+Register that URL (with a **matching shared secret**) on your identity in the
+[dashboard](https://standin.komaa.com/dashboard), or use the
+[sandbox](https://standin.komaa.com) to try it without your own Teams bot:
+
+1. Set the identity's **Agent voice URL** to where the bridge listens.
+2. Set `WORKER_SHARED_SECRET` to the **shared secret from pairing** - both sides must match exactly,
+   or the WebSocket handshake is rejected with `401`.
+3. Place a Teams call (or join the sandbox meeting). StandIn joins, connects to the bridge, the
+   bridge creates the room and dispatches your agent, and the agent answers.
+
+<Note>
+  Next: the full [configuration reference](/livekit/configuration) - every environment variable, the
+  call governor, and dispatch. Deep protocol, agent, and library docs live on the
+  [project site](https://komaa-com.github.io/livekit-msteams-bridge/).
+</Note>
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Docs site" icon="book" href="https://komaa-com.github.io/livekit-msteams-bridge/" />
+  <Card title="npm" icon="npm" href="https://www.npmjs.com/package/@komaa/livekit-msteams-bridge" />
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/livekit-msteams-bridge" />
+</CardGroup>
