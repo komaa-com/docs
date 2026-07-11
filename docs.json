@@ -53,6 +53,13 @@
           "hermes/installation",
           "hermes/configuration"
         ]
+      },
+      {
+        "group": "ElevenLabs bridge",
+        "pages": [
+          "elevenlabs/installation",
+          "elevenlabs/configuration"
+        ]
       }
     ]
   },

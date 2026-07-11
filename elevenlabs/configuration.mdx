@@ -1,0 +1,72 @@
+---
+title: "Configuration"
+description: "Environment variables for elevenlabs-msteams-bridge: agent, secret, governor, vision, and regional hosts."
+keywords: ["elevenlabs-msteams-bridge config","ELEVENLABS_AGENT_ID","MAX_CALL_MINUTES","EL_TTS_VOICE_ID","EL_HOST regions"]
+---
+
+The bridge is configured entirely by **environment variables** (a `.env` file works with
+`node --env-file=.env`). Numeric variables fail loudly at startup if set to a non-number, so a typo
+stops the process with a clear message rather than silently misbehaving.
+
+## Required
+
+| Variable | Meaning |
+|---|---|
+| `ELEVENLABS_API_KEY` | Server-side ElevenLabs key. Never sent to the Teams side; used to mint signed URLs, open the agent socket, and synthesize the goodbye. |
+| `ELEVENLABS_AGENT_ID` | The agent that answers calls (Agents dashboard). Its audio input **and** output format must be **PCM 16000 Hz**. |
+| `WORKER_SHARED_SECRET` | Must equal the shared secret from StandIn pairing. Both sides sign the WebSocket upgrade with it; a mismatch is rejected with `401`. |
+
+## Common options
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `PORT` | `8080` | Port the media WebSocket listens on. |
+| `BIND` | `0.0.0.0` | Bind address. |
+| `MAX_CALL_MINUTES` | `0` (off) | Bridge-side hard cap per call. On expiry the agent speaks a goodbye, then the call ends. ElevenLabs does not know your billing, so enforce limits here. |
+| `EL_TTS_VOICE_ID` | (unset) | With a voice id, the time-limit goodbye is spoken as the **exact** `GOODBYE_TEXT` via standalone TTS. Without it, the agent is asked to say goodbye (wording may vary). |
+| `GOODBYE_TEXT` | a default line | The goodbye the governor speaks. |
+| `EL_FIRST_MESSAGE` | (unset) | Localized greeting or spoken AI disclosure (a `first_message` override; the agent's security settings must allowlist overrides). |
+
+## Vision (the `look` tool)
+
+Give the agent a **client tool named `look`** to let it see the caller's camera or screen-share.
+The bridge answers it two ways:
+
+| Variable | Meaning |
+|---|---|
+| `VISION_API_URL` | Any OpenAI-compatible chat-completions endpoint with image input. When set, the bridge describes the frame and returns the text (the raw frame never leaves the bridge). |
+| `VISION_API_KEY` | Bearer key for that endpoint (optional for local models). |
+| `VISION_MODEL` | Model name for the vision endpoint. |
+
+Without a vision endpoint, `look` falls back to uploading the frame to ElevenLabs (multimodal), which
+is only allowed when Teams recording is active. For a fully custom vision hook in code, see the
+[library API](https://komaa-com.github.io/elevenlabs-msteams-bridge/library-api/).
+
+## Region and residency
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `EL_HOST` | `api.elevenlabs.io` | ElevenLabs API host. Regional pins for latency and data residency: `api.us.elevenlabs.io`, `api.eu.residency.elevenlabs.io`, `api.in.residency.elevenlabs.io`, `api.sg.residency.elevenlabs.io`. Restricted to `elevenlabs.io` hosts (the API key ships there); set `EL_HOST_ALLOW_ANY=true` only for a trusted proxy. |
+| `EL_ENVIRONMENT` | (unset) | Passed to `get-signed-url` and conversation init when you run staging agents alongside production. |
+
+## Advanced
+
+`HMAC_FRESHNESS_MS` (default 60000), `MAX_CONNECTIONS` (64), `MAX_CONNECTIONS_PER_IP` (8),
+`PRE_START_TIMEOUT_MS` (10000), `LOG_LEVEL` (`info`), and `LOG_TRANSCRIPTS` (`false`; still gated on
+Teams recording being active). Full reference:
+[configuration-reference](https://komaa-com.github.io/elevenlabs-msteams-bridge/configuration-reference/).
+
+## Privacy
+
+Caller audio and any vision descriptions transit ElevenLabs' cloud and are retained per the agent's
+settings. For deployments that must not retain caller data with a third party, enable the agent's
+zero-retention setting and disclose the AI on the call via `EL_FIRST_MESSAGE`. See
+[Governors and privacy](https://komaa-com.github.io/elevenlabs-msteams-bridge/governors-and-privacy/).
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Docs site" icon="book" href="https://komaa-com.github.io/elevenlabs-msteams-bridge/" />
+  <Card title="Installation" icon="download" href="/elevenlabs/installation" />
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/elevenlabs-msteams-bridge" />
+</CardGroup>

@@ -1,0 +1,99 @@
+---
+title: "Installation"
+description: "Run elevenlabs-msteams-bridge and connect a hosted ElevenLabs agent to Microsoft Teams calls through StandIn."
+keywords: ["ElevenLabs agent Teams","elevenlabs-msteams-bridge","conversational AI voice","StandIn agent backend","pcm_16000"]
+---
+
+[`@komaa/elevenlabs-msteams-bridge`](https://www.npmjs.com/package/@komaa/elevenlabs-msteams-bridge)
+brings a hosted **ElevenLabs agent** (STT + LLM + TTS + turn-taking, all run by ElevenLabs) onto a
+Microsoft Teams call. It is the ElevenLabs analogue of the [OpenClaw](/openclaw/installation) and
+[Hermes](/hermes/installation) plugins: it hosts the HMAC WebSocket that StandIn connects to, then
+relays audio to and from an ElevenLabs Agent conversation.
+
+<Note>
+  Unlike the OpenClaw and Hermes plugins, this is a **standalone Node service**, not a framework
+  plugin. You do not install it into an agent runtime - you run the bridge and point StandIn at it.
+  ElevenLabs hosts the agent itself.
+</Note>
+
+## How it works
+
+Audio is relayed **verbatim** - both sides speak base64 PCM 16 kHz, so there is no transcoding on
+the call path. The bridge opens **one ElevenLabs Agent WebSocket per call**
+(`wss://api.elevenlabs.io/v1/convai/conversation`), mints a short-lived signed URL for private
+agents, maps caller barge-in to ElevenLabs interruptions, and injects caller context.
+
+<Note>
+  ElevenLabs agent conversations are **realtime WebSocket** connections (one socket per call), not
+  webhooks. ElevenLabs post-call webhooks are a separate, optional feature for pushing a transcript
+  or analysis to your own server after a call ends - unrelated to the live audio path, and not
+  required by the bridge.
+</Note>
+
+## Requirements
+
+- **Node.js `>= 20`**.
+- An **ElevenLabs agent** ([Agents dashboard](https://elevenlabs.io/app/agents)) with its audio
+  input and output format set to **PCM 16000 Hz**, plus an **API key**.
+- A **StandIn** subscription ([standin.komaa.com](https://standin.komaa.com), free package works) -
+  the hosted media bridge that joins the Teams call and connects to this service. See
+  [Architecture](/concepts/architecture).
+
+## Run
+
+Env-configured, no install step needed:
+
+```bash
+ELEVENLABS_API_KEY=sk_... \
+ELEVENLABS_AGENT_ID=agent_... \
+WORKER_SHARED_SECRET=... \
+npx @komaa/elevenlabs-msteams-bridge
+```
+
+Or add it to a project (`npm i @komaa/elevenlabs-msteams-bridge`) and embed it - see the
+[library API](https://komaa-com.github.io/elevenlabs-msteams-bridge/library-api/) for the
+programmatic surface and a custom vision hook.
+
+The bridge binds its media WebSocket (default `ws://<host>:8080/voice/msteams/stream`; StandIn
+appends `/{callId}` per call).
+
+## Expose the WebSocket (Agent voice URL)
+
+StandIn connects to the bridge **from the internet**, so the port must be reachable - a public host
+or a tunnel. With Tailscale Funnel:
+
+```bash
+tailscale funnel --bg --https=8080 8080
+```
+
+Your **Agent voice URL** is then:
+
+```
+wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream
+```
+
+## Connect it to StandIn
+
+Register that URL (with a **matching shared secret**) on your identity in the
+[dashboard](https://standin.komaa.com/dashboard), or use the
+[sandbox](https://standin.komaa.com/sandbox) to try it without your own Teams bot:
+
+1. Set the identity's **Agent voice URL** to where the bridge listens.
+2. Set `WORKER_SHARED_SECRET` to the **shared secret from pairing** - both sides must match exactly,
+   or the WebSocket handshake is rejected with `401`.
+3. Place a Teams call (or join the sandbox meeting). StandIn joins, connects to the bridge, and your
+   ElevenLabs agent answers.
+
+<Note>
+  Next: the full [configuration reference](/elevenlabs/configuration) - every environment variable,
+  the call governor, and vision. Deep protocol and library docs live on the
+  [project site](https://komaa-com.github.io/elevenlabs-msteams-bridge/).
+</Note>
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Docs site" icon="book" href="https://komaa-com.github.io/elevenlabs-msteams-bridge/" />
+  <Card title="npm" icon="npm" href="https://www.npmjs.com/package/@komaa/elevenlabs-msteams-bridge" />
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/elevenlabs-msteams-bridge" />
+</CardGroup>
