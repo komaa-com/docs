@@ -1,0 +1,79 @@
+---
+title: "Configuration"
+description: "Environment variables for livekit-msteams-bridge: LiveKit server, agent dispatch, the call governor, and transport hardening."
+keywords: ["livekit-msteams-bridge config","LIVEKIT_AGENT_NAME","LIVEKIT_DELETE_ROOM_ON_END","MAX_CALL_MINUTES","explicit dispatch"]
+---
+
+The bridge is configured entirely by **environment variables** (a `.env` file works with
+`node --env-file=.env`). Numeric variables fail loudly at startup if set to a non-number or a
+negative value, so a typo stops the process with a clear message rather than silently misbehaving.
+
+## Required
+
+| Variable | Meaning |
+|---|---|
+| `WORKER_SHARED_SECRET` | Must equal the shared secret from StandIn pairing. Both sides sign the WebSocket upgrade with it; a mismatch is rejected with `401`. |
+| `LIVEKIT_URL` | LiveKit server URL - a Cloud project (`wss://<project>.livekit.cloud`) or self-hosted. |
+| `LIVEKIT_API_KEY` | LiveKit API key. Mints join tokens, dispatches agents, deletes rooms. Server-side only. |
+| `LIVEKIT_API_SECRET` | LiveKit API secret paired with the key. |
+
+## Agent dispatch
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `LIVEKIT_AGENT_NAME` | (unset) | The `agentName` your worker registers with, for **explicit dispatch** (recommended). Unset falls back to automatic dispatch (an unnamed agent joins every room; prototype-only). |
+| `LIVEKIT_ROOM_PREFIX` | `msteams-` | Room name prefix; the room is `${prefix}${callId}` (sanitized). |
+| `LIVEKIT_DELETE_ROOM_ON_END` | `true` | Delete the room at teardown so the agent job ends immediately instead of idling out (billing hygiene). |
+
+The dispatch carries per-call metadata to your agent (`ctx.job.metadata`, JSON):
+`source`, `caller_name`, `tenant_id`, `call_direction`, and `user_id` (AAD id, only when Teams
+provides one). Your agent can also listen on two data topics: `teams.context` (participant
+count/DTMF) and `teams.goodbye` (the governor's goodbye line to speak). See
+[Agents and dispatch](https://komaa-com.github.io/livekit-msteams-bridge/agents-and-dispatch/).
+
+## Governor
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `MAX_CALL_MINUTES` | `0` (off) | Bridge-side hard cap per call. LiveKit does not know your billing, so enforce limits here. On expiry the bridge asks the agent to say goodbye, waits the grace, then ends the call. |
+| `GOODBYE_TEXT` | a default line | The goodbye line sent on the `teams.goodbye` data topic. |
+| `GOODBYE_GRACE_MS` | `8000` | How long to let the goodbye play before ending the call. |
+
+<Note>
+  There is **no bridge-side TTS** on the room transport - the goodbye is a `teams.goodbye` data
+  message your agent speaks. Have your handler interrupt the current turn so the goodbye actually
+  plays; if the current turn outlasts `GOODBYE_GRACE_MS` it can be cut.
+</Note>
+
+## Transport hardening
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `HMAC_FRESHNESS_MS` | `60000` | Allowed clock skew for the upgrade timestamp and the replay-guard window. |
+| `MAX_CONNECTIONS` | `64` | Max concurrent worker connections. |
+| `MAX_CONNECTIONS_PER_IP` | = `MAX_CONNECTIONS` | Per-IP cap. Default is the global cap (StandIn dials from a small fixed egress set); set it if the bridge is more broadly exposed. |
+| `PRE_START_TIMEOUT_MS` | `10000` | Drop a client that authenticates but never sends `session.start`. |
+| `WORKER_IDLE_TIMEOUT_MS` | `90000` | Dead-peer window: end the call after this long with no worker message (the worker heartbeats every 30 s). |
+| `TRUST_PROXY_XFF` | `false` | Trust the first `X-Forwarded-For` hop for the per-IP cap. Enable only behind a single proxy that overwrites the header. |
+| `PORT` / `BIND` / `LOG_LEVEL` | `8080` / `0.0.0.0` / `info` | Listen port, bind address, log verbosity. |
+
+## TLS
+
+There is no TLS variable: the bridge serves plain WebSocket by design. Front it with a TLS
+terminator (tunnel, ingress, or load balancer) - StandIn requires `wss://` in any real deployment.
+
+## Privacy
+
+The bridge stores nothing - audio is relayed frame-by-frame between the worker socket and the LiveKit
+room and never written to disk; `recording.status` is logged only, and `/metrics` exposes counters,
+never call content. Whatever your **agent and LiveKit** retain follows their own settings. The room
+is deleted at teardown (`LIVEKIT_DELETE_ROOM_ON_END=true`). See
+[Governors and privacy](https://komaa-com.github.io/livekit-msteams-bridge/governors-and-privacy/).
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Docs site" icon="book" href="https://komaa-com.github.io/livekit-msteams-bridge/" />
+  <Card title="Installation" icon="download" href="/livekit/installation" />
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/livekit-msteams-bridge" />
+</CardGroup>

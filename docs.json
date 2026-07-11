@@ -60,6 +60,13 @@
           "elevenlabs/installation",
           "elevenlabs/configuration"
         ]
+      },
+      {
+        "group": "LiveKit bridge",
+        "pages": [
+          "livekit/installation",
+          "livekit/configuration"
+        ]
       }
     ]
   },
