@@ -84,6 +84,52 @@ Register that URL (with a **matching shared secret**) on your identity in the
 3. Place a Teams call (or join the sandbox meeting). StandIn joins, connects to the bridge, and your
    ElevenLabs agent answers.
 
+## Try the runnable example
+
+The fastest way to understand the bridge is to run its example project - a minimal, working
+embedding you can copy straight into your own repo.
+
+<Card title="examples/basic-bridge" icon="play" href="https://github.com/komaa-com/elevenlabs-msteams-bridge/tree/main/examples/basic-bridge">
+  `loadConfig()` + `startServer()` in a few lines, with a custom vision hook (your own model answers
+  the agent's `look` tool - the raw frame never leaves your process). Env-file config and graceful
+  shutdown are built in.
+</Card>
+
+Clone the repo and run it:
+
+```bash
+git clone https://github.com/komaa-com/elevenlabs-msteams-bridge
+```
+
+```bash
+cd elevenlabs-msteams-bridge/examples/basic-bridge
+```
+
+```bash
+npm install
+```
+
+```bash
+cp .env.example .env
+```
+
+Fill in `ELEVENLABS_API_KEY`, `ELEVENLABS_AGENT_ID`, and `WORKER_SHARED_SECRET` (the example still
+boots with dummy values, so you can check the wiring first), then:
+
+```bash
+npm start
+```
+
+It prints the WebSocket URL to give StandIn. Expose port `8080` with a tunnel (see above), point your
+identity's Agent voice URL there, and place a call - your ElevenLabs agent answers.
+
+<Note>
+  The example's [README](https://github.com/komaa-com/elevenlabs-msteams-bridge/blob/main/examples/basic-bridge/README.md)
+  walks through every `.env` variable and the vision hook (OpenAI or Azure OpenAI). In your own
+  project, depend on the published package instead of the local checkout:
+  `npm install @komaa/elevenlabs-msteams-bridge`.
+</Note>
+
 <Note>
   Next: the full [configuration reference](/elevenlabs/configuration) - every environment variable,
   the call governor, and vision. Deep protocol and library docs live on the
