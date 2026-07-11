@@ -88,6 +88,75 @@ Register that URL (with a **matching shared secret**) on your identity in the
 3. Place a Teams call (or join the sandbox meeting). StandIn joins, connects to the bridge, the
    bridge creates the room and dispatches your agent, and the agent answers.
 
+## Try the runnable examples
+
+The repo ships two example projects so you can see a full working setup - an agent **and** the
+bridge - before wiring your own. A LiveKit call needs both: your agent runs as a worker, the bridge
+dispatches it into a per-call room.
+
+<CardGroup cols={2}>
+  <Card title="examples/agents" icon="robot" href="https://github.com/komaa-com/livekit-msteams-bridge/tree/main/examples/agents">
+    Two ready-to-run LiveKit agents the bridge dispatches: a minimal voice pipeline
+    (`voice_agent.py`) and a bitHuman avatar (`avatar_agent.py`). Each shows the three integration
+    points - `agent_name`, `ctx.job.metadata`, and the `teams.*` data topics.
+  </Card>
+  <Card title="examples/basic-bridge" icon="play" href="https://github.com/komaa-com/livekit-msteams-bridge/tree/main/examples/basic-bridge">
+    Embed the bridge in your own Node project: `loadConfig()` + `startServer()`, env-file config, and
+    graceful shutdown built in.
+  </Card>
+</CardGroup>
+
+**1. Run an agent** (from `examples/agents`, using [uv](https://docs.astral.sh/uv/)):
+
+```bash
+git clone https://github.com/komaa-com/livekit-msteams-bridge
+```
+
+```bash
+cd livekit-msteams-bridge/examples/agents
+```
+
+```bash
+cp .env.example .env
+```
+
+Fill in `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, and `OPENAI_API_KEY`, then:
+
+```bash
+uv sync
+```
+
+```bash
+uv run voice_agent.py download-files
+```
+
+```bash
+uv run voice_agent.py dev
+```
+
+(Plain pip works too: `pip install -r requirements.txt && python voice_agent.py dev`.)
+
+**2. Run the bridge** pointed at that agent's name (`teams-voice-agent`):
+
+```bash
+LIVEKIT_URL=wss://your-project.livekit.cloud \
+LIVEKIT_API_KEY=API... \
+LIVEKIT_API_SECRET=... \
+LIVEKIT_AGENT_NAME=teams-voice-agent \
+WORKER_SHARED_SECRET=... \
+npx @komaa/livekit-msteams-bridge
+```
+
+Expose port `8080` with a tunnel (see above), point your StandIn identity's Agent voice URL there,
+and call your Teams bot - the voice agent answers. Swap in `avatar_agent.py`
+(`LIVEKIT_AGENT_NAME=teams-avatar-agent`) for the bitHuman avatar.
+
+<Note>
+  Each example's README covers Docker, the avatar's extra environment, and swapping the STT/LLM/TTS
+  plugins. The bridge only relays room audio - it never sees your model stack, so any LiveKit agent
+  works unchanged.
+</Note>
+
 <Note>
   Next: the full [configuration reference](/livekit/configuration) - every environment variable, the
   call governor, and dispatch. Deep protocol, agent, and library docs live on the
