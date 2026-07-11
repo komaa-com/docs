@@ -1,10 +1,10 @@
 ---
 title: "Installation"
-description: "Install @komaa/msteams-bridge into an OpenClaw host."
-keywords: ["@komaa/msteams-bridge","OpenClaw plugin install","openclaw plugins install","npm Teams voice plugin"]
+description: "Install @komaa/openclaw-msteams-bridge into an OpenClaw host."
+keywords: ["@komaa/openclaw-msteams-bridge","OpenClaw plugin install","openclaw plugins install","npm Teams voice plugin"]
 ---
 
-[`@komaa/msteams-bridge`](https://www.npmjs.com/package/@komaa/msteams-bridge) is a self-contained Teams CVI plugin for **OpenClaw**. It depends only on the
+[`@komaa/openclaw-msteams-bridge`](https://www.npmjs.com/package/@komaa/openclaw-msteams-bridge) is a self-contained Teams CVI plugin for **OpenClaw**. It depends only on the
 published `openclaw` plugin-sdk + `api.runtime` - no fork, no vendored runtime.
 
 <Note>
@@ -24,13 +24,13 @@ published `openclaw` plugin-sdk + `api.runtime` - no fork, no vendored runtime.
 ## Install
 
 ```bash
-openclaw plugins install npm:@komaa/msteams-bridge
+openclaw plugins install npm:@komaa/openclaw-msteams-bridge
 ```
 
 The package ships **prebuilt** (v0.1.10+): no build step, install and go.
 
 <Note>
-  Also on ClawHub: `openclaw plugins install clawhub:@komaa/msteams-bridge` - OpenClaw falls back to npm
+  Also on ClawHub: `openclaw plugins install clawhub:@komaa/openclaw-msteams-bridge` - OpenClaw falls back to npm
   automatically if the ClawHub fetch fails. See the
   [plugin README](https://github.com/komaa-com/openclaw-msteams-bridge#install).
 </Note>
@@ -85,6 +85,6 @@ port - a bare host means the 443 slot, which is normally your chat webhook, not 
 
 <CardGroup cols={3}>
   <Card title="Source" icon="github" href="https://github.com/komaa-com/openclaw-msteams-bridge" />
-  <Card title="npm" icon="npm" href="https://www.npmjs.com/package/@komaa/msteams-bridge" />
+  <Card title="npm" icon="npm" href="https://www.npmjs.com/package/@komaa/openclaw-msteams-bridge" />
   <Card title="Configuration" icon="gear" href="/openclaw/configuration" />
 </CardGroup>
