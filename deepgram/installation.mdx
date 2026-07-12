@@ -18,6 +18,15 @@ relays audio to and from a Deepgram Voice Agent session.
   and it runs.
 </Note>
 
+<Note>
+  **Prefer Python?** The same bridge exists as a Python package:
+  [`deepgram-msteams-bridge` on PyPI](https://pypi.org/project/deepgram-msteams-bridge/)
+  (`pip install deepgram-msteams-bridge`), with its own
+  [repo](https://github.com/komaa-com/deepgram-msteams-bridge-py). Same wire protocol, same
+  environment variables, same hardening - pick the runtime that fits your stack. This page follows
+  the Node package.
+</Note>
+
 ## How it works
 
 The bridge opens **one Voice Agent WebSocket per call**
