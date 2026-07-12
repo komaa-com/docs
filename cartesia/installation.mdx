@@ -21,6 +21,16 @@ provide for bringing your own telephony).
   [contract is documented](https://komaa-com.github.io/cartesia-msteams-bridge/your-line-agent/).
 </Note>
 
+<Note>
+  **Prefer Python?** The same bridge exists as a Python package:
+  [`cartesia-msteams-bridge` on PyPI](https://pypi.org/project/cartesia-msteams-bridge/)
+  (`pip install cartesia-msteams-bridge`), with its own
+  [docs site](https://komaa-com.github.io/cartesia-msteams-bridge-py/) and
+  [repo](https://github.com/komaa-com/cartesia-msteams-bridge-py). Same wire protocol, same
+  environment variables, same hardening - pick the runtime that fits your stack. This page follows
+  the Node package.
+</Note>
+
 ## How it works
 
 The bridge mints a **short-lived, agent-scoped access token per call** (the API key never rides an
