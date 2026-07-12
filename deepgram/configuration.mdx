@@ -1,0 +1,102 @@
+---
+title: "Configuration"
+description: "Environment variables for deepgram-msteams-bridge: models, prompt, secret, governor, vision, BYO-LLM endpoint, and regional hosts."
+keywords: ["deepgram-msteams-bridge config","DEEPGRAM_SPEAK_MODEL","DEEPGRAM_THINK_ENDPOINT_URL","MAX_CALL_MINUTES","VISION_REQUIRES_RECORDING"]
+---
+
+The bridge is configured entirely by **environment variables** (a `.env` file works with
+`node --env-file=.env`). Numeric variables fail loudly at startup if set to a non-number, so a typo
+stops the process with a clear message rather than silently misbehaving - the same goes for a
+non-`deepgram.com` host, a malformed `VISION_API_URL`, or a non-https think endpoint.
+
+## Required
+
+| Variable | Meaning |
+|---|---|
+| `DEEPGRAM_API_KEY` | Server-side Deepgram key with Voice Agent access. Never sent to the Teams side; opens the per-call session and synthesizes the goodbye. |
+| `WORKER_SHARED_SECRET` | Must equal the shared secret from StandIn pairing. Both sides sign the WebSocket upgrade with it; a mismatch is rejected with `401`. |
+
+## The agent
+
+There is no dashboard - these variables define the agent:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `DEEPGRAM_LISTEN_MODEL` | `nova-3` | STT model for `agent.listen`. |
+| `DEEPGRAM_THINK_PROVIDER` | `open_ai` | LLM provider (`open_ai`, `anthropic`, `google`, `groq`, `aws_bedrock`, ...). |
+| `DEEPGRAM_THINK_MODEL` | `gpt-4o-mini` | LLM model. |
+| `DEEPGRAM_SPEAK_MODEL` | `aura-2-thalia-en` | Aura voice for `agent.speak`. |
+| `DEEPGRAM_LANGUAGE` | `en` | Agent language (set on the listen and speak providers). |
+| `DEEPGRAM_PROMPT` | a built-in default | Base system prompt. The bridge appends per-call caller context and live context notes. |
+| `DEEPGRAM_GREETING` | (unset) | Deterministic opening line the agent speaks first - also the natural place for a spoken AI disclosure. |
+
+## BYO-LLM endpoint
+
+Deepgram-managed `open_ai` and `anthropic` work with just a model name. **Third-party providers
+require an endpoint** that Deepgram dials itself:
+
+| Variable | Meaning |
+|---|---|
+| `DEEPGRAM_THINK_ENDPOINT_URL` | Required for `google`, `groq`, `aws_bedrock`, and other third-party providers. Must be https. |
+| `DEEPGRAM_THINK_ENDPOINT_HEADERS` | Auth headers for that endpoint, as a JSON object (e.g. `{"authorization":"Bearer ..."}`). |
+
+## Common options
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `PORT` | `8080` | Port the media WebSocket listens on. |
+| `BIND` | `0.0.0.0` | Bind address. |
+| `MAX_CALL_MINUTES` | `0` (off) | Bridge-side hard cap per call. On expiry the agent speaks a goodbye, then the call ends. Deepgram does not know your billing, so enforce limits here. |
+| `DEEPGRAM_TTS_MODEL` | (unset) | With an Aura model set, the time-limit goodbye is spoken as the **exact** `GOODBYE_TEXT` via the standalone TTS endpoint (agent muted). Without it, the live agent speaks the exact text via `InjectAgentMessage`. |
+| `GOODBYE_TEXT` | a default line | The goodbye the governor speaks. |
+
+## Vision (the `look` tool)
+
+The `look` tool is registered automatically. The Voice Agent API is audio-only, so the bridge
+answers it via **your** endpoint:
+
+| Variable | Meaning |
+|---|---|
+| `VISION_API_URL` | Any OpenAI-compatible chat-completions endpoint with image input. **The raw frame is sent here** (never to Deepgram) - run a local model (Ollama/vLLM) if frames must not leave your infrastructure. Without it, `look` reports vision unavailable. |
+| `VISION_API_KEY` | Bearer key for the vision endpoint (optional for local models). |
+| `VISION_MODEL` | Model name for the vision endpoint. |
+| `VISION_REQUIRES_RECORDING` | `true` refuses to send caller video frames unless Teams recording is active - a compliance gate for PII-bearing camera/screen frames. |
+
+## Custom tools
+
+Function tools your own code executes (`lookup_order`, `transfer_call`, ...) are registered
+programmatically and run in-process, inside your trust boundary - see
+[Extending the agent's tools](https://komaa-com.github.io/deepgram-msteams-bridge/extending-tools/)
+and the [example](/deepgram/example#the-custom-tool).
+
+## Region and residency
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `DEEPGRAM_AGENT_HOST` | `agent.deepgram.com` | Voice Agent WebSocket host. Regional pins: `api.eu.deepgram.com`, `api.au.deepgram.com`. Restricted to `*.deepgram.com` (the API key ships there); set `DEEPGRAM_HOST_ALLOW_ANY=true` only for a trusted proxy. |
+| `DEEPGRAM_API_HOST` | `api.deepgram.com` | REST host (goodbye TTS). Same regional pins and allowlist - set both together. |
+
+## Advanced
+
+`HMAC_FRESHNESS_MS` (default 60000), `MAX_CONNECTIONS` (64), `MAX_CONNECTIONS_PER_IP` (= total cap),
+`PRE_START_TIMEOUT_MS` (10000), `WORKER_IDLE_TIMEOUT_MS` (90000), `TLS_CERT_PATH` / `TLS_KEY_PATH`
+(native `wss://`), `LOG_LEVEL` (`info`), and `LOG_TRANSCRIPTS` (`false`; still gated on Teams
+recording being active). The bridge also exposes `GET /metrics` (Prometheus text, including a
+call-duration histogram). Full reference:
+[configuration-reference](https://komaa-com.github.io/deepgram-msteams-bridge/configuration-reference/).
+
+## Privacy
+
+Caller audio, transcripts, and any vision descriptions transit Deepgram's cloud (and the configured
+think provider) per your Deepgram data settings. Keep `LOG_TRANSCRIPTS` off and vision unconfigured
+if not needed, use the regional hosts for in-region residency, and disclose the AI on the call via
+`DEEPGRAM_GREETING`. See
+[Governors and privacy](https://komaa-com.github.io/deepgram-msteams-bridge/governors-and-privacy/).
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Docs site" icon="book" href="https://komaa-com.github.io/deepgram-msteams-bridge/" />
+  <Card title="Installation" icon="download" href="/deepgram/installation" />
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/deepgram-msteams-bridge" />
+</CardGroup>

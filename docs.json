@@ -85,6 +85,14 @@
           "openai/example",
           "openai/configuration"
         ]
+      },
+      {
+        "group": "Deepgram bridge",
+        "pages": [
+          "deepgram/installation",
+          "deepgram/example",
+          "deepgram/configuration"
+        ]
       }
     ]
   },

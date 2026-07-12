@@ -1,7 +1,7 @@
 ---
 title: "Teams Voice Plugin (StandIn)"
 description: "Turn a Microsoft Teams call into a two-way video conversation with your AI agent - it sees, converses, and appears as a lip-synced avatar."
-keywords: ["Microsoft Teams AI bot","Teams voice agent","Teams video bot","conversational video interface","CVI","AI avatar","OpenClaw","Hermes Agent","ElevenLabs agent Teams","LiveKit agent Teams","OpenAI Realtime Teams","StandIn"]
+keywords: ["Microsoft Teams AI bot","Teams voice agent","Teams video bot","conversational video interface","CVI","AI avatar","OpenClaw","Hermes Agent","ElevenLabs agent Teams","LiveKit agent Teams","OpenAI Realtime Teams","Deepgram Voice Agent Teams","StandIn"]
 ---
 
 **Teams Voice Plugin (StandIn)** gives your AI agent a **Conversational Video Interface (CVI)** inside
@@ -10,8 +10,8 @@ Microsoft Teams: it answers and places calls, **sees** the caller's camera and s
 joins 1:1 and group meetings, speaks only when addressed, and handles Teams chat. All over
 recording-gated, allowlisted, HMAC-authenticated transport.
 
-It ships as **five backends** - two plugins that drop into an agent framework you already run, and
-three standalone bridges that connect a hosted, room-based, or speech-to-speech agent platform.
+It ships as **six backends** - two plugins that drop into an agent framework you already run, and
+four standalone bridges that connect a hosted, room-based, or speech-to-speech agent platform.
 Pick the one that matches your stack:
 
 <CardGroup cols={2}>
@@ -35,6 +35,10 @@ Pick the one that matches your stack:
     Put an **OpenAI Realtime agent** (`gpt-realtime`, speech-to-speech) on Teams calls, with
     extensible tools and MCP. Node
     [`@komaa/openai-msteams-bridge`](https://www.npmjs.com/package/@komaa/openai-msteams-bridge).
+  </Card>
+  <Card title="Deepgram bridge" icon="microphone-lines" href="/deepgram/installation">
+    Put a **Deepgram Voice Agent** (Nova STT + LLM + Aura TTS) on Teams calls, copy-only at 16 kHz.
+    Node [`@komaa/deepgram-msteams-bridge`](https://www.npmjs.com/package/@komaa/deepgram-msteams-bridge).
   </Card>
 </CardGroup>
 

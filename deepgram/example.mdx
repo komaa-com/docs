@@ -1,0 +1,179 @@
+---
+title: "Run the example"
+description: "A step-by-step walkthrough of the basic-bridge example: clone, configure, expose, connect to StandIn, and put a Deepgram Voice Agent on a Teams call."
+keywords: ["deepgram-msteams-bridge example","basic-bridge","Deepgram Voice Agent tutorial","custom function tool","VisionDescriber look tool"]
+---
+
+The fastest way to understand the bridge is to run its example project - a minimal, working
+embedding you can copy straight into your own repo. Budget about **10 minutes** once the
+[Teams setup](/teams/overview) is done.
+
+<Card title="examples/basic-bridge" icon="play" href="https://github.com/komaa-com/deepgram-msteams-bridge/tree/main/examples/basic-bridge">
+  `loadConfig()` + `startServer()` in a few lines, with a custom vision hook (your own model answers
+  the agent's `look` tool) and a custom `lookup_order` function tool the bridge executes. Env-file
+  config and graceful shutdown are built in.
+</Card>
+
+## What you need first
+
+- **Node.js `>= 20`**.
+- A **Deepgram API key** with Voice Agent access ([console.deepgram.com](https://console.deepgram.com/)).
+  No agent to create - the bridge configures each session itself.
+- A **StandIn identity** with its **shared secret** (from
+  [pairing](/quickstart#connect-your-agent-by-pairing-recommended) or the
+  [dashboard](https://standin.komaa.com/dashboard)). The [sandbox](/community) works too if you have
+  no Teams bot yet.
+
+## 1. Clone and install
+
+```bash
+git clone https://github.com/komaa-com/deepgram-msteams-bridge
+```
+
+```bash
+cd deepgram-msteams-bridge/examples/basic-bridge
+```
+
+```bash
+npm install
+```
+
+## 2. Configure the environment
+
+The example reads the same env file as the CLI - copy the fully commented template from the repo
+root:
+
+```bash
+cp ../../.env.example .env
+```
+
+Open `.env` and fill in the two required values:
+
+| Variable | What to put there |
+|---|---|
+| `DEEPGRAM_API_KEY` | Your Deepgram API key (server-side only; never sent to the Teams side). |
+| `WORKER_SHARED_SECRET` | The shared secret from StandIn pairing - both sides must match exactly. |
+
+Worth setting while you are there: `DEEPGRAM_PROMPT` (the agent's personality), `DEEPGRAM_GREETING`
+(a deterministic greeting / AI disclosure), `DEEPGRAM_SPEAK_MODEL` (the Aura voice), and
+`DEEPGRAM_THINK_MODEL` (the LLM). The example still boots with dummy values, so you can check the
+wiring before the credentials are real. Everything else (`PORT`, `MAX_CALL_MINUTES`, goodbye
+behavior) has sensible defaults - see the [configuration reference](/deepgram/configuration).
+
+## 3. Start it
+
+```bash
+npm start
+```
+
+The bridge prints the WebSocket URL to give StandIn:
+
+```
+Point your StandIn identity's agent WebSocket URL at ws://<this-host>:8080/voice/msteams/stream
+```
+
+## 4. Expose port 8080
+
+StandIn connects **from the internet**, so the port needs a public `wss://` URL. Any tunnel works:
+
+<Tabs>
+  <Tab title="Tailscale Funnel">
+    ```bash
+    tailscale funnel --bg --https=8080 8080
+    ```
+    Your URL: `wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream`
+  </Tab>
+  <Tab title="cloudflared">
+    ```bash
+    cloudflared tunnel --url http://localhost:8080
+    ```
+    Use the printed hostname: `wss://<hostname>/voice/msteams/stream`
+  </Tab>
+  <Tab title="ngrok">
+    ```bash
+    ngrok http 8080
+    ```
+    Use the printed hostname: `wss://<hostname>/voice/msteams/stream`
+  </Tab>
+</Tabs>
+
+## 5. Connect it to StandIn and call
+
+1. In your [StandIn dashboard](https://standin.komaa.com/dashboard), set the identity's
+   **Agent voice URL** to the `wss://` URL from step 4.
+2. Make sure the identity's shared secret equals `WORKER_SHARED_SECRET`.
+3. Place a Teams call to your bot (or join the sandbox meeting). StandIn joins, connects to the
+   bridge, and your Deepgram agent answers.
+
+## The vision hook
+
+The example ships a custom `VisionDescriber` in `index.mjs`. When your agent calls its built-in
+`look` tool, the bridge hands your function the current camera or screen-share frame and returns
+your text description to the agent. The example answers with `gpt-4o-mini`; swap in any
+vision-capable model. If you prefer configuration over code, the
+`VISION_API_URL` / `VISION_API_KEY` / `VISION_MODEL` variables do the same against any
+OpenAI-compatible endpoint.
+
+<Warning>
+  The Voice Agent API is audio-only, so `look` is answered by **your** vision endpoint - the raw
+  frame is sent there (never to Deepgram). Set `VISION_REQUIRES_RECORDING=true` to refuse frames
+  unless Teams recording is active, or run a local model if frames must not leave your
+  infrastructure. See [Vision](/deepgram/configuration#vision-the-look-tool).
+</Warning>
+
+## The custom tool
+
+The example also registers a `lookup_order` function tool:
+
+```js
+const tools = [{
+  name: "lookup_order",
+  description: "Look up the status of a customer order by its order number.",
+  parameters: {
+    type: "object",
+    properties: { orderNumber: { type: "string", description: "The order number, e.g. KO-1234." } },
+    required: ["orderNumber"],
+  },
+  async handler({ orderNumber }, ctx) {
+    // call your own backend here; the returned string goes to the agent
+    return `Order ${orderNumber} shipped yesterday and arrives tomorrow.`;
+  },
+}];
+
+startServer(cfg, undefined, describeFrame, { handleSignals: true, tools });
+```
+
+Ask the agent on a call "where is order KO-12?" and it calls your handler, then speaks the answer.
+This is the pattern for wiring the agent to your own systems (CRM lookups, transfers, bookings) -
+in-process, inside your trust boundary. See
+[Extending the agent's tools](https://komaa-com.github.io/deepgram-msteams-bridge/extending-tools/).
+
+## From example to your own project
+
+Depend on the published package instead of the local checkout:
+
+```bash
+npm install @komaa/deepgram-msteams-bridge
+```
+
+Then copy the example's `index.mjs` as your starting point. The
+[library API](https://komaa-com.github.io/deepgram-msteams-bridge/library-api/) documents the
+programmatic surface (config, server options, tools, hooks).
+
+## If something does not work
+
+- **WebSocket rejected with `401`** - `WORKER_SHARED_SECRET` does not match the secret in StandIn.
+- **Bot joins the call but stays silent** - the Agent voice URL is unreachable from the internet or
+  points at the wrong port; re-check the tunnel.
+- **Call connects, then ends with `agent-unavailable`** - the Deepgram key is invalid, or a
+  third-party `DEEPGRAM_THINK_PROVIDER` is set without `DEEPGRAM_THINK_ENDPOINT_URL`; the log line
+  carries the underlying error.
+- More: [Troubleshooting](/troubleshooting).
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Example README" icon="github" href="https://github.com/komaa-com/deepgram-msteams-bridge/blob/main/examples/basic-bridge/README.md" />
+  <Card title="Configuration" icon="sliders" href="/deepgram/configuration" />
+  <Card title="Library API" icon="book" href="https://komaa-com.github.io/deepgram-msteams-bridge/library-api/" />
+</CardGroup>

@@ -1,0 +1,128 @@
+---
+title: "Installation"
+description: "Run deepgram-msteams-bridge and put a Deepgram Voice Agent (Nova STT + LLM + Aura TTS) on Microsoft Teams calls through StandIn."
+keywords: ["Deepgram Voice Agent Teams","deepgram-msteams-bridge","Aura TTS","Nova STT","StandIn agent backend","speech-to-speech Teams bot"]
+---
+
+[`@komaa/deepgram-msteams-bridge`](https://www.npmjs.com/package/@komaa/deepgram-msteams-bridge)
+brings a **Deepgram Voice Agent** (Nova STT + your chosen LLM + Aura TTS, with turn-taking, all run
+by Deepgram) onto a Microsoft Teams call. It is the Deepgram analogue of the
+[ElevenLabs](/elevenlabs/installation), [LiveKit](/livekit/installation) and
+[OpenAI](/openai/installation) bridges: it hosts the HMAC WebSocket that StandIn connects to, then
+relays audio to and from a Deepgram Voice Agent session.
+
+<Note>
+  Like the other bridges, this is a **standalone Node service**, not a framework plugin. There is
+  also **no agent to configure in a dashboard**: the bridge configures each Voice Agent session
+  itself (STT model, LLM, voice, prompt, greeting, tools) from environment variables. Two variables
+  and it runs.
+</Note>
+
+## How it works
+
+The bridge opens **one Voice Agent WebSocket per call**
+(`wss://agent.deepgram.com/v1/agent/converse`), waits for the server's `Welcome`, sends a `Settings`
+message configuring the agent, and relays audio both ways. Audio is **copy-only**: the StandIn wire
+is base64 PCM 16 kHz and the Voice Agent session is pinned to `linear16` at 16 kHz, so nothing is
+resampled or re-encoded. Caller barge-in (`UserStartedSpeaking`) maps to a Teams-side flush, and
+stale "ghost" audio is dropped so nothing plays after the caller cuts in.
+
+The agent gets four built-in tools automatically (`end_call`, `look` for vision, `show_image`,
+`express` for avatar emotion), and you can register **your own function tools** the bridge executes
+in-process. See [Extending the agent's tools](https://komaa-com.github.io/deepgram-msteams-bridge/extending-tools/).
+
+## Requirements
+
+- **Node.js `>= 20`**.
+- A **Deepgram API key** with Voice Agent access ([console.deepgram.com](https://console.deepgram.com/)).
+- A **StandIn** subscription ([standin.komaa.com](https://standin.komaa.com), free package works) -
+  the hosted media bridge that joins the Teams call and connects to this service. See
+  [Architecture](/concepts/architecture).
+- Your own **Microsoft Teams bot** connected to StandIn - the [Teams setup](/teams/overview) walks
+  through the Azure bot, the app package, and the upload. To try it without one, use the
+  [sandbox](/community).
+
+## Run
+
+Env-configured, no install step needed:
+
+```bash
+DEEPGRAM_API_KEY=dg_... \
+WORKER_SHARED_SECRET=... \
+npx @komaa/deepgram-msteams-bridge
+```
+
+Optionally shape the agent (all have defaults):
+
+```bash
+DEEPGRAM_PROMPT="You are Komaa's friendly receptionist. Keep replies short."
+DEEPGRAM_GREETING="Hello! You've reached Komaa. How can I help?"
+DEEPGRAM_SPEAK_MODEL=aura-2-thalia-en   # Aura voice
+DEEPGRAM_THINK_MODEL=gpt-4o-mini        # LLM
+```
+
+Or add it to a project (`npm i @komaa/deepgram-msteams-bridge`) and embed it - see the
+[library API](https://komaa-com.github.io/deepgram-msteams-bridge/library-api/) for the programmatic
+surface, custom tools, and a custom vision hook.
+
+The bridge binds its media WebSocket (default `ws://<host>:8080/voice/msteams/stream`; StandIn
+appends `/{callId}` per call).
+
+<Note>
+  **Third-party LLMs need an endpoint.** Deepgram-managed `open_ai` and `anthropic` work with just a
+  model name. Providers like `google`, `groq` or `aws_bedrock` additionally require
+  `DEEPGRAM_THINK_ENDPOINT_URL` (Deepgram dials it) - see the
+  [configuration reference](/deepgram/configuration).
+</Note>
+
+## Expose the WebSocket (Agent voice URL)
+
+StandIn connects to the bridge **from the internet**, so the port must be reachable - a public host
+or a tunnel. With Tailscale Funnel:
+
+```bash
+tailscale funnel --bg --https=8080 8080
+```
+
+Your **Agent voice URL** is then:
+
+```
+wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream
+```
+
+## Connect it to StandIn
+
+Register that URL (with a **matching shared secret**) on your identity in the
+[dashboard](https://standin.komaa.com/dashboard), or use the
+[sandbox](https://standin.komaa.com/sandbox) to try it without your own Teams bot:
+
+1. Set the identity's **Agent voice URL** to where the bridge listens.
+2. Set `WORKER_SHARED_SECRET` to the **shared secret from pairing** - both sides must match exactly,
+   or the WebSocket handshake is rejected with `401`.
+3. Place a Teams call (or join the sandbox meeting). StandIn joins, connects to the bridge, and your
+   Deepgram agent answers.
+
+## Try the runnable example
+
+The fastest way to understand the bridge is to run its example project - a minimal, working
+embedding you can copy straight into your own repo.
+
+<Card title="Run the example, step by step" icon="play" href="/deepgram/example">
+  Clone `examples/basic-bridge`, fill in two environment variables, expose the port, connect it to
+  StandIn, and place a call - with the vision hook and a custom `lookup_order` tool explained along
+  the way.
+</Card>
+
+<Note>
+  Next: the full [configuration reference](/deepgram/configuration) - every environment variable, the
+  call governor, vision, and BYO-LLM endpoints. Deep protocol and library docs live on the
+  [project site](https://komaa-com.github.io/deepgram-msteams-bridge/).
+</Note>
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Docs site" icon="book" href="https://komaa-com.github.io/deepgram-msteams-bridge/" />
+  <Card title="npm" icon="npm" href="https://www.npmjs.com/package/@komaa/deepgram-msteams-bridge" />
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/deepgram-msteams-bridge" />
+</CardGroup>
