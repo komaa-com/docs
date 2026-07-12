@@ -13,7 +13,7 @@
 |---|---|
 | `index.mdx` | Landing page: what StandIn is, CVI pillars, capabilities |
 | `quickstart.mdx` | Install the plugin, connect to StandIn, place a test call |
-| `teams/overview.mdx` | Teams setup landing: what you create, setup path, applies to all four bridges |
+| `teams/overview.mdx` | Teams setup landing: what you create, setup path, applies to all five bridges |
 | `teams/azure-bot.mdx` | Entra app + Azure Bot + Teams channel/calling (redacted portal screenshots); canonical Microsoft Graph permissions table |
 | `teams/app-package.mdx` | Download the generated manifest zip from StandIn; example manifest, placeholders, manual packaging |
 | `teams/publish.mdx` | Upload routes (client / Developer Portal / org publish), register in StandIn, first call |
@@ -26,11 +26,12 @@
 | `hermes/installation.mdx`, `hermes/configuration.mdx` | Hermes plugin (`hermes-msteams-bridge`) |
 | `elevenlabs/example.mdx` | Step-by-step basic-bridge example walkthrough (clone, env, tunnel, StandIn, vision hook) |
 | `livekit/example.mdx` | Step-by-step examples walkthrough (voice agent + bridge, avatar variant, Docker, integration points) |
+| `openai/installation.mdx`, `openai/example.mdx`, `openai/configuration.mdx` | OpenAI Realtime bridge (`@komaa/openai-msteams-bridge`): install, basic-bridge example walkthrough (vision hook + custom lookup_order tool), env reference incl. OPENAI_MCP_SERVERS |
 
 ## Navigation (docs.json)
 
 - Groups: Getting Started, Teams setup, Concepts, OpenClaw plugin, Hermes plugin, ElevenLabs
-  bridge, LiveKit bridge.
+  bridge, LiveKit bridge, OpenAI bridge.
 - New pages must be added to `navigation.pages` in `docs.json` or they will not appear.
 - Internal links are root-relative without extension, e.g. `/teams/azure-bot#8-grant-graph-permissions`.
 - `/teams-app` (the old single-page Teams setup) redirects to `/teams/azure-bot` via

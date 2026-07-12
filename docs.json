@@ -77,6 +77,14 @@
           "livekit/example",
           "livekit/configuration"
         ]
+      },
+      {
+        "group": "OpenAI bridge",
+        "pages": [
+          "openai/installation",
+          "openai/example",
+          "openai/configuration"
+        ]
       }
     ]
   },

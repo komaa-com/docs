@@ -1,0 +1,91 @@
+---
+title: "Configuration"
+description: "Environment variables for openai-msteams-bridge: model, voice, instructions, secret, governor, vision, and MCP servers."
+keywords: ["openai-msteams-bridge config","OPENAI_REALTIME_MODEL","OPENAI_VOICE","MAX_CALL_MINUTES","OPENAI_MCP_SERVERS"]
+---
+
+The bridge is configured entirely by **environment variables** (a `.env` file works with
+`node --env-file=.env`). Numeric variables fail loudly at startup if set to a non-number, so a typo
+stops the process with a clear message rather than silently misbehaving - the same goes for a bad
+`OPENAI_VAD` value or malformed `OPENAI_MCP_SERVERS` JSON.
+
+## Required
+
+| Variable | Meaning |
+|---|---|
+| `OPENAI_API_KEY` | Server-side OpenAI key with Realtime access. Never sent to the Teams side; opens the per-call Realtime session and synthesizes the goodbye. |
+| `WORKER_SHARED_SECRET` | Must equal the shared secret from StandIn pairing. Both sides sign the WebSocket upgrade with it; a mismatch is rejected with `401`. |
+
+## The agent
+
+There is no dashboard - these variables define the agent:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `OPENAI_REALTIME_MODEL` | `gpt-realtime` | The Realtime model each per-call session runs. |
+| `OPENAI_VOICE` | model default | Output voice (e.g. `marin`, `cedar`, `alloy`). |
+| `OPENAI_INSTRUCTIONS` | a built-in default | Base system instructions. The bridge appends per-call caller context (name, tenant, direction) automatically. |
+| `OPENAI_FIRST_MESSAGE` | (unset) | Deterministic opening line the agent speaks as its first response - also the natural place for a spoken AI disclosure. |
+| `OPENAI_VAD` | `server_vad` | Turn detection: `server_vad` (volume-based) or `semantic_vad` (the model decides when the caller's turn is over). |
+
+## Common options
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `PORT` | `8080` | Port the media WebSocket listens on. |
+| `BIND` | `0.0.0.0` | Bind address. |
+| `MAX_CALL_MINUTES` | `0` (off) | Bridge-side hard cap per call. On expiry the agent speaks a goodbye, then the call ends. **Keep it below 60**: the Realtime API caps sessions at 60 minutes server-side, and a call reaching that ceiling drops abruptly instead of saying goodbye. |
+| `OPENAI_TTS_VOICE` | (unset) | With a voice set, the time-limit goodbye is spoken as the **exact** `GOODBYE_TEXT` via the standalone TTS endpoint. Without it, the agent is asked to say goodbye (wording may vary). |
+| `GOODBYE_TEXT` | a default line | The goodbye the governor speaks. |
+
+## Vision (the `look` tool)
+
+The `look` tool is registered automatically - nothing to define on the OpenAI side. The bridge
+answers it two ways:
+
+| Variable | Meaning |
+|---|---|
+| `VISION_API_URL` | Any OpenAI-compatible chat-completions endpoint with image input. When set, the bridge describes the frame and returns the text (the raw frame never leaves the bridge). |
+| `VISION_API_KEY` | Bearer key for that endpoint (optional for local models). |
+| `VISION_MODEL` | Model name for the vision endpoint. |
+
+Without a vision endpoint, `look` falls back to attaching the frame to the Realtime conversation as
+native image input (`gpt-realtime` is multimodal), which is only allowed when Teams recording is
+active. For a fully custom vision hook in code, see the
+[library API](https://komaa-com.github.io/openai-msteams-bridge/library-api/).
+
+## Custom tools and MCP servers
+
+| Variable | Meaning |
+|---|---|
+| `OPENAI_MCP_SERVERS` | JSON array of remote MCP tool entries (`{"server_label", "server_url", "allowed_tools"?, "authorization"?}`) the **Realtime API executes server-side** - the bridge does nothing at call time. `server_url` must be https. `require_approval` defaults to `"never"` (a voice call has no approval UI), so scope servers with `allowed_tools`. |
+
+Function tools your own code executes (`lookup_order`, `transfer_call`, ...) are registered
+programmatically - see
+[Extending the agent's tools](https://komaa-com.github.io/openai-msteams-bridge/extending-tools/)
+and the [example](/openai/example#the-custom-tool).
+
+## Advanced
+
+`OPENAI_TRANSCRIPTION_MODEL` (unset; needed for user-side transcript logging), `OPENAI_TTS_MODEL`
+(`gpt-4o-mini-tts`), `OPENAI_HOST` (`api.openai.com`, restricted to `*.openai.com` so the key
+cannot be exfiltrated elsewhere), `HMAC_FRESHNESS_MS` (default 60000), `MAX_CONNECTIONS` (64),
+`MAX_CONNECTIONS_PER_IP` (= total cap), `PRE_START_TIMEOUT_MS` (10000), `WORKER_IDLE_TIMEOUT_MS`
+(90000), `TLS_CERT_PATH` / `TLS_KEY_PATH` (native `wss://`), `LOG_LEVEL` (`info`), and
+`LOG_TRANSCRIPTS` (`false`; still gated on Teams recording being active). Full reference:
+[configuration-reference](https://komaa-com.github.io/openai-msteams-bridge/configuration-reference/).
+
+## Privacy
+
+Caller audio, transcripts, any vision content, and MCP tool traffic transit OpenAI's cloud and are
+retained per your organization's OpenAI data controls. Keep `LOG_TRANSCRIPTS` off and vision
+unconfigured if not needed, and disclose the AI on the call via `OPENAI_FIRST_MESSAGE`. See
+[Governors and privacy](https://komaa-com.github.io/openai-msteams-bridge/governors-and-privacy/).
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Docs site" icon="book" href="https://komaa-com.github.io/openai-msteams-bridge/" />
+  <Card title="Installation" icon="download" href="/openai/installation" />
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/openai-msteams-bridge" />
+</CardGroup>

@@ -1,7 +1,7 @@
 ---
 title: "Teams Voice Plugin (StandIn)"
 description: "Turn a Microsoft Teams call into a two-way video conversation with your AI agent - it sees, converses, and appears as a lip-synced avatar."
-keywords: ["Microsoft Teams AI bot","Teams voice agent","Teams video bot","conversational video interface","CVI","AI avatar","OpenClaw","Hermes Agent","ElevenLabs agent Teams","LiveKit agent Teams","StandIn"]
+keywords: ["Microsoft Teams AI bot","Teams voice agent","Teams video bot","conversational video interface","CVI","AI avatar","OpenClaw","Hermes Agent","ElevenLabs agent Teams","LiveKit agent Teams","OpenAI Realtime Teams","StandIn"]
 ---
 
 **Teams Voice Plugin (StandIn)** gives your AI agent a **Conversational Video Interface (CVI)** inside
@@ -10,9 +10,9 @@ Microsoft Teams: it answers and places calls, **sees** the caller's camera and s
 joins 1:1 and group meetings, speaks only when addressed, and handles Teams chat. All over
 recording-gated, allowlisted, HMAC-authenticated transport.
 
-It ships as **four backends** - two plugins that drop into an agent framework you already run, and
-two standalone bridges that connect a hosted or room-based agent platform. Pick the one that matches
-your stack:
+It ships as **five backends** - two plugins that drop into an agent framework you already run, and
+three standalone bridges that connect a hosted, room-based, or speech-to-speech agent platform.
+Pick the one that matches your stack:
 
 <CardGroup cols={2}>
   <Card title="OpenClaw plugin" icon="npm" href="/openclaw/installation">
@@ -30,6 +30,11 @@ your stack:
     Dispatch any **LiveKit agent** (incl. avatar agents) into Teams calls. Node
     [`@komaa/livekit-msteams-bridge`](https://www.npmjs.com/package/@komaa/livekit-msteams-bridge)
     or Python [`livekit-msteams-bridge`](https://pypi.org/project/livekit-msteams-bridge/).
+  </Card>
+  <Card title="OpenAI bridge" icon="bolt" href="/openai/installation">
+    Put an **OpenAI Realtime agent** (`gpt-realtime`, speech-to-speech) on Teams calls, with
+    extensible tools and MCP. Node
+    [`@komaa/openai-msteams-bridge`](https://www.npmjs.com/package/@komaa/openai-msteams-bridge).
   </Card>
 </CardGroup>
 

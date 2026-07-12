@@ -1,0 +1,125 @@
+---
+title: "Installation"
+description: "Run openai-msteams-bridge and put an OpenAI Realtime voice agent (gpt-realtime) on Microsoft Teams calls through StandIn."
+keywords: ["OpenAI Realtime Teams","gpt-realtime Teams call","openai-msteams-bridge","StandIn agent backend","speech-to-speech Teams bot"]
+---
+
+[`@komaa/openai-msteams-bridge`](https://www.npmjs.com/package/@komaa/openai-msteams-bridge)
+brings an **OpenAI Realtime** voice agent (`gpt-realtime` - speech-to-speech: STT + LLM + TTS +
+turn-taking in one model) onto a Microsoft Teams call. It is the OpenAI analogue of the
+[ElevenLabs](/elevenlabs/installation) and [LiveKit](/livekit/installation) bridges: it hosts the
+HMAC WebSocket that StandIn connects to, then relays audio to and from an OpenAI Realtime session.
+
+<Note>
+  Like the other bridges, this is a **standalone Node service**, not a framework plugin. There is
+  also **no agent to configure in a dashboard**: the bridge configures each Realtime session itself
+  (model, voice, instructions, VAD, tools) from environment variables. Two variables and it runs.
+</Note>
+
+## How it works
+
+The bridge opens **one Realtime WebSocket per call**
+(`wss://api.openai.com/v1/realtime`), configures the session with your instructions plus per-call
+caller context, and relays audio both ways. The Teams wire is PCM 16 kHz; the Realtime API speaks
+PCM 24 kHz only, so the bridge converts at that one boundary with a built-in anti-aliased resampler
+(no codecs, no external dependencies). Caller barge-in maps onto the model's own interruption
+handling, and stale "ghost" audio is dropped so nothing plays after the caller cuts in.
+
+The agent gets four built-in tools automatically (`end_call`, `look` for vision, `show_image`,
+`express` for avatar emotion) - and you can register **your own function tools** or pass **remote
+MCP servers** the Realtime API executes server-side. See
+[Extending the agent's tools](https://komaa-com.github.io/openai-msteams-bridge/extending-tools/).
+
+## Requirements
+
+- **Node.js `>= 20`**.
+- An **OpenAI API key** with Realtime access ([platform.openai.com](https://platform.openai.com/api-keys)).
+- A **StandIn** subscription ([standin.komaa.com](https://standin.komaa.com), free package works) -
+  the hosted media bridge that joins the Teams call and connects to this service. See
+  [Architecture](/concepts/architecture).
+- Your own **Microsoft Teams bot** connected to StandIn - the [Teams setup](/teams/overview) walks
+  through the Azure bot, the app package, and the upload. To try it without one, use the
+  [sandbox](/community).
+
+## Run
+
+Env-configured, no install step needed:
+
+```bash
+OPENAI_API_KEY=sk-... \
+WORKER_SHARED_SECRET=... \
+npx @komaa/openai-msteams-bridge
+```
+
+Optionally shape the agent (all have defaults):
+
+```bash
+OPENAI_VOICE=marin
+OPENAI_INSTRUCTIONS="You are Komaa's friendly receptionist. Keep replies short."
+OPENAI_FIRST_MESSAGE="Hello! You've reached Komaa. How can I help?"
+```
+
+Or add it to a project (`npm i @komaa/openai-msteams-bridge`) and embed it - see the
+[library API](https://komaa-com.github.io/openai-msteams-bridge/library-api/) for the programmatic
+surface, custom tools, and a custom vision hook.
+
+The bridge binds its media WebSocket (default `ws://<host>:8080/voice/msteams/stream`; StandIn
+appends `/{callId}` per call).
+
+<Warning>
+  The OpenAI Realtime API caps a session at **60 minutes** server-side. Set `MAX_CALL_MINUTES`
+  below 60 so the bridge's own governor ends long calls with a spoken goodbye instead of an abrupt
+  drop - the bridge warns at startup when it would not.
+</Warning>
+
+## Expose the WebSocket (Agent voice URL)
+
+StandIn connects to the bridge **from the internet**, so the port must be reachable - a public host
+or a tunnel. With Tailscale Funnel:
+
+```bash
+tailscale funnel --bg --https=8080 8080
+```
+
+Your **Agent voice URL** is then:
+
+```
+wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream
+```
+
+## Connect it to StandIn
+
+Register that URL (with a **matching shared secret**) on your identity in the
+[dashboard](https://standin.komaa.com/dashboard), or use the
+[sandbox](https://standin.komaa.com/sandbox) to try it without your own Teams bot:
+
+1. Set the identity's **Agent voice URL** to where the bridge listens.
+2. Set `WORKER_SHARED_SECRET` to the **shared secret from pairing** - both sides must match exactly,
+   or the WebSocket handshake is rejected with `401`.
+3. Place a Teams call (or join the sandbox meeting). StandIn joins, connects to the bridge, and your
+   Realtime agent answers.
+
+## Try the runnable example
+
+The fastest way to understand the bridge is to run its example project - a minimal, working
+embedding you can copy straight into your own repo.
+
+<Card title="Run the example, step by step" icon="play" href="/openai/example">
+  Clone `examples/basic-bridge`, fill in two environment variables, expose the port, connect it to
+  StandIn, and place a call - with the vision hook and a custom `lookup_order` tool explained along
+  the way.
+</Card>
+
+<Note>
+  Next: the full [configuration reference](/openai/configuration) - every environment variable, the
+  call governor, vision, and MCP servers. Deep protocol and library docs live on the
+  [project site](https://komaa-com.github.io/openai-msteams-bridge/).
+</Note>
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Docs site" icon="book" href="https://komaa-com.github.io/openai-msteams-bridge/" />
+  <Card title="npm" icon="npm" href="https://www.npmjs.com/package/@komaa/openai-msteams-bridge" />
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/openai-msteams-bridge" />
+</CardGroup>
