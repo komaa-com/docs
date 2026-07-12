@@ -27,7 +27,7 @@
 | `elevenlabs/example.mdx` | Step-by-step basic-bridge example walkthrough (clone, env, tunnel, StandIn, vision hook) |
 | `livekit/example.mdx` | Step-by-step examples walkthrough (voice agent + bridge, avatar variant, Docker, integration points) |
 | `openai/installation.mdx`, `openai/example.mdx`, `openai/configuration.mdx` | OpenAI Realtime bridge (`@komaa/openai-msteams-bridge`): install, basic-bridge example walkthrough (vision hook + custom lookup_order tool), env reference incl. OPENAI_MCP_SERVERS |
-| `deepgram/installation.mdx`, `deepgram/example.mdx`, `deepgram/configuration.mdx` | Deepgram Voice Agent bridge (`@komaa/deepgram-msteams-bridge`): install, basic-bridge example walkthrough (vision hook + custom lookup_order tool), env reference incl. DEEPGRAM_THINK_ENDPOINT_URL and VISION_REQUIRES_RECORDING |
+| `deepgram/installation.mdx`, `deepgram/example.mdx`, `deepgram/configuration.mdx` | Deepgram Voice Agent bridge (`@komaa/deepgram-msteams-bridge`, Python sibling `deepgram-msteams-bridge` on PyPI): install, basic-bridge example walkthrough (vision hook + custom lookup_order tool), env reference incl. DEEPGRAM_THINK_ENDPOINT_URL and VISION_REQUIRES_RECORDING |
 
 ## Navigation (docs.json)
 
