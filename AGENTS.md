@@ -28,6 +28,7 @@
 | `livekit/example.mdx` | Step-by-step examples walkthrough (voice agent + bridge, avatar variant, Docker, integration points) |
 | `openai/installation.mdx`, `openai/example.mdx`, `openai/configuration.mdx` | OpenAI Realtime bridge (`@komaa/openai-msteams-bridge`): install, basic-bridge example walkthrough (vision hook + custom lookup_order tool), env reference incl. OPENAI_MCP_SERVERS |
 | `deepgram/installation.mdx`, `deepgram/example.mdx`, `deepgram/configuration.mdx` | Deepgram Voice Agent bridge (`@komaa/deepgram-msteams-bridge`, Python sibling `deepgram-msteams-bridge` on PyPI): install, basic-bridge example walkthrough (vision hook + custom lookup_order tool), env reference incl. DEEPGRAM_THINK_ENDPOINT_URL and VISION_REQUIRES_RECORDING |
+| `cartesia/installation.mdx`, `cartesia/example.mdx`, `cartesia/configuration.mdx` | Cartesia Line bridge (`@komaa/cartesia-msteams-bridge`): install, basic-bridge example walkthrough (transport-only: agent code lives on Cartesia's platform, context via custom events), env reference incl. CARTESIA_TTS_MODEL goodbye and per-call overrides |
 
 ## Navigation (docs.json)
 

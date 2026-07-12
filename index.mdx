@@ -10,8 +10,8 @@ Microsoft Teams: it answers and places calls, **sees** the caller's camera and s
 joins 1:1 and group meetings, speaks only when addressed, and handles Teams chat. All over
 recording-gated, allowlisted, HMAC-authenticated transport.
 
-It ships as **six backends** - two plugins that drop into an agent framework you already run, and
-four standalone bridges that connect a hosted, room-based, or speech-to-speech agent platform.
+It ships as **seven backends** - two plugins that drop into an agent framework you already run, and
+five standalone bridges that connect a hosted, room-based, or speech-to-speech agent platform.
 Pick the one that matches your stack:
 
 <CardGroup cols={2}>
@@ -40,6 +40,10 @@ Pick the one that matches your stack:
     Put a **Deepgram Voice Agent** (Nova STT + LLM + Aura TTS) on Teams calls, copy-only at 16 kHz.
     Node [`@komaa/deepgram-msteams-bridge`](https://www.npmjs.com/package/@komaa/deepgram-msteams-bridge)
     or Python [`deepgram-msteams-bridge`](https://pypi.org/project/deepgram-msteams-bridge/).
+  </Card>
+  <Card title="Cartesia bridge" icon="phone-volume" href="/cartesia/installation">
+    Put a **Cartesia Line agent** (your agent code on Cartesia's platform) on Teams calls, verbatim
+    at 16 kHz. Node [`@komaa/cartesia-msteams-bridge`](https://www.npmjs.com/package/@komaa/cartesia-msteams-bridge).
   </Card>
 </CardGroup>
 

@@ -1,0 +1,96 @@
+---
+title: "Run the example"
+description: "A step-by-step walkthrough of the basic-bridge example: clone, configure, expose, connect to StandIn, and put a Cartesia Line agent on a Teams call."
+keywords: ["cartesia-msteams-bridge example","basic-bridge","Cartesia Line tutorial","Line agent Teams call"]
+---
+
+The fastest way to understand the bridge is to run its example project - a minimal, working
+embedding you can copy straight into your own repo. Budget about **10 minutes** once the
+[Teams setup](/teams/overview) is done.
+
+<Card title="examples/basic-bridge" icon="play" href="https://github.com/komaa-com/cartesia-msteams-bridge/tree/main/examples/basic-bridge">
+  `loadConfig()` + `startServer()` and nothing else - about 20 lines, because the agent's brain
+  (LLM, tools, conversation logic) lives in your Line deployment on Cartesia, not in the bridge.
+  Env-file config and graceful shutdown are built in.
+</Card>
+
+## What you need first
+
+- **Node.js `>= 20`**.
+- A **Cartesia API key** and a **deployed Line agent** (its agent id) -
+  [docs.cartesia.ai/line](https://docs.cartesia.ai/line).
+- A **StandIn identity** with its **shared secret** (from
+  [pairing](/quickstart#connect-your-agent-by-pairing-recommended) or the
+  [dashboard](https://standin.komaa.com/dashboard)). The [sandbox](/community) works too if you have
+  no Teams bot yet.
+
+## 1. Clone and install
+
+```bash
+git clone https://github.com/komaa-com/cartesia-msteams-bridge
+cd cartesia-msteams-bridge/examples/basic-bridge
+npm install
+```
+
+## 2. Configure
+
+```bash
+cp ../../.env.example .env
+```
+
+Fill in the three required values:
+
+| Variable | What to put there |
+|---|---|
+| `CARTESIA_API_KEY` | Your Cartesia API key (server-side only; each call mints a short-lived token, so the key never rides the agent socket). |
+| `CARTESIA_AGENT_ID` | The deployed Line agent that should answer calls. |
+| `WORKER_SHARED_SECRET` | The shared secret from StandIn pairing - both sides must match exactly. |
+
+Optionally give the call a deterministic opening line (a natural spoken AI disclosure):
+
+```bash
+CARTESIA_INTRODUCTION="Hello! You've reached Komaa. Quick note: I'm an AI assistant."
+```
+
+## 3. Run and expose
+
+```bash
+npm start
+```
+
+The bridge listens on port `8080`. Expose it with a tunnel (Tailscale Funnel, Cloudflare Tunnel,
+ngrok, dev tunnels - see the [installation page](/cartesia/installation)) and note the public
+`wss://…/voice/msteams/stream` URL.
+
+## 4. Connect to StandIn and call
+
+Set your identity's **Agent voice URL** to that `wss://` URL in the
+[dashboard](https://standin.komaa.com/dashboard) (or use the
+[sandbox](https://standin.komaa.com/sandbox)), then place a Teams call. In the logs you should see:
+
+```text
+INFO  [server] worker connected for call 19:meeting_ab... (1/64)
+INFO  [call:19:meeting_ab] session.start (direction=inbound, recording=unknown)
+INFO  [call:19:meeting_ab] Cartesia Line stream open; waiting for ack
+INFO  [call:19:meeting_ab] ack received; relaying
+```
+
+Speak, and your Line agent answers in its own voice.
+
+## Where the interesting parts live
+
+Unlike the other bridges' examples there is no vision hook or custom tool to study here - those
+belong in your **Line agent code** on Cartesia's platform. What the bridge forwards to it (caller
+metadata, `call_context` and `goodbye_request` custom events, native DTMF) is documented on the
+project site:
+
+<Card title="Your Line Agent - the contract" icon="code" href="https://komaa-com.github.io/cartesia-msteams-bridge/your-line-agent/">
+  The start metadata and custom-event shapes your agent code receives, how to detect a Teams call
+  (`metadata.from == "msteams"`), and the transfer_call limitation.
+</Card>
+
+<Note>
+  Before production: set the [governor variables](/cartesia/configuration#call-governor)
+  (`MAX_CALL_MINUTES`, `CARTESIA_TTS_MODEL` + `CARTESIA_TTS_VOICE_ID`, `GOODBYE_TEXT`) so time
+  limits end with a spoken goodbye instead of silence.
+</Note>

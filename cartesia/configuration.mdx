@@ -1,0 +1,77 @@
+---
+title: "Configuration"
+description: "Environment variables for cartesia-msteams-bridge: agent id, per-call overrides, the call governor, the Sonic TTS goodbye, and transport hardening."
+keywords: ["cartesia-msteams-bridge config","CARTESIA_AGENT_ID","CARTESIA_TTS_MODEL","MAX_CALL_MINUTES","CARTESIA_INTRODUCTION"]
+---
+
+The bridge is configured entirely by **environment variables** (a `.env` file works with
+`node --env-file=.env`). Numeric variables fail loudly at startup if set to a non-number, so a typo
+stops the process with a clear message rather than silently misbehaving - the same goes for a
+non-`cartesia.ai` host or a zero `HMAC_FRESHNESS_MS`.
+
+The agent itself (LLM, tools, conversation logic) is configured where it lives: in your **Line
+deployment on Cartesia**. The variables here configure the transport and optional per-call
+overrides.
+
+## Required
+
+| Variable | Meaning |
+|---|---|
+| `CARTESIA_API_KEY` | Server-side Cartesia key. Mints per-call access tokens and calls Sonic TTS; never rides the agent socket. |
+| `CARTESIA_AGENT_ID` | The deployed Line agent that answers calls. |
+| `WORKER_SHARED_SECRET` | Must equal the shared secret from StandIn pairing. Both sides sign the WebSocket upgrade with it; a mismatch is rejected with `401`. |
+
+## Per-call overrides
+
+Your Line agent's own deployment config is the default:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `CARTESIA_VOICE_ID` | (unset) | Override the agent's TTS voice for calls through this bridge. |
+| `CARTESIA_INTRODUCTION` | (unset) | Deterministic opening line - also the natural place for a spoken AI disclosure. |
+| `CARTESIA_SYSTEM_PROMPT` | (unset) | Prompt override. When set, per-call caller context (name, tenant, direction) is appended; unset = the deployed agent's prompt, untouched. Caller context reaches your agent code via the start metadata either way. |
+| `CARTESIA_API_HOST` | `api.cartesia.ai` | Restricted to `*.cartesia.ai` so the API key cannot be exfiltrated (`CARTESIA_HOST_ALLOW_ANY=true` only for a proxy you control). |
+| `CARTESIA_VERSION` | `2025-04-16` | `Cartesia-Version` header sent on every request. |
+
+## Call governor
+
+Cartesia knows nothing about your budget - enforce time limits here:
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `MAX_CALL_MINUTES` | `0` (off) | Hard cap per call, in minutes (fractional allowed). On expiry the bridge speaks the goodbye and ends the call. |
+| `GOODBYE_TEXT` | a default line | The goodbye the governor speaks. |
+| `GOODBYE_GRACE_MS` | `8000` | Grace before hangup when the goodbye duration is unknown. Always hard-bounded. |
+| `CARTESIA_TTS_MODEL` | (unset) | Enables the **deterministic goodbye** via standalone Sonic TTS (exact text, agent muted, real duration, never dropped under backpressure). E.g. `sonic-2`. |
+| `CARTESIA_TTS_VOICE_ID` | (unset) | Voice for the goodbye TTS; falls back to `CARTESIA_VOICE_ID`. |
+| `CARTESIA_TTS_LANGUAGE` | `en` | Language for the goodbye TTS. |
+
+<Note>
+  **The Line wire has no "say this exact text" message.** Without a TTS model + voice, the governor
+  goodbye is a `goodbye_request` custom event your Line agent code may speak - silent otherwise.
+  Arming `MAX_CALL_MINUTES` without TTS logs a startup warning for exactly this reason.
+</Note>
+
+## Server and transport
+
+| Variable | Default | Meaning |
+|---|---|---|
+| `PORT` / `BIND` | `8080` / `0.0.0.0` | Listen address. |
+| `TLS_CERT_PATH` / `TLS_KEY_PATH` | (unset) | PEM cert/key for native TLS (`wss://`, TLS 1.2 minimum). Without both, front the bridge with a TLS terminator. |
+| `HMAC_FRESHNESS_MS` | `60000` | Allowed clock skew for the HMAC timestamp. Must be positive. |
+| `MAX_CONNECTIONS` | `0` (= 64) | Max concurrent worker connections. |
+| `MAX_CONNECTIONS_PER_IP` | `0` (= total) | Per-IP cap (`TRUST_PROXY_XFF=true` behind a proxy you control). |
+| `PRE_START_TIMEOUT_MS` | `0` (= 10000) | Drop a connection that authenticates but never starts a call. |
+| `WORKER_IDLE_TIMEOUT_MS` | `0` (= 90000) | Dead-peer window (the worker heartbeats every 30 s). |
+| `LOG_LEVEL` | `info` | `debug` / `info` / `warn` / `error`. |
+
+The bridge exposes `GET /healthz` (liveness) and `GET /metrics` (Prometheus text format: calls,
+duration histogram, rejects, relay/drop counters, agent errors) on the same port - keep it private
+to your network or scrape through your ingress.
+
+<Note>
+  Audio formats are not configurable: the wire is PCM 16 kHz by contract and the Line stream is
+  pinned to `pcm_16000` - the bridge relays base64 payloads verbatim. The full environment
+  reference, wire protocol, and library API live on the
+  [project site](https://komaa-com.github.io/cartesia-msteams-bridge/).
+</Note>

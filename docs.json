@@ -93,6 +93,14 @@
           "deepgram/example",
           "deepgram/configuration"
         ]
+      },
+      {
+        "group": "Cartesia bridge",
+        "pages": [
+          "cartesia/installation",
+          "cartesia/example",
+          "cartesia/configuration"
+        ]
       }
     ]
   },

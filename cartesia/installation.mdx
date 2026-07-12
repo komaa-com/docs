@@ -1,0 +1,121 @@
+---
+title: "Installation"
+description: "Run cartesia-msteams-bridge and put a Cartesia Line voice agent (your agent code on Cartesia's platform) on Microsoft Teams calls through StandIn."
+keywords: ["Cartesia Line Teams","cartesia-msteams-bridge","Line agent telephony","Sonic TTS","StandIn agent backend","speech-to-speech Teams bot"]
+---
+
+[`@komaa/cartesia-msteams-bridge`](https://www.npmjs.com/package/@komaa/cartesia-msteams-bridge)
+brings a **Cartesia Line agent** onto a Microsoft Teams call. It is the Cartesia analogue of the
+[ElevenLabs](/elevenlabs/installation), [LiveKit](/livekit/installation),
+[OpenAI](/openai/installation) and [Deepgram](/deepgram/installation) bridges: it hosts the HMAC
+WebSocket that StandIn connects to, then relays audio to and from a Line agent stream (Cartesia's
+[WebSocket API](https://docs.cartesia.ai/line/integrations/websocket-api), the integration they
+provide for bringing your own telephony).
+
+<Note>
+  **Where the brain lives.** A Line agent is **your code deployed on Cartesia's platform** - LLM,
+  tools, conversation logic, hangup. This bridge is deliberately a hardened transport: unlike the
+  other bridges there is no in-process tool registry or vision hook, because the Line wire has no
+  client-side tool channel. Your agent still receives the full Teams context (caller identity,
+  participants, active speaker, DTMF, recording state) as metadata and custom events - the
+  [contract is documented](https://komaa-com.github.io/cartesia-msteams-bridge/your-line-agent/).
+</Note>
+
+## How it works
+
+The bridge mints a **short-lived, agent-scoped access token per call** (the API key never rides an
+agent socket), opens `wss://api.cartesia.ai/agents/stream/{agentId}`, sends the `start` event, and
+relays once the server acks. Audio is **verbatim**: the StandIn wire is base64 PCM 16 kHz and the
+Line stream is pinned to `pcm_16000` with base64 payloads both ways, so the hot path relays the
+payload string untouched - no decode, no re-encode, no transcoding. Line's `clear` (barge-in) maps
+to a Teams-side playback flush, and keypad digits ride the wire as native `dtmf` events.
+
+## Requirements
+
+- **Node.js `>= 20`**.
+- A **Cartesia API key** and a **deployed Line agent** (its agent id) -
+  [docs.cartesia.ai/line](https://docs.cartesia.ai/line).
+- A **StandIn** subscription ([standin.komaa.com](https://standin.komaa.com), free package works) -
+  the hosted media bridge that joins the Teams call and connects to this service. See
+  [Architecture](/concepts/architecture).
+- Your own **Microsoft Teams bot** connected to StandIn - the [Teams setup](/teams/overview) walks
+  through the Azure bot, the app package, and the upload. To try it without one, use the
+  [sandbox](/community).
+
+## Run
+
+Env-configured, no install step needed:
+
+```bash
+CARTESIA_API_KEY=sk_car_... \
+CARTESIA_AGENT_ID=agent_... \
+WORKER_SHARED_SECRET=... \
+npx @komaa/cartesia-msteams-bridge
+```
+
+Optionally shape the call (your Line agent's own config is the default):
+
+```bash
+CARTESIA_INTRODUCTION="Hello! You've reached Komaa. Quick note: I'm an AI assistant."
+CARTESIA_VOICE_ID=a0e99841-438c-4a64-b679-ae501e7d6091   # voice override
+```
+
+Or add it to a project (`npm i @komaa/cartesia-msteams-bridge`) and embed it - see the
+[library API](https://komaa-com.github.io/cartesia-msteams-bridge/library-api/) for the programmatic
+surface, including the graceful `drain()` for embedders.
+
+The bridge binds its media WebSocket (default `ws://<host>:8080/voice/msteams/stream`; StandIn
+appends `/{callId}` per call).
+
+## Expose the WebSocket (Agent voice URL)
+
+StandIn connects to the bridge **from the internet**, so the port must be reachable - a public host
+or a tunnel. With Tailscale Funnel:
+
+```bash
+tailscale funnel --bg --https=8080 8080
+```
+
+Your **Agent voice URL** is then:
+
+```
+wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream
+```
+
+## Connect it to StandIn
+
+Register that URL (with a **matching shared secret**) on your identity in the
+[dashboard](https://standin.komaa.com/dashboard), or use the
+[sandbox](https://standin.komaa.com/sandbox) to try it without your own Teams bot:
+
+1. Set the identity's **Agent voice URL** to where the bridge listens.
+2. Set `WORKER_SHARED_SECRET` to the **shared secret from pairing** - both sides must match exactly,
+   or the WebSocket handshake is rejected with `401`.
+3. Place a Teams call (or join the sandbox meeting). StandIn joins, connects to the bridge, and your
+   Line agent answers.
+
+## Try the runnable example
+
+The fastest way to understand the bridge is to run its example project - a minimal, working
+embedding you can copy straight into your own repo.
+
+<Card title="Run the example, step by step" icon="play" href="/cartesia/example">
+  Clone `examples/basic-bridge`, fill in three environment variables, expose the port, connect it to
+  StandIn, and place a call - about 20 lines of code, because the agent's brain lives in your Line
+  deployment.
+</Card>
+
+<Note>
+  Next: the full [configuration reference](/cartesia/configuration) - every environment variable,
+  the call governor, and the Sonic TTS goodbye. Deep protocol and library docs live on the
+  [project site](https://komaa-com.github.io/cartesia-msteams-bridge/), including
+  [what your Line agent receives](https://komaa-com.github.io/cartesia-msteams-bridge/your-line-agent/).
+</Note>
+
+## Links
+
+<CardGroup cols={3}>
+  <Card title="Docs site" icon="book" href="https://komaa-com.github.io/cartesia-msteams-bridge/" />
+  <Card title="npm" icon="npm" href="https://www.npmjs.com/package/@komaa/cartesia-msteams-bridge" />
+  <Card title="Source" icon="github" href="https://github.com/komaa-com/cartesia-msteams-bridge" />
+</CardGroup>
