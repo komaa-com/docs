@@ -81,7 +81,7 @@ and Hermes plugins implement:
 
 | Aspect | Value |
 |---|---|
-| **Handshake** | `HMAC-SHA256(sharedSecret, "{timestampMs}.{callId}")`, lowercase hex, sent as `X-OpenClawTeamsBridge-Timestamp` / `-Signature` headers on the WS upgrade. ±60 s window; each `(callId, ts, sig)` is single-use (replay-guarded). |
+| **Handshake** | `HMAC-SHA256(sharedSecret, "{timestampMs}.{callId}")`, lowercase hex, sent as `X-StandIn-Timestamp` / `-Signature` (legacy `X-OpenClawTeamsBridge-*` still accepted) headers on the WS upgrade. ±60 s window; each `(callId, ts, sig)` is single-use (replay-guarded). |
 | **Path** | `/voice/msteams/stream/{callId}` |
 | **Audio** | PCM 16 kHz, 16-bit, mono, little-endian; 20 ms / 640-byte frames, base64 |
 | **Inbound msgs** | `session.start` · `session.end` · `recording.status` · `audio.frame` · `video.frame` · `participants` · `dtmf` · `ping` |
