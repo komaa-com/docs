@@ -16,6 +16,16 @@ relays audio to and from an ElevenLabs Agent conversation.
   ElevenLabs hosts the agent itself.
 </Note>
 
+<Note>
+  **Prefer Python?** The same bridge exists as a Python package:
+  [`elevenlabs-msteams-bridge` on PyPI](https://pypi.org/project/elevenlabs-msteams-bridge/)
+  (`pip install elevenlabs-msteams-bridge`), with its own
+  [docs site](https://komaa-com.github.io/elevenlabs-msteams-bridge-py/) and
+  [repo](https://github.com/komaa-com/elevenlabs-msteams-bridge-py). Same wire protocol, same
+  environment variables, same hardening - pick the runtime that fits your stack. This page follows
+  the Node package.
+</Note>
+
 ## How it works
 
 Audio is relayed **verbatim** - both sides speak base64 PCM 16 kHz, so there is no transcoding on
