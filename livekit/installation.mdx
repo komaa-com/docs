@@ -18,6 +18,16 @@ then bridges the call into a LiveKit room where your agent runs.
   agent runs as its own worker and is dispatched into a per-call room.
 </Note>
 
+<Note>
+  **Prefer Python?** The same bridge exists as a Python package:
+  [`livekit-msteams-bridge` on PyPI](https://pypi.org/project/livekit-msteams-bridge/)
+  (`pip install livekit-msteams-bridge`), with its own
+  [docs site](https://komaa-com.github.io/livekit-msteams-bridge-py/) and
+  [repo](https://github.com/komaa-com/livekit-msteams-bridge-py). Same wire protocol, same
+  environment variables, same hardening - pick the runtime that fits your stack. This page follows
+  the Node package.
+</Note>
+
 ## How it works
 
 Per call, the bridge creates **one LiveKit room**, **dispatches your agent into it** (explicit
