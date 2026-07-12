@@ -108,5 +108,10 @@
       "cursor",
       "vscode"
     ]
+  },
+  "integrations": {
+    "ga4": {
+      "measurementId": "G-M02N9C42XH"
+    }
   }
 }
