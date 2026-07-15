@@ -1,18 +1,22 @@
 ---
 title: "Run the examples"
 description: "A step-by-step walkthrough of the example agent and bridge: run a LiveKit voice or avatar agent, run the bridge, connect StandIn, and take a Teams call."
-keywords: ["livekit-msteams-bridge example","LiveKit voice agent Teams tutorial","bitHuman avatar agent","agent dispatch agentName","uv run voice_agent"]
+keywords: ["livekit-msteams-bridge example","LiveKit voice agent Teams tutorial","bitHuman avatar agent","agent dispatch agentName","uv run worker.py"]
 ---
 
-The repo ships two example projects so you can see a full working setup - an agent **and** the
+The repo ships example projects so you can see a full working setup - an agent **and** the
 bridge - before wiring your own. A LiveKit call needs both: your agent runs as a worker, and the
 bridge dispatches it into a per-call room. Budget about **15 minutes** once the
 [Teams setup](/teams/overview) is done.
 
-<CardGroup cols={2}>
-  <Card title="examples/agents" icon="robot" href="https://github.com/komaa-com/livekit-msteams-bridge/tree/main/examples/agents">
-    Two ready-to-run LiveKit agents: a minimal voice pipeline (`voice_agent.py`) and a bitHuman
-    avatar (`avatar_agent.py`).
+<CardGroup cols={3}>
+  <Card title="examples/voice-agent" icon="microphone" href="https://github.com/komaa-com/livekit-msteams-bridge/tree/main/examples/voice-agent">
+    A minimal LiveKit voice agent (OpenAI STT/LLM/TTS + silero VAD). `worker.py`, registers as
+    `standin-voice-agent`.
+  </Card>
+  <Card title="examples/video-agent" icon="robot" href="https://github.com/komaa-com/livekit-msteams-bridge/tree/main/examples/video-agent">
+    The same pipeline plus a lip-synced **bitHuman** avatar. `worker.py`, registers as
+    `standin-avatar-agent`.
   </Card>
   <Card title="examples/basic-bridge" icon="play" href="https://github.com/komaa-com/livekit-msteams-bridge/tree/main/examples/basic-bridge">
     Embed the bridge in your own Node project: `loadConfig()` + `startServer()`, env-file config,
@@ -34,9 +38,9 @@ bridge dispatches it into a per-call room. Budget about **15 minutes** once the
 
 ## Set up the LiveKit project and agent
 
-Unlike a hosted agent, a LiveKit "agent" is a **worker you run** - the example in `examples/agents`
-is a complete, ready-to-run one. You need two things: a LiveKit project for it to connect to, and an
-**agent name** so the bridge can dispatch it.
+Unlike a hosted agent, a LiveKit "agent" is a **worker you run** - `examples/voice-agent` (and
+`examples/video-agent` for the avatar) is a complete, ready-to-run one. You need two things: a LiveKit
+project for it to connect to, and an **agent name** so the bridge can dispatch it.
 
 ### Create a LiveKit project
 
@@ -59,10 +63,10 @@ the bridge (step 2):
 ### The agent name is the contract
 
 The bridge dispatches by **agent name** (explicit dispatch). The example voice agent registers itself
-as `teams-voice-agent`:
+as `standin-voice-agent`:
 
 ```python
-cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, agent_name="teams-voice-agent"))
+cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, agent_name="standin-voice-agent"))
 ```
 
 That name must equal the bridge's `LIVEKIT_AGENT_NAME` (step 2). Nothing else about the agent is
@@ -84,14 +88,14 @@ data topics if you want (all shown in the example agents). See
 
 ## 1. Run the voice agent
 
-Clone the repo and enter the agents example:
+Clone the repo and enter the voice-agent example:
 
 ```bash
 git clone https://github.com/komaa-com/livekit-msteams-bridge
 ```
 
 ```bash
-cd livekit-msteams-bridge/examples/agents
+cd livekit-msteams-bridge/examples/voice-agent
 ```
 
 ```bash
@@ -113,17 +117,17 @@ uv sync
 ```
 
 ```bash
-uv run voice_agent.py download-files
+uv run python -m livekit.agents download-files
 ```
 
 ```bash
-uv run voice_agent.py dev
+uv run worker.py dev
 ```
 
-(Plain pip works too: `pip install -r requirements.txt && python voice_agent.py dev`. Use `start`
+(Plain pip works too: `pip install -r requirements.txt && python worker.py dev`. Use `start`
 instead of `dev` in production.)
 
-The worker registers with your LiveKit server under the agent name **`teams-voice-agent`** and
+The worker registers with your LiveKit server under the agent name **`standin-voice-agent`** and
 waits for dispatch - it will not join anything until the bridge creates a room.
 
 ## 2. Run the bridge
@@ -134,14 +138,14 @@ In a second terminal, point the bridge at the same LiveKit project and at that a
 LIVEKIT_URL=wss://your-project.livekit.cloud \
 LIVEKIT_API_KEY=API... \
 LIVEKIT_API_SECRET=... \
-LIVEKIT_AGENT_NAME=teams-voice-agent \
+LIVEKIT_AGENT_NAME=standin-voice-agent \
 WORKER_SHARED_SECRET=... \
 npx @komaa/livekit-msteams-bridge
 ```
 
 <Warning>
   `LIVEKIT_AGENT_NAME` must equal the `agent_name` the worker registers with (the examples use
-  `teams-voice-agent` and `teams-avatar-agent`). A mismatch is the classic silent failure: the room
+  `standin-voice-agent` and `standin-avatar-agent`). A mismatch is the classic silent failure: the room
   is created, the caller hears nothing, and the worker never gets a job.
 </Warning>
 
@@ -175,23 +179,23 @@ StandIn connects **from the internet**, so the port needs a public `wss://` URL.
 ## 4. Connect it to StandIn and call
 
 1. In your [StandIn dashboard](https://standin.komaa.com/dashboard), set the identity's
-   **Agent voice URL** to the `wss://` URL from step 3.
+   **Agent voice host** to the host (and port) from step 3 - StandIn appends `/voice/msteams/stream`.
 2. Make sure the identity's shared secret equals `WORKER_SHARED_SECRET`.
 3. Call your Teams bot (or join the sandbox meeting). StandIn joins, connects to the bridge, the
    bridge creates a room and dispatches the agent, and the agent answers.
 
 ## Swap in the avatar agent
 
-`avatar_agent.py` is the same pipeline plus a lip-synced **bitHuman** avatar on the bot's video
-tile. Two extra variables in the agent's `.env`:
+`examples/video-agent` is the same pipeline plus a lip-synced **bitHuman** avatar on the bot's video
+tile. Its `.env` needs two extra variables:
 
 | Variable | What to put there |
 |---|---|
 | `BITHUMAN_API_SECRET` | Your bitHuman API secret. |
 | `BITHUMAN_MODEL_PATH` | Path to the downloaded `.imx` avatar model. |
 
-Run it the same way (`uv run avatar_agent.py dev`) and restart the bridge with
-`LIVEKIT_AGENT_NAME=teams-avatar-agent`.
+Run it the same way - from `examples/video-agent`, `uv run worker.py dev` - and restart the bridge with
+`LIVEKIT_AGENT_NAME=standin-avatar-agent`.
 
 ## How the pieces talk
 
@@ -210,18 +214,19 @@ the project site.
 
 ## Docker
 
-Each agent has a Dockerfile; pass the environment at runtime rather than baking it in:
+Each agent folder ships a `Dockerfile`; pass the environment at runtime rather than baking it in. From
+`examples/voice-agent`:
 
 ```bash
-docker build -f Dockerfile.voice_agent -t teams-voice-agent .
+docker build -f Dockerfile -t standin-voice-agent .
 ```
 
 ```bash
-docker run --env-file .env teams-voice-agent
+docker run --env-file .env standin-voice-agent
 ```
 
-The avatar image additionally needs the model mounted:
-`docker run --env-file .env -v ./avatar.imx:/models/avatar.imx teams-avatar-agent`.
+The avatar (`examples/video-agent`) additionally needs the model mounted:
+`docker build -f Dockerfile -t standin-avatar-agent . && docker run --env-file .env -v ./avatar.imx:/models/avatar.imx -e BITHUMAN_MODEL_PATH=/models/avatar.imx standin-avatar-agent`.
 
 ## From example to your own project
 
@@ -236,7 +241,7 @@ documents the programmatic surface.
 - **WebSocket rejected with `401`** - `WORKER_SHARED_SECRET` does not match the secret in StandIn.
 - **Room is created but no agent joins** - `LIVEKIT_AGENT_NAME` does not match the worker's
   `agent_name`, or the worker is not running / registered with a different LiveKit project.
-- **Bot joins the call but stays silent** - the Agent voice URL is unreachable from the internet;
+- **Bot joins the call but stays silent** - the Agent voice host is unreachable from the internet;
   re-check the tunnel.
 - More: [Troubleshooting](/troubleshooting).
 
