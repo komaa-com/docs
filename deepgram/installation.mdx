@@ -6,13 +6,11 @@ keywords: ["Deepgram Voice Agent Teams","deepgram-msteams-bridge","Aura TTS","No
 
 [`@komaa/deepgram-msteams-bridge`](https://www.npmjs.com/package/@komaa/deepgram-msteams-bridge)
 brings a **Deepgram Voice Agent** (Nova STT + your chosen LLM + Aura TTS, with turn-taking, all run
-by Deepgram) onto a Microsoft Teams call. It is the Deepgram analogue of the
-[ElevenLabs](/elevenlabs/installation), [LiveKit](/livekit/installation) and
-[OpenAI](/openai/installation) bridges: it hosts the HMAC WebSocket that StandIn connects to, then
+by Deepgram) onto a Microsoft Teams call. It hosts the HMAC WebSocket that StandIn connects to, then
 relays audio to and from a Deepgram Voice Agent session.
 
 <Note>
-  Like the other bridges, this is a **standalone Node service**, not a framework plugin. There is
+  This is a **standalone Node service**, not a framework plugin. There is
   also **no agent to configure in a dashboard**: the bridge configures each Voice Agent session
   itself (STT model, LLM, voice, prompt, greeting, tools) from environment variables. Two variables
   and it runs.
