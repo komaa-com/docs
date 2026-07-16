@@ -5,18 +5,16 @@ keywords: ["Cartesia Line Teams","cartesia-msteams-bridge","Line agent telephony
 ---
 
 [`@komaa/cartesia-msteams-bridge`](https://www.npmjs.com/package/@komaa/cartesia-msteams-bridge)
-brings a **Cartesia Line agent** onto a Microsoft Teams call. It is the Cartesia analogue of the
-[ElevenLabs](/elevenlabs/installation), [LiveKit](/livekit/installation),
-[OpenAI](/openai/installation) and [Deepgram](/deepgram/installation) bridges: it hosts the HMAC
-WebSocket that StandIn connects to, then relays audio to and from a Line agent stream (Cartesia's
+brings a **Cartesia Line agent** onto a Microsoft Teams call. It hosts the HMAC WebSocket that
+StandIn connects to, then relays audio to and from a Line agent stream (Cartesia's
 [WebSocket API](https://docs.cartesia.ai/line/integrations/websocket-api), the integration they
 provide for bringing your own telephony).
 
 <Note>
   **Where the brain lives.** A Line agent is **your code deployed on Cartesia's platform** - LLM,
-  tools, conversation logic, hangup. This bridge is deliberately a hardened transport: unlike the
-  other bridges there is no in-process tool registry or vision hook, because the Line wire has no
-  client-side tool channel. Your agent still receives the full Teams context (caller identity,
+  tools, conversation logic, hangup. This bridge is deliberately a hardened transport: there
+  is no in-process tool registry or vision hook, because the Line wire has no client-side tool
+  channel. Your agent still receives the full Teams context (caller identity,
   participants, active speaker, DTMF, recording state) as metadata and custom events - the
   [contract is documented](https://komaa-com.github.io/cartesia-msteams-bridge/your-line-agent/).
 </Note>

@@ -6,12 +6,11 @@ keywords: ["OpenAI Realtime Teams","gpt-realtime Teams call","openai-msteams-bri
 
 [`@komaa/openai-msteams-bridge`](https://www.npmjs.com/package/@komaa/openai-msteams-bridge)
 brings an **OpenAI Realtime** voice agent (`gpt-realtime` - speech-to-speech: STT + LLM + TTS +
-turn-taking in one model) onto a Microsoft Teams call. It is the OpenAI analogue of the
-[ElevenLabs](/elevenlabs/installation) and [LiveKit](/livekit/installation) bridges: it hosts the
-HMAC WebSocket that StandIn connects to, then relays audio to and from an OpenAI Realtime session.
+turn-taking in one model) onto a Microsoft Teams call. It hosts the HMAC WebSocket that StandIn
+connects to, then relays audio to and from an OpenAI Realtime session.
 
 <Note>
-  Like the other bridges, this is a **standalone Node service**, not a framework plugin. There is
+  This is a **standalone Node service**, not a framework plugin. There is
   also **no agent to configure in a dashboard**: the bridge configures each Realtime session itself
   (model, voice, instructions, VAD, tools) from environment variables. Two variables and it runs.
 </Note>

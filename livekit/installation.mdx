@@ -7,15 +7,13 @@ keywords: ["LiveKit agent Teams","livekit-msteams-bridge","LiveKit avatar agent"
 [`@komaa/livekit-msteams-bridge`](https://www.npmjs.com/package/@komaa/livekit-msteams-bridge)
 puts a [LiveKit Agent](https://docs.livekit.io/agents/) - including
 [avatar agents](https://github.com/livekit/agents/tree/main/examples/avatar_agents) (bitHuman,
-Tavus, and friends) - onto a Microsoft Teams call. It is the LiveKit analogue of the
-[OpenClaw](/openclaw/installation) and [Hermes](/hermes/installation) plugins and the
-[ElevenLabs bridge](/elevenlabs/installation): it hosts the HMAC WebSocket that StandIn connects to,
-then bridges the call into a LiveKit room where your agent runs.
+Tavus, and friends) - onto a Microsoft Teams call. It hosts the HMAC WebSocket that StandIn connects
+to, then bridges the call into a LiveKit room where your agent runs.
 
 <Note>
-  Like the ElevenLabs bridge, this is a **standalone Node service**, not a framework plugin. You do
-  not install it into an agent runtime - you run the bridge and point StandIn at it. Your LiveKit
-  agent runs as its own worker and is dispatched into a per-call room.
+  This is a **standalone Node service**, not a framework plugin. You do not install it into an
+  agent runtime - you run the bridge and point StandIn at it. Your LiveKit agent runs as its own
+  worker and is dispatched into a per-call room.
 </Note>
 
 <Note>

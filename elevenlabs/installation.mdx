@@ -6,14 +6,12 @@ keywords: ["ElevenLabs agent Teams","elevenlabs-msteams-bridge","conversational 
 
 [`@komaa/elevenlabs-msteams-bridge`](https://www.npmjs.com/package/@komaa/elevenlabs-msteams-bridge)
 brings a hosted **ElevenLabs agent** (STT + LLM + TTS + turn-taking, all run by ElevenLabs) onto a
-Microsoft Teams call. It is the ElevenLabs analogue of the [OpenClaw](/openclaw/installation) and
-[Hermes](/hermes/installation) plugins: it hosts the HMAC WebSocket that StandIn connects to, then
-relays audio to and from an ElevenLabs Agent conversation.
+Microsoft Teams call. It hosts the HMAC WebSocket that StandIn connects to, then relays audio to
+and from an ElevenLabs Agent conversation.
 
 <Note>
-  Unlike the OpenClaw and Hermes plugins, this is a **standalone Node service**, not a framework
-  plugin. You do not install it into an agent runtime - you run the bridge and point StandIn at it.
-  ElevenLabs hosts the agent itself.
+  This is a **standalone Node service**, not a framework plugin. You do not install it into an
+  agent runtime - you run the bridge and point StandIn at it. ElevenLabs hosts the agent itself.
 </Note>
 
 <Note>
