@@ -197,9 +197,9 @@ tile. Its `.env` needs two extra variables:
 Run it the same way - from `examples/video-agent`, `uv run worker.py dev` - and restart the bridge with
 `LIVEKIT_AGENT_NAME=standin-avatar-agent`.
 
-To also show the avatar's face on the Teams tile (not just hear it), start the bridge with
-`LIVEKIT_TILE_VIDEO=auto` - the bridge relays the agent's avatar video onto the caller's tile. Left
-off (the default), the tile shows StandIn's built-in animated avatar. See
+The avatar's face also shows on the Teams tile **by default** - the bridge relays the agent's avatar
+video onto the caller's tile (`LIVEKIT_TILE_VIDEO=auto`, the default). Set `LIVEKIT_TILE_VIDEO=off`
+for audio-only, and the tile shows StandIn's built-in animated avatar instead. See
 [Configuration -> Avatar video](/livekit/configuration#avatar-video).
 
 ## How the pieces talk
