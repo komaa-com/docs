@@ -37,13 +37,14 @@ Opt-in: relay an avatar agent's video track onto the caller's Teams tile.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `LIVEKIT_TILE_VIDEO` | `off` | Relay the avatar agent's video onto the Teams tile. `auto` uses the agent participant; or name a specific participant identity. `off` keeps StandIn's built-in animated avatar. |
+| `LIVEKIT_TILE_VIDEO` | `auto` | Relay the avatar agent's video onto the Teams tile. `auto` uses the agent participant; or name a specific participant identity; `off` disables the relay and keeps StandIn's built-in animated avatar. |
 | `LIVEKIT_TILE_VIDEO_FPS` | `15` | Send rate for the relayed tile stream (frames/s). |
 
 <Note>
-  Leave this `off` unless your agent publishes an avatar (bitHuman, Tavus, ...). Enabling it adds an
-  outbound video stream, so it costs a little bandwidth. The caller always hears the agent's audio
-  either way.
+  If your agent publishes an avatar (bitHuman, Tavus, ...), `auto` shows its face on the tile; set
+  `off` to disable the relay (it adds an outbound video stream, so it costs a little bandwidth).
+  Voice-only agents publish no avatar video, so `auto` has no effect for them. The caller always
+  hears the agent's audio either way.
 </Note>
 
 ## Governor
