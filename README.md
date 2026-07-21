@@ -1,8 +1,8 @@
 # Microsoft Teams Bridge (StandIn) - documentation
 
 Source for **[docs.komaa.com](https://docs.komaa.com)** - the docs for the Microsoft Teams Bridge
-plugins: voice/video (CVI) for **OpenClaw** (`@komaa/openclaw-msteams-bridge`) and **Hermes Agent**
-(`hermes-msteams-bridge`), connected to the hosted **StandIn** media bridge
+plugins: voice/video (CVI) for all seven agent backends (OpenClaw, Hermes, ElevenLabs, LiveKit,
+OpenAI Realtime, Deepgram, and Cartesia), connected to the hosted **StandIn** media bridge
 ([standin.komaa.com](https://standin.komaa.com)).
 
 Built with [Mintlify](https://mintlify.com); pushes to `main` auto-deploy to production.
