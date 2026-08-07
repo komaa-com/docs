@@ -51,8 +51,6 @@ A fully env-only setup works too:
 ```bash
 TEAMS_CALL_SHARED_SECRET=...        # must equal the secret set in StandIn
 AZURE_FOUNDRY_API_KEY=...            # realtime key (also used by the gateway)
-# SharePoint (OneDrive) site for attaching files/minutes - host,siteGuid,webGuid
-# (the bot AAD app needs Graph Sites.ReadWrite.All, admin-consented):
 # fully env-only is fine too:
 TEAMS_CALL_HOST=127.0.0.1
 TEAMS_CALL_PORT=8443
@@ -88,6 +86,7 @@ matching `TEAMS_CALL_*` env var.
 | `require_recording_status` | only engage once Teams reports recording active (default `true`) |
 | `allowlist` / `allowlist_allow_names` / `allow_all` | inbound caller policy (see [below](#inbound-policy-voice-hermes-vs-openclaw)): allowlisted caller AAD ids; **empty = deny all** inbound callers unless `allow_all: true` (`TEAMS_CALL_ALLOW_ALL`) explicitly opens it. `allowlist_allow_names` additionally matches display names (weaker; spoofable). When empty, `allowlist` inherits the chat plane's `TEAMS_ALLOWED_USERS`, so voice + chat can share one AAD allowlist |
 | `wake_phrases` | group-call "speak only when addressed" wake words (default `assistant`, `hermes`) |
+| `watch_browser_tasks` | opt-in "watch it work" (default `false`): while a background task runs, the tile shows live frames of the agent's own browser session instead of the plain progress panel. Off by default because each capture can invoke the auxiliary vision model (`TEAMS_CALL_WATCH_BROWSER_TASKS`) |
 | `max_vision_per_minute` | vision spend cap (default `30`, `0` = unlimited) |
 | `session_scope` | `per-call` \| `per-thread` \| `per-aad` agent-memory scope |
 | `meeting_recap` | post end-of-meeting minutes (default `false`) |
@@ -150,6 +149,31 @@ The bot's Azure AD app needs admin-consented **application** permissions - see t
   call connects.
 </Warning>
 
+
+## Gateway-managed mode (two layers)
+
+To have `hermes gateway run` host the voice bridge itself (one process, no
+separate `serve`), enable both the plugin and the platform:
+
+```yaml
+plugins:
+  enabled:
+    - teams_call          # layer 1: the plugin
+  entries:
+    teams_call:
+      config:
+        shared_secret: ${TEAMS_CALL_SHARED_SECRET}
+platforms:
+  teams_call:
+    enabled: true         # layer 2: the gateway platform
+```
+
+In this mode scheduled jobs can deliver **by voice**: a cron job with
+`deliver=teams_call` places a call and speaks the result. Set
+`TEAMS_CALL_HOME_AAD` to the AAD object id the gateway should call for those
+deliveries (the callee must also be on the `allowlist`). Run gateway mode
+**or** standalone `serve`, never both - the second owner fails loudly on the
+port bind.
 
 ## Voice & language tuning lives in Hermes
 

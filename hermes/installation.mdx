@@ -39,14 +39,22 @@ tool uses the host Hermes browser tools - no extra install.
 Or with `pip`:
 
 ```bash
-pip install hermes-msteams-bridge
+pip install "hermes-msteams-bridge[documents]"
 ```
 
-Then enable the plugin:
+Then enable the plugin by adding it to `plugins.enabled` in
+`~/.hermes/config.yaml` (the [configuration page](/hermes/configuration) shows
+the full block):
 
-```bash
-hermes plugins enable teams_call
+```yaml
+plugins:
+  enabled:
+    - teams_call
 ```
+
+`hermes plugins enable teams_call` works too when run interactively, but it may
+prompt for tool-override consent, so scripts and installers should write the
+YAML instead.
 
 ## Verify
 
@@ -146,6 +154,11 @@ In this mode, streaming-mode utterances run as real gateway agent turns
 (`deliver=teams_call` - the bot calls you and speaks the result). If a
 standalone `hermes teams-call serve` is already bound to the port, the
 adapter fails loudly instead of splitting traffic - run one or the other.
+
+Using the StandIn one-line installer? Set `STANDIN_GATEWAY_MODE=1` in the
+environment **before** running it: the installer then writes both layers
+above, stops any standalone bridge, and restarts the gateway instead of
+launching `serve`.
 
 `hermes teams-call smoke` is an **offline install check**: it proves config
 resolution, the HMAC handshake, wire decode, and session lifecycle against an

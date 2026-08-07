@@ -217,12 +217,11 @@ Prefer to wire it up by hand? Pick your runtime:
       <Step title="Install">
         Into the **same Python environment as Hermes**:
         ```bash
-        uv pip install --python /path/to/hermes/venv/bin/python hermes-msteams-bridge
+        uv pip install --python /path/to/hermes/venv/bin/python "hermes-msteams-bridge[documents]"
         ```
-        Then enable the plugin:
-        ```bash
-        hermes plugins enable teams_call
-        ```
+        The `[documents]` extra enables `show_file` document rendering and the
+        progress panel. Enablement happens in the config below: `teams_call`
+        under `plugins.enabled` is all Hermes needs.
       </Step>
       <Step title="Configure">
         In `~/.hermes/config.yaml` under `plugins.entries.teams_call.config` (secrets in `.env`):
