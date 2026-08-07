@@ -51,7 +51,9 @@ Both plugins implement the same feature set over the shared CVI bridge.
 ## Meeting productivity
 
 - **End-of-meeting recap** (opt-in) + on-demand **`post_meeting_minutes`**, posted to the Teams chat
-  with per-speaker attribution. With SharePoint configured, minutes attach as a Word **`.docx`** file card.
+  with per-speaker attribution, the minutes attached as a Word **`.docx`** file card. On Hermes the
+  card rides the Bot Framework attachment contract (bot credentials only, no SharePoint); SharePoint
+  upload (`Sites.ReadWrite.All`) remains an optional path where configured.
 
 ## Security
 

@@ -61,7 +61,9 @@ flowchart LR
 | Tight control over the STT and TTS vendors | **Streaming** |
 
 Both modes support **barge-in** (the caller can interrupt), the **vision ring**, **group-call gating**,
-**DTMF**, **bilingual EN/AR**, and the avatar **driver cues**.
+**DTMF**, **multilingual replies**, and the avatar **driver cues**. The `languages` setting
+(e.g. EN/AR/FR/DE; auto-detect when unset) applies to **realtime** mode; streaming mode is
+multilingual through the host's own model/STT/TTS configuration instead.
 
 ## Switching
 
@@ -75,7 +77,7 @@ Both modes support **barge-in** (the caller can interrupt), the **vision ring**,
   <Tab title="Hermes">
     Pick the handler at launch (use `--handler streaming` for streaming mode):
     ```bash
-    hermes teams-voice serve --handler realtime
+    hermes teams-call serve --handler realtime
     ```
   </Tab>
 </Tabs>
