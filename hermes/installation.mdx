@@ -1,10 +1,10 @@
 ---
 title: "Installation"
 description: "Install hermes-msteams-bridge into a Hermes Agent environment."
-keywords: ["hermes-msteams-bridge","Hermes Agent plugin","pip install Teams voice","teams_voice","uv pip"]
+keywords: ["hermes-msteams-bridge","Hermes Agent plugin","pip install Teams voice","teams_call","uv pip"]
 ---
 
-[`hermes-msteams-bridge`](https://pypi.org/project/hermes-msteams-bridge/) (plugin name **`teams_voice`**) is the Python half of the Teams CVI for
+[`hermes-msteams-bridge`](https://pypi.org/project/hermes-msteams-bridge/) (plugin name **`teams_call`**) is the Python half of the Teams CVI for
 **Hermes Agent**. It hosts the HMAC WebSocket that StandIn connects to, runs the dialogue +
 perception, and emits avatar driver cues. Chat-plane features live in the existing Teams adapter.
 
@@ -28,8 +28,13 @@ Install into the **same Python environment as Hermes** so the `hermes_agent.plug
 discovered:
 
 ```bash
-uv pip install --python /path/to/hermes/venv/bin/python hermes-msteams-bridge
+uv pip install --python /path/to/hermes/venv/bin/python "hermes-msteams-bridge[documents]"
 ```
+
+The `documents` extra enables `show_file` document rendering (pypdfium2 +
+Pillow). Optional system tools: **LibreOffice** (`soffice` on PATH) for showing
+Office documents, **ffmpeg** for streaming-mode TTS decode. The `show_web_page`
+tool uses the host Hermes browser tools - no extra install.
 
 Or with `pip`:
 
@@ -40,21 +45,29 @@ pip install hermes-msteams-bridge
 Then enable the plugin:
 
 ```bash
-hermes plugins enable teams_voice
+hermes plugins enable teams_call
 ```
 
 ## Verify
 
-Show config + readiness:
+Show config + readiness - the status probe checks **every Hermes surface the
+plugin depends on** (vision, STT, TTS, chat delivery, browser, document
+rendering) and reports two levels: `boundaries_ok` (the contract surface
+exists) and `operational_ok` (providers/credentials/dependencies actually
+work). Anything missing is named explicitly, so a broken Hermes integration
+surfaces here and at `serve` startup rather than mid-call. External paths
+(Teams reachability, the StandIn endpoint, provider round trips) are not
+probed - those surface on the first real call. Tested against Hermes Agent
+0.19.0 (PyPI floor) and the current 0.20.x line:
 
 ```bash
-hermes teams-voice status
+hermes teams-call status
 ```
 
 Run the bridge server (foreground):
 
 ```bash
-hermes teams-voice serve
+hermes teams-call serve
 ```
 
 The bridge binds its media WebSocket (default `ws://<host>:8443/voice/msteams/stream`).
@@ -101,3 +114,41 @@ port - a bare host means the 443 slot, which is normally a chat webhook, not voi
   <Card title="PyPI" icon="python" href="https://pypi.org/project/hermes-msteams-bridge/" />
   <Card title="Configuration" icon="gear" href="/hermes/configuration" />
 </CardGroup>
+
+
+## Gateway-managed mode (one process)
+
+With the `teams_call` platform enabled in the gateway config, `hermes gateway
+run` hosts the voice bridge itself - no separate `serve` process. Two layers
+must both be on:
+
+1. the **plugin**: `teams_call` under `plugins.enabled` in `config.yaml`;
+2. the **platform**: a `teams_call` platform entry enabled in the gateway
+   configuration (same place as your Teams chat platform).
+
+The complete `config.yaml` shape:
+
+```yaml
+plugins:
+  enabled:
+    - teams_call          # layer 1: the plugin
+  entries:
+    teams_call:
+      config:
+        shared_secret: ${TEAMS_CALL_SHARED_SECRET}
+platforms:
+  teams_call:
+    enabled: true         # layer 2: the gateway platform
+```
+
+In this mode, streaming-mode utterances run as real gateway agent turns
+(sessions, authorization, approvals), and scheduled jobs can deliver by voice
+(`deliver=teams_call` - the bot calls you and speaks the result). If a
+standalone `hermes teams-call serve` is already bound to the port, the
+adapter fails loudly instead of splitting traffic - run one or the other.
+
+`hermes teams-call smoke` is an **offline install check**: it proves config
+resolution, the HMAC handshake, wire decode, and session lifecycle against an
+ephemeral local listener. It does **not** test the configured listener,
+gateway platform activation, Teams connectivity, provider credentials, or the
+public tunnel - the first real call is the test for those.

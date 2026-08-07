@@ -1,15 +1,17 @@
 ---
 title: "Configuration"
-description: "Configure teams_voice via config.yaml + .env, pick a realtime backend, and run the bridge."
-keywords: ["Hermes teams_voice config","config.yaml env","Azure OpenAI realtime","Microsoft Graph permissions","allow_remote_worker"]
+description: "Configure teams_call via config.yaml + .env, pick a realtime backend, and run the bridge."
+keywords: ["Hermes teams_call config","config.yaml env","Azure OpenAI realtime","Microsoft Graph permissions","allow_remote_worker"]
 ---
 
 Two sources are supported: **`config.yaml` takes precedence, `.env` is the fallback.** The recommended
 pattern keeps **secrets in `.env`** and references them from `config.yaml` with `${VAR}` (the loader
 expands them), so config lives in one declarative file.
 
-Each `config.yaml` key has a matching env var (e.g. `realtime.azure_endpoint` ↔
-`TEAMS_VOICE_AZURE_ENDPOINT`); `config.yaml` wins where both are set.
+Most `config.yaml` keys have a matching `TEAMS_CALL_*` env var (e.g.
+`realtime.azure_endpoint` ↔ `TEAMS_CALL_AZURE_ENDPOINT`); `config.yaml` wins where
+both are set. Exceptions: `path` is config-only, and the SharePoint site id uses
+`TEAMS_SHAREPOINT_SITE_ID` (shared with the chat plane).
 
 ## config.yaml
 
@@ -18,16 +20,17 @@ Each `config.yaml` key has a matching env var (e.g. `realtime.azure_endpoint` �
 ```yaml
 plugins:
   enabled:
-    - teams_voice
+    - teams_call
   entries:
-    teams_voice:
+    teams_call:
       config:
-        shared_secret: ${TEAMS_VOICE_SHARED_SECRET}   # must equal the secret set in StandIn
+        shared_secret: ${TEAMS_CALL_SHARED_SECRET}   # must equal the secret set in StandIn
         host: 127.0.0.1
         port: 8443
-        # Attach meeting-minutes .docx to the Teams chat (needs Graph
-        # Sites.ReadWrite.All on the bot app); omit for text-only minutes.
-        share_point_site_id: ${TEAMS_SHAREPOINT_SITE_ID}
+        # Post meeting minutes to the chat with the .docx as a native file
+        # card - no SharePoint needed; it rides the Bot Framework attachment
+        # contract using the chat plane's bot credentials.
+        meeting_recap: true
         realtime:
           backend: azure
           azure_endpoint: https://<your-azure-resource>.cognitiveservices.azure.com
@@ -46,19 +49,18 @@ plugins:
 A fully env-only setup works too:
 
 ```bash
-TEAMS_VOICE_SHARED_SECRET=...        # must equal the secret set in StandIn
+TEAMS_CALL_SHARED_SECRET=...        # must equal the secret set in StandIn
 AZURE_FOUNDRY_API_KEY=...            # realtime key (also used by the gateway)
 # SharePoint (OneDrive) site for attaching files/minutes - host,siteGuid,webGuid
 # (the bot AAD app needs Graph Sites.ReadWrite.All, admin-consented):
-TEAMS_SHAREPOINT_SITE_ID=contoso.sharepoint.com,<siteGuid>,<webGuid>
 # fully env-only is fine too:
-TEAMS_VOICE_HOST=127.0.0.1
-TEAMS_VOICE_PORT=8443
-TEAMS_VOICE_REALTIME_BACKEND=azure
-TEAMS_VOICE_AZURE_ENDPOINT=https://<your-azure-resource>.cognitiveservices.azure.com
-TEAMS_VOICE_AZURE_DEPLOYMENT=gpt-realtime
-TEAMS_VOICE_AZURE_API_VERSION=2025-04-01-preview
-TEAMS_VOICE_REALTIME_VOICE=cedar
+TEAMS_CALL_HOST=127.0.0.1
+TEAMS_CALL_PORT=8443
+TEAMS_CALL_REALTIME_BACKEND=azure
+TEAMS_CALL_AZURE_ENDPOINT=https://<your-azure-resource>.cognitiveservices.azure.com
+TEAMS_CALL_AZURE_DEPLOYMENT=gpt-realtime
+TEAMS_CALL_AZURE_API_VERSION=2025-04-01-preview
+TEAMS_CALL_REALTIME_VOICE=cedar
 ```
 
 <Tip>
@@ -76,7 +78,7 @@ TEAMS_VOICE_REALTIME_VOICE=cedar
 ## Key reference
 
 Hermes implements the same feature set as the OpenClaw plugin; keys are `snake_case` and each has a
-matching `TEAMS_VOICE_*` env var.
+matching `TEAMS_CALL_*` env var.
 
 | Key | Meaning |
 |---|---|
@@ -84,12 +86,14 @@ matching `TEAMS_VOICE_*` env var.
 | `host` / `port` / `path` | media WebSocket the StandIn bridge connects to (default `127.0.0.1` : `8443`, `/voice/msteams/stream`) |
 | `allow_remote_worker` | SSRF guard for **outbound** "call me back": permit dialing a non-loopback `worker_base_url` (default `false` = loopback only). Does not affect inbound bridge connections |
 | `require_recording_status` | only engage once Teams reports recording active (default `true`) |
-| `allowlist` / `allowlist_allow_names` / `allow_all` | inbound caller policy (see [below](#inbound-policy-voice-hermes-vs-openclaw)): allowlisted caller AAD ids; **empty = deny all** inbound callers unless `allow_all: true` (`TEAMS_VOICE_ALLOW_ALL`) explicitly opens it. `allowlist_allow_names` additionally matches display names (weaker; spoofable). When empty, `allowlist` inherits the chat plane's `TEAMS_ALLOWED_USERS`, so voice + chat can share one AAD allowlist |
+| `allowlist` / `allowlist_allow_names` / `allow_all` | inbound caller policy (see [below](#inbound-policy-voice-hermes-vs-openclaw)): allowlisted caller AAD ids; **empty = deny all** inbound callers unless `allow_all: true` (`TEAMS_CALL_ALLOW_ALL`) explicitly opens it. `allowlist_allow_names` additionally matches display names (weaker; spoofable). When empty, `allowlist` inherits the chat plane's `TEAMS_ALLOWED_USERS`, so voice + chat can share one AAD allowlist |
 | `wake_phrases` | group-call "speak only when addressed" wake words (default `assistant`, `hermes`) |
 | `max_vision_per_minute` | vision spend cap (default `30`, `0` = unlimited) |
 | `session_scope` | `per-call` \| `per-thread` \| `per-aad` agent-memory scope |
 | `meeting_recap` | post end-of-meeting minutes (default `false`) |
-| `share_point_site_id` | SharePoint site for `.docx` minutes attach (needs `Sites.ReadWrite.All`) |
+| `show_file_root` | root directory `show_file` may display from (workspace containment; default `<hermes home>/workspace/teams_call_show`) |
+| `languages` | (realtime block) list like `[en, fr, de, ar]` - reply in the caller's language when configured; empty = auto-detect and mirror. `bilingual` remains a deprecated alias for `[ar, en]` |
+| `share_point_site_id` | optional; reserved for a future large-file SharePoint path. The minutes `.docx` file card itself needs **no** SharePoint - it rides the Bot Framework attachment contract using the chat plane's `TEAMS_CLIENT_ID`/`SECRET`/`TENANT_ID` |
 | `worker_base_url` / `tenant_id` | outbound "call me back" - StandIn's outbound endpoint + your tenant |
 | `realtime.{backend,azure_endpoint,azure_deployment,voice,api_key,vad_threshold,…}` | realtime backend (`azure` \| `openai`); key stays in `.env` |
 | `hmac_window_ms` / `max_connections` / `max_connections_per_ip` | handshake window + connection caps |
@@ -102,13 +106,13 @@ inbound policy:
 - `allowlist` set → only those AAD object ids may call (add `allowlist_allow_names: true` to also
   match display names, which is weaker).
 - `allowlist` empty → **all inbound callers are denied**, unless you explicitly opt out with
-  `allow_all: true` (env: `TEAMS_VOICE_ALLOW_ALL`). An unset allowlist never means "open to all".
+  `allow_all: true` (env: `TEAMS_CALL_ALLOW_ALL`). An unset allowlist never means "open to all".
 - When `allowlist` is empty, it inherits `TEAMS_ALLOWED_USERS` (the chat plane's allowlist), so one
   AAD list can cover both voice and chat.
 
 The `openclaw pairing approve msteams <CODE>` steps you will see in the Quickstart and Teams app
 pages are **OpenClaw-only**. The Hermes equivalents are: edit `allowlist` for **voice** callers, and
-for Teams **chat** DMs (handled by the Hermes gateway's Teams platform, not `teams_voice`) either
+for Teams **chat** DMs (handled by the Hermes gateway's Teams platform, not `teams_call`) either
 approve the pairing code the bot sends an unknown sender (`hermes pairing approve teams <CODE>`) or
 set `TEAMS_ALLOWED_USERS` - see
 [the bot ignores Teams chat](/troubleshooting#the-bot-answers-calls-but-ignores-teams-chat-dm-pairing).
@@ -118,13 +122,13 @@ set `TEAMS_ALLOWED_USERS` - see
 Show config + readiness:
 
 ```bash
-hermes teams-voice status
+hermes teams-call status
 ```
 
 Serve the bridge (use `--handler streaming` for streaming mode, which needs ffmpeg):
 
 ```bash
-hermes teams-voice serve --handler realtime
+hermes teams-call serve --handler realtime
 ```
 
 Or run it standalone:
@@ -145,3 +149,14 @@ The bot's Azure AD app needs admin-consented **application** permissions - see t
   The `shared_secret` **must byte-match** the secret set in StandIn, or the HMAC handshake fails and no
   call connects.
 </Warning>
+
+
+## Voice & language tuning lives in Hermes
+
+STT and TTS provider selection, voices, and language hints are **host
+configuration**, not plugin keys: set Hermes's own `stt:` and `tts:` blocks in
+`~/.hermes/config.yaml` (see the Hermes TTS and voice-mode feature docs). The
+plugin inherits them - streaming mode dispatches the host's `text_to_speech`
+tool and transcription chain, so all Hermes STT/TTS providers apply unchanged.
+The call also answers with the host's `SOUL.md` identity and knows the host's
+installed skills (chat/call parity).
