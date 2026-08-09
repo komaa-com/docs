@@ -188,7 +188,7 @@ Prefer to wire it up by hand? Pick your runtime:
                   "enabled": true,
                   "mode": "realtime",
                   "port": 9442,
-                  "path": "/voice/msteams/stream",
+                  "path": "/msteams/calling",
                   "sharedSecret": "<same secret as in your StandIn dashboard>",
                   "inboundPolicy": "allowlist",
                   "allowFrom": ["<caller AAD object id>"],
@@ -208,7 +208,7 @@ Prefer to wire it up by hand? Pick your runtime:
       </Step>
       <Step title="Run + call">
         Start the gateway (`openclaw gateway run`), then in your StandIn dashboard register your
-        **Agent voice URL** (`wss://<your-public-host>:8443/voice/msteams/stream` via the funnel; local bind `ws://<host>:9442/...`) and the matching secret. Place a Teams call to your bot.
+        **Agent voice URL** (`wss://<your-public-host>:8443/msteams/calling` via the funnel; local bind `ws://<host>:9442/...`) and the matching secret. Place a Teams call to your bot.
       </Step>
     </Steps>
   </Tab>
@@ -250,7 +250,7 @@ Prefer to wire it up by hand? Pick your runtime:
         ```bash
         hermes teams-call serve --handler realtime
         ```
-        In your StandIn dashboard, register your **Agent voice URL** (`wss://<your-public-host>:8443/voice/msteams/stream` via the funnel; local bind `ws://<host>:8443/...`)
+        In your StandIn dashboard, register your **Agent voice URL** (`wss://<your-public-host>:8443/msteams/calling` via the funnel; local bind `ws://<host>:8443/...`)
         and the matching secret, then place a Teams call to your bot.
       </Step>
     </Steps>
@@ -260,7 +260,7 @@ Prefer to wire it up by hand? Pick your runtime:
 <Warning>
   **StandIn connects to your plugin from the internet**, so its WebSocket must be reachable - expose it
   via a public URL or a tunnel (e.g. Tailscale), not loopback-only. Default ports **9442** (OpenClaw) /
-  **8443** (Hermes); path `/voice/msteams/stream`. A `sharedSecret` mismatch fails the HMAC handshake
+  **8443** (Hermes); path `/msteams/calling`. A `sharedSecret` mismatch fails the HMAC handshake
   **silently** - the most common first-call issue.
 </Warning>
 

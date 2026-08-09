@@ -141,12 +141,12 @@ The two runtimes listen on **different default ports** but the **same path**:
 
 | Runtime | Default port | Path |
 |---|---|---|
-| OpenClaw | `9442` | `/voice/msteams/stream` |
-| Hermes | `8443` | `/voice/msteams/stream` |
+| OpenClaw | `9442` | `/msteams/calling` |
+| Hermes | `8443` | `/msteams/calling` |
 
 Registering the OpenClaw URL with the Hermes port (or vice versa) is a frequent mix-up: the bridge
 connects to a closed port and the call never reaches your agent. Double-check the full URL you
-registered in the StandIn dashboard, e.g. `wss://<your-public-host>:8443/voice/msteams/stream` (the
+registered in the StandIn dashboard, e.g. `wss://<your-public-host>:8443/msteams/calling` (the
 public funnel URL; locally OpenClaw binds `9442` and Hermes binds `8443`). Always the public `wss://`
 URL with its port, never the local `ws://` bind.
 

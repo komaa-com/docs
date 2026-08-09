@@ -1,7 +1,7 @@
 ---
 title: "Configuration"
-description: "Configure teams_call via config.yaml + .env, pick a realtime backend, and run the bridge."
-keywords: ["Hermes teams_call config","config.yaml env","Azure OpenAI realtime","Microsoft Graph permissions","allow_remote_worker"]
+description: "Configure msteams_call via config.yaml + .env, pick a realtime backend, and run the bridge."
+keywords: ["Hermes msteams_call config","config.yaml env","Azure OpenAI realtime","Microsoft Graph permissions","allow_remote_worker"]
 ---
 
 Two sources are supported: **`config.yaml` takes precedence, `.env` is the fallback.** The recommended
@@ -20,11 +20,11 @@ both are set. Exceptions: `path` is config-only, and the SharePoint site id uses
 ```yaml
 plugins:
   enabled:
-    - teams_call
+    - msteams_call
   entries:
-    teams_call:
+    msteams_call:
       config:
-        shared_secret: ${TEAMS_CALL_SHARED_SECRET}   # must equal the secret set in StandIn
+        calling_secret: ${MSTEAMS_CALL_CALLING_SECRET}   # must equal the secret set in StandIn
         host: 127.0.0.1
         port: 8443
         # Post meeting minutes to the chat with the .docx as a native file
@@ -49,7 +49,7 @@ plugins:
 A fully env-only setup works too:
 
 ```bash
-TEAMS_CALL_SHARED_SECRET=...        # must equal the secret set in StandIn
+MSTEAMS_CALL_CALLING_SECRET=...        # must equal the secret set in StandIn
 AZURE_FOUNDRY_API_KEY=...            # realtime key (also used by the gateway)
 # fully env-only is fine too:
 TEAMS_CALL_HOST=127.0.0.1
@@ -80,8 +80,8 @@ matching `TEAMS_CALL_*` env var.
 
 | Key | Meaning |
 |---|---|
-| `shared_secret` | HMAC secret - **must match the secret set in StandIn** (keep in `.env`) |
-| `host` / `port` / `path` | media WebSocket the StandIn bridge connects to (default `127.0.0.1` : `8443`, `/voice/msteams/stream`) |
+| `calling_secret` | HMAC secret - **must match the secret set in StandIn** (keep in `.env`) |
+| `host` / `port` / `path` | media WebSocket the StandIn bridge connects to (default `127.0.0.1` : `8443`, `/msteams/calling`) |
 | `allow_remote_worker` | SSRF guard for **outbound** "call me back": permit dialing a non-loopback `worker_base_url` (default `false` = loopback only). Does not affect inbound bridge connections |
 | `require_recording_status` | only engage once Teams reports recording active (default `true`) |
 | `allowlist` / `allowlist_allow_names` / `allow_all` | inbound caller policy (see [below](#inbound-policy-voice-hermes-vs-openclaw)): allowlisted caller AAD ids; **empty = deny all** inbound callers unless `allow_all: true` (`TEAMS_CALL_ALLOW_ALL`) explicitly opens it. `allowlist_allow_names` additionally matches display names (weaker; spoofable). When empty, `allowlist` inherits the chat plane's `TEAMS_ALLOWED_USERS`, so voice + chat can share one AAD allowlist |
@@ -90,7 +90,7 @@ matching `TEAMS_CALL_*` env var.
 | `max_vision_per_minute` | vision spend cap (default `30`, `0` = unlimited) |
 | `session_scope` | `per-call` \| `per-thread` \| `per-aad` agent-memory scope |
 | `meeting_recap` | post end-of-meeting minutes (default `false`) |
-| `show_file_root` | root directory `show_file` may display from (workspace containment; default `<hermes home>/workspace/teams_call_show`) |
+| `show_file_root` | root directory `show_file` may display from (workspace containment; default `<hermes home>/workspace/msteams_call_show`) |
 | `languages` | (realtime block) list like `[en, fr, de, ar]` - reply in the caller's language when configured; empty = auto-detect and mirror. `bilingual` remains a deprecated alias for `[ar, en]` |
 | `share_point_site_id` | optional; reserved for a future large-file SharePoint path. The minutes `.docx` file card itself needs **no** SharePoint - it rides the Bot Framework attachment contract using the chat plane's `TEAMS_CLIENT_ID`/`SECRET`/`TENANT_ID` |
 | `worker_base_url` / `tenant_id` | outbound "call me back" - StandIn's outbound endpoint + your tenant |
@@ -111,7 +111,7 @@ inbound policy:
 
 The `openclaw pairing approve msteams <CODE>` steps you will see in the Quickstart and Teams app
 pages are **OpenClaw-only**. The Hermes equivalents are: edit `allowlist` for **voice** callers, and
-for Teams **chat** DMs (handled by the Hermes gateway's Teams platform, not `teams_call`) either
+for Teams **chat** DMs (handled by the Hermes gateway's Teams platform, not `msteams_call`) either
 approve the pairing code the bot sends an unknown sender (`hermes pairing approve teams <CODE>`) or
 set `TEAMS_ALLOWED_USERS` - see
 [the bot ignores Teams chat](/troubleshooting#the-bot-answers-calls-but-ignores-teams-chat-dm-pairing).
@@ -121,13 +121,13 @@ set `TEAMS_ALLOWED_USERS` - see
 Show config + readiness:
 
 ```bash
-hermes teams-call status
+hermes msteams-call status
 ```
 
 Serve the bridge (use `--handler streaming` for streaming mode, which needs ffmpeg):
 
 ```bash
-hermes teams-call serve --handler realtime
+hermes msteams-call serve --handler realtime
 ```
 
 Or run it standalone:
@@ -136,7 +136,7 @@ Or run it standalone:
 python -m hermes_msteams_bridge.bridge_server
 ```
 
-Register your **Agent voice URL** (`wss://<your-public-host>:8443/voice/msteams/stream` via your tunnel; local bind `ws://<host>:8443/...`) and a matching shared
+Register your **Agent voice URL** (`wss://<your-public-host>:8443/msteams/calling` via your tunnel; local bind `ws://<host>:8443/...`) and a matching shared
 secret in your StandIn dashboard.
 
 ## Microsoft Graph permissions
@@ -145,7 +145,7 @@ The bot's Azure AD app needs admin-consented **application** permissions - see t
 [Graph permissions table](/teams/azure-bot#8-grant-graph-permissions) on the Create the Azure bot page.
 
 <Warning>
-  The `shared_secret` **must byte-match** the secret set in StandIn, or the HMAC handshake fails and no
+  The `calling_secret` **must byte-match** the secret set in StandIn, or the HMAC handshake fails and no
   call connects.
 </Warning>
 
@@ -158,18 +158,18 @@ separate `serve`), enable both the plugin and the platform:
 ```yaml
 plugins:
   enabled:
-    - teams_call          # layer 1: the plugin
+    - msteams_call          # layer 1: the plugin
   entries:
-    teams_call:
+    msteams_call:
       config:
-        shared_secret: ${TEAMS_CALL_SHARED_SECRET}
+        calling_secret: ${MSTEAMS_CALL_CALLING_SECRET}
 platforms:
-  teams_call:
+  msteams_call:
     enabled: true         # layer 2: the gateway platform
 ```
 
 In this mode scheduled jobs can deliver **by voice**: a cron job with
-`deliver=teams_call` places a call and speaks the result. Set
+`deliver=msteams_call` places a call and speaks the result. Set
 `TEAMS_CALL_HOME_AAD` to the AAD object id the gateway should call for those
 deliveries (the callee must also be on the `allowlist`). Run gateway mode
 **or** standalone `serve`, never both - the second owner fails loudly on the

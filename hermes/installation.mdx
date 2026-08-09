@@ -1,10 +1,10 @@
 ---
 title: "Installation"
 description: "Install hermes-msteams-bridge into a Hermes Agent environment."
-keywords: ["hermes-msteams-bridge","Hermes Agent plugin","pip install Teams voice","teams_call","uv pip"]
+keywords: ["hermes-msteams-bridge","Hermes Agent plugin","pip install Teams voice","msteams_call","uv pip"]
 ---
 
-[`hermes-msteams-bridge`](https://pypi.org/project/hermes-msteams-bridge/) (plugin name **`teams_call`**) is the Python half of the Teams CVI for
+[`hermes-msteams-bridge`](https://pypi.org/project/hermes-msteams-bridge/) (plugin name **`msteams_call`**) is the Python half of the Teams CVI for
 **Hermes Agent**. It hosts the HMAC WebSocket that StandIn connects to, runs the dialogue +
 perception, and emits avatar driver cues. Chat-plane features live in the existing Teams adapter.
 
@@ -49,10 +49,10 @@ the full block):
 ```yaml
 plugins:
   enabled:
-    - teams_call
+    - msteams_call
 ```
 
-`hermes plugins enable teams_call` works too when run interactively, but it may
+`hermes plugins enable msteams_call` works too when run interactively, but it may
 prompt for tool-override consent, so scripts and installers should write the
 YAML instead.
 
@@ -69,16 +69,16 @@ probed - those surface on the first real call. Tested against Hermes Agent
 0.19.0 (PyPI floor) and the current 0.20.x line:
 
 ```bash
-hermes teams-call status
+hermes msteams-call status
 ```
 
 Run the bridge server (foreground):
 
 ```bash
-hermes teams-call serve
+hermes msteams-call serve
 ```
 
-The bridge binds its media WebSocket (default `ws://<host>:8443/voice/msteams/stream`).
+The bridge binds its media WebSocket (default `ws://<host>:8443/msteams/calling`).
 
 ## Expose the WebSocket (Agent voice URL)
 
@@ -93,7 +93,7 @@ tailscale funnel --bg --https=8443 8443
 Your **Agent voice URL** is then:
 
 ```
-wss://<machine>.<tailnet>.ts.net:8443/voice/msteams/stream
+wss://<machine>.<tailnet>.ts.net:8443/msteams/calling
 ```
 
 Register that URL (with a **matching shared secret**) in the
@@ -105,7 +105,7 @@ port - a bare host means the 443 slot, which is normally a chat webhook, not voi
   Funnel serves up to 3 external ports (443, 8443, 10000). Also running the **OpenClaw** plugin on
   the same machine? Use one canonical layout so the two runtimes never fight over a slot: keep
   **OpenClaw voice on 8443 -> 9442** and move **Hermes voice to the 10000 slot**:
-  `tailscale funnel --bg --https=10000 8443` → `wss://<machine>.<tailnet>.ts.net:10000/voice/msteams/stream`.
+  `tailscale funnel --bg --https=10000 8443` → `wss://<machine>.<tailnet>.ts.net:10000/msteams/calling`.
   Register each runtime as its own agent, each with its own secret. This matches the OpenClaw page, so
   following both guides sets the same funnel map instead of overwriting the already-registered 8443 slot.
 </Note>
@@ -126,12 +126,12 @@ port - a bare host means the 443 slot, which is normally a chat webhook, not voi
 
 ## Gateway-managed mode (one process)
 
-With the `teams_call` platform enabled in the gateway config, `hermes gateway
+With the `msteams_call` platform enabled in the gateway config, `hermes gateway
 run` hosts the voice bridge itself - no separate `serve` process. Two layers
 must both be on:
 
-1. the **plugin**: `teams_call` under `plugins.enabled` in `config.yaml`;
-2. the **platform**: a `teams_call` platform entry enabled in the gateway
+1. the **plugin**: `msteams_call` under `plugins.enabled` in `config.yaml`;
+2. the **platform**: a `msteams_call` platform entry enabled in the gateway
    configuration (same place as your Teams chat platform).
 
 The complete `config.yaml` shape:
@@ -139,20 +139,20 @@ The complete `config.yaml` shape:
 ```yaml
 plugins:
   enabled:
-    - teams_call          # layer 1: the plugin
+    - msteams_call          # layer 1: the plugin
   entries:
-    teams_call:
+    msteams_call:
       config:
-        shared_secret: ${TEAMS_CALL_SHARED_SECRET}
+        calling_secret: ${MSTEAMS_CALL_CALLING_SECRET}
 platforms:
-  teams_call:
+  msteams_call:
     enabled: true         # layer 2: the gateway platform
 ```
 
 In this mode, streaming-mode utterances run as real gateway agent turns
 (sessions, authorization, approvals), and scheduled jobs can deliver by voice
-(`deliver=teams_call` - the bot calls you and speaks the result). If a
-standalone `hermes teams-call serve` is already bound to the port, the
+(`deliver=msteams_call` - the bot calls you and speaks the result). If a
+standalone `hermes msteams-call serve` is already bound to the port, the
 adapter fails loudly instead of splitting traffic - run one or the other.
 
 Using the StandIn one-line installer? Set `STANDIN_GATEWAY_MODE=1` in the
@@ -160,7 +160,7 @@ environment **before** running it: the installer then writes both layers
 above, stops any standalone bridge, and restarts the gateway instead of
 launching `serve`.
 
-`hermes teams-call smoke` is an **offline install check**: it proves config
+`hermes msteams-call smoke` is an **offline install check**: it proves config
 resolution, the HMAC handshake, wire decode, and session lifecycle against an
 ephemeral local listener. It does **not** test the configured listener,
 gateway platform activation, Teams connectivity, provider credentials, or the

@@ -1,0 +1,71 @@
+---
+title: "Connection modes"
+description: "Two ways to put your agent in Microsoft Teams: the StandIn Managed Bot from the Teams Store, or your own Azure bot."
+keywords: ["StandIn Managed Bot","Teams Store","Azure bot","bring your own bot","multi-tenant Teams bot"]
+---
+
+There are two ways to connect an agent to Microsoft Teams. They differ in **who owns the Teams bot**,
+and that single difference decides how much Azure work you do.
+
+| | StandIn Managed Bot | Bring your own Azure bot |
+|---|---|---|
+| Who owns the bot | StandIn | You |
+| Azure app registration | none | you create it |
+| App ID / client secret | none | you manage them |
+| Install | add **StandIn** from the Teams Store | upload your own app package |
+| Admin consent | once, for calling | once, for calling |
+| Identity in Teams | appears as StandIn | appears as your own bot |
+| Best for | getting working quickly | full identity custody |
+
+Both modes connect **your own agent**. StandIn is the bridge, never the brain: the AI that talks is
+the OpenClaw or Hermes agent you run.
+
+## StandIn Managed Bot
+
+StandIn publishes and operates one Teams bot; your Microsoft organization is routed to your agent by
+a connection you create in the StandIn portal.
+
+1. In Teams, add **StandIn** from the Store.
+2. Type `signin` to the bot and sign in with your StandIn account. That link is how StandIn learns
+   which Microsoft organization to connect - you do not type a tenant id anywhere.
+3. In the StandIn portal, deploy an identity and choose **Use the StandIn bot**. Paste your agent's
+   address; the portal gives you back the secrets.
+4. A Microsoft 365 administrator approves calling once for the organization. Chat works before this;
+   calling switches on when the approval lands.
+
+You get **two secrets**, and they are not interchangeable:
+
+| Secret | Signs | Config key |
+|---|---|---|
+| Calling | the media WebSocket handshake | `calling_secret` (Hermes) / `sharedSecret` (OpenClaw) |
+| Messages | the chat relay HTTP body | `messages_secret` (Hermes) / `messagesSecret` (OpenClaw) |
+
+They are separate so a key leaked from one surface cannot forge the other, and so they can be rotated
+independently.
+
+<Note>
+One agent instance serves **one** connection. The secrets belong to a single Microsoft organization -
+run a second instance for a second organization, and never share a secret across tenants.
+</Note>
+
+## Bring your own Azure bot
+
+You register a Microsoft Entra app, create an Azure Bot resource, and upload your own Teams app
+package. The bot carries your name and lives entirely in your tenant. Follow
+[Azure bot setup](/teams/azure-bot) and [App package](/teams/app-package).
+
+This is the right choice when identity custody matters more than setup time, or when you need the bot
+to be visibly yours.
+
+## Endpoints
+
+StandIn dials your agent. Give the portal a bare host and it completes the canonical path for you; if
+your bridge serves a different path, paste the full URL and StandIn will respect it.
+
+| Lane | Hermes / OpenClaw default | Other bridges |
+|---|---|---|
+| Calling (media WebSocket) | `wss://host/msteams/calling` | `wss://host/voice/msteams/stream` |
+| Messages (chat relay, managed only) | `https://host/msteams/messages` | not applicable |
+
+Both StandIn-maintained bridges also still answer their previous paths, so an agent deployed before
+this naming keeps working.
