@@ -1,6 +1,5 @@
 ---
 title: "ElevenLabs example"
-sidebarTitle: "Run the example"
 description: "A step-by-step walkthrough of the basic-bridge example: clone, configure, expose, connect to StandIn, and put an ElevenLabs agent on a Teams call."
 keywords: ["elevenlabs-msteams-bridge example","basic-bridge","ElevenLabs agent Teams tutorial","VisionDescriber look tool","Tailscale Funnel ngrok"]
 ---
@@ -140,7 +139,7 @@ StandIn connects **from the internet**, so the port needs a public `wss://` URL.
 ## 5. Connect it to StandIn and call
 
 1. In your [StandIn dashboard](https://standin.komaa.com/dashboard), set the identity's
-   **Agent voice URL** to the `wss://` URL from step 4.
+   **Agent calling URL** to the `wss://` URL from step 4.
 2. Make sure the identity's shared secret equals `WORKER_SHARED_SECRET`.
 3. Place a Teams call to your bot (or join the sandbox meeting). StandIn joins, connects to the
    bridge, and your ElevenLabs agent answers.
@@ -169,7 +168,7 @@ programmatic surface (config, server handle, hooks).
 ## If something does not work
 
 - **WebSocket rejected with `401`** - `WORKER_SHARED_SECRET` does not match the secret in StandIn.
-- **Bot joins the call but stays silent** - the Agent voice URL is unreachable from the internet or
+- **Bot joins the call but stays silent** - the Agent calling URL is unreachable from the internet or
   points at the wrong port; re-check the tunnel.
 - **Agent audio garbled or missing** - the ElevenLabs agent's audio input/output format is not
   **PCM 16000 Hz**.

@@ -1,6 +1,5 @@
 ---
 title: "Cartesia installation"
-sidebarTitle: "Installation"
 description: "Run cartesia-msteams-bridge and put a Cartesia Line voice agent (your agent code on Cartesia's platform) on Microsoft Teams calls through StandIn."
 keywords: ["Cartesia Line Teams","cartesia-msteams-bridge","Line agent telephony","Sonic TTS","StandIn agent backend","speech-to-speech Teams bot"]
 ---
@@ -76,7 +75,7 @@ surface, including the graceful `drain()` for embedders.
 The bridge binds its media WebSocket (default `ws://<host>:8080/voice/msteams/stream`; StandIn
 appends `/{callId}` per call).
 
-## Expose the WebSocket (Agent voice URL)
+## Expose the WebSocket (Agent calling URL)
 
 StandIn connects to the bridge **from the internet**, so the port must be reachable - a public host
 or a tunnel. With Tailscale Funnel:
@@ -85,7 +84,7 @@ or a tunnel. With Tailscale Funnel:
 tailscale funnel --bg --https=8080 8080
 ```
 
-Your **Agent voice URL** is then:
+Your **Agent calling URL** is then:
 
 ```
 wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream
@@ -97,7 +96,7 @@ Register that URL (with a **matching shared secret**) on your identity in the
 [dashboard](https://standin.komaa.com/dashboard), or use the
 [sandbox](https://standin.komaa.com/sandbox) to try it without your own Teams bot:
 
-1. Set the identity's **Agent voice URL** to where the bridge listens.
+1. Set the identity's **Agent calling URL** to where the bridge listens.
 2. Set `WORKER_SHARED_SECRET` to the **shared secret from pairing** - both sides must match exactly,
    or the WebSocket handshake is rejected with `401`.
 3. Place a Teams call (or join the sandbox meeting). StandIn joins, connects to the bridge, and your

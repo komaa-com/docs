@@ -208,7 +208,7 @@ Prefer to wire it up by hand? Pick your runtime:
       </Step>
       <Step title="Run + call">
         Start the gateway (`openclaw gateway run`), then in your StandIn dashboard register your
-        **Agent voice URL** (`wss://<your-public-host>:8443/msteams/calling` via the funnel; local bind `ws://<host>:9442/...`) and the matching secret. Place a Teams call to your bot.
+        **Agent calling URL** (`wss://<your-public-host>:8443/msteams/calling` via the funnel; local bind `ws://<host>:9442/...`) and the matching secret. Place a Teams call to your bot.
       </Step>
     </Steps>
   </Tab>
@@ -250,7 +250,7 @@ Prefer to wire it up by hand? Pick your runtime:
         ```bash
         hermes msteams-call serve --handler realtime
         ```
-        In your StandIn dashboard, register your **Agent voice URL** (`wss://<your-public-host>:8443/msteams/calling` via the funnel; local bind `ws://<host>:8443/...`)
+        In your StandIn dashboard, register your **Agent calling URL** (`wss://<your-public-host>:8443/msteams/calling` via the funnel; local bind `ws://<host>:8443/...`)
         and the matching secret, then place a Teams call to your bot.
       </Step>
     </Steps>

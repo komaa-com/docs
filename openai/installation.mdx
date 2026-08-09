@@ -1,6 +1,5 @@
 ---
 title: "OpenAI installation"
-sidebarTitle: "Installation"
 description: "Run openai-msteams-bridge and put an OpenAI Realtime voice agent (gpt-realtime) on Microsoft Teams calls through StandIn."
 keywords: ["OpenAI Realtime Teams","gpt-realtime Teams call","openai-msteams-bridge","StandIn agent backend","speech-to-speech Teams bot"]
 ---
@@ -72,7 +71,7 @@ appends `/{callId}` per call).
   drop - the bridge warns at startup when it would not.
 </Warning>
 
-## Expose the WebSocket (Agent voice URL)
+## Expose the WebSocket (Agent calling URL)
 
 StandIn connects to the bridge **from the internet**, so the port must be reachable - a public host
 or a tunnel. With Tailscale Funnel:
@@ -81,7 +80,7 @@ or a tunnel. With Tailscale Funnel:
 tailscale funnel --bg --https=8080 8080
 ```
 
-Your **Agent voice URL** is then:
+Your **Agent calling URL** is then:
 
 ```
 wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream
@@ -93,7 +92,7 @@ Register that URL (with a **matching shared secret**) on your identity in the
 [dashboard](https://standin.komaa.com/dashboard), or use the
 [sandbox](https://standin.komaa.com/sandbox) to try it without your own Teams bot:
 
-1. Set the identity's **Agent voice URL** to where the bridge listens.
+1. Set the identity's **Agent calling URL** to where the bridge listens.
 2. Set `WORKER_SHARED_SECRET` to the **shared secret from pairing** - both sides must match exactly,
    or the WebSocket handshake is rejected with `401`.
 3. Place a Teams call (or join the sandbox meeting). StandIn joins, connects to the bridge, and your

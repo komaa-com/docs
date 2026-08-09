@@ -1,6 +1,5 @@
 ---
 title: "OpenAI example"
-sidebarTitle: "Run the example"
 description: "A step-by-step walkthrough of the basic-bridge example: clone, configure, expose, connect to StandIn, and put a gpt-realtime agent on a Teams call."
 keywords: ["openai-msteams-bridge example","basic-bridge","gpt-realtime Teams tutorial","custom function tool","VisionDescriber look tool"]
 ---
@@ -102,7 +101,7 @@ StandIn connects **from the internet**, so the port needs a public `wss://` URL.
 ## 5. Connect it to StandIn and call
 
 1. In your [StandIn dashboard](https://standin.komaa.com/dashboard), set the identity's
-   **Agent voice URL** to the `wss://` URL from step 4.
+   **Agent calling URL** to the `wss://` URL from step 4.
 2. Make sure the identity's shared secret equals `WORKER_SHARED_SECRET`.
 3. Place a Teams call to your bot (or join the sandbox meeting). StandIn joins, connects to the
    bridge, and your `gpt-realtime` agent answers.
@@ -158,7 +157,7 @@ programmatic surface (config, server options, tools, hooks).
 ## If something does not work
 
 - **WebSocket rejected with `401`** - `WORKER_SHARED_SECRET` does not match the secret in StandIn.
-- **Bot joins the call but stays silent** - the Agent voice URL is unreachable from the internet or
+- **Bot joins the call but stays silent** - the Agent calling URL is unreachable from the internet or
   points at the wrong port; re-check the tunnel.
 - **Call connects, then ends with `agent-unavailable`** - the OpenAI key is invalid, lacks Realtime
   access, or `OPENAI_REALTIME_MODEL` names a model your account cannot use; the log line carries the
