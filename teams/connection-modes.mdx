@@ -79,5 +79,6 @@ your bridge serves a different path, paste the full URL and StandIn will respect
 | Calling (media WebSocket) | `wss://host/msteams/calling` | `wss://host/voice/msteams/stream` |
 | Messages (chat relay, managed only) | `https://host/msteams/messages` | not applicable |
 
-Both StandIn-maintained bridges also still answer their previous paths, so an agent deployed before
-this naming keeps working.
+The StandIn-maintained bridges serve **only** the canonical paths. An agent configured before this
+naming answers nothing at `/msteams/calling`, so update the bridge and the endpoint together: upgrade
+the plugin, then re-save the endpoint in the portal.

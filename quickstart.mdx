@@ -220,18 +220,18 @@ Prefer to wire it up by hand? Pick your runtime:
         uv pip install --python /path/to/hermes/venv/bin/python "hermes-msteams-bridge[documents]"
         ```
         The `[documents]` extra enables `show_file` document rendering and the
-        progress panel. Enablement happens in the config below: `teams_call`
+        progress panel. Enablement happens in the config below: `msteams_call`
         under `plugins.enabled` is all Hermes needs.
       </Step>
       <Step title="Configure">
-        In `~/.hermes/config.yaml` under `plugins.entries.teams_call.config` (secrets in `.env`):
+        In `~/.hermes/config.yaml` under `plugins.entries.msteams_call.config` (secrets in `.env`):
         ```yaml
         plugins:
-          enabled: [teams_call]
+          enabled: [msteams_call]
           entries:
-            teams_call:
+            msteams_call:
               config:
-                shared_secret: ${TEAMS_CALL_SHARED_SECRET}   # must match the secret set in StandIn
+                secret: ${MSTEAMS_CALL_SECRET}   # must match the secret set in StandIn
                 host: 127.0.0.1
                 port: 8443
                 # Inbound caller policy: Hermes has no `inboundPolicy` key and no
@@ -248,7 +248,7 @@ Prefer to wire it up by hand? Pick your runtime:
       </Step>
       <Step title="Run + call">
         ```bash
-        hermes teams-call serve --handler realtime
+        hermes msteams-call serve --handler realtime
         ```
         In your StandIn dashboard, register your **Agent voice URL** (`wss://<your-public-host>:8443/msteams/calling` via the funnel; local bind `ws://<host>:8443/...`)
         and the matching secret, then place a Teams call to your bot.

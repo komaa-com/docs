@@ -1,5 +1,6 @@
 ---
-title: "Configuration"
+title: "Hermes configuration"
+sidebarTitle: "Configuration"
 description: "Configure msteams_call via config.yaml + .env, pick a realtime backend, and run the bridge."
 keywords: ["Hermes msteams_call config","config.yaml env","Azure OpenAI realtime","Microsoft Graph permissions","allow_remote_worker"]
 ---
@@ -13,6 +14,12 @@ Most `config.yaml` keys have a matching `TEAMS_CALL_*` env var (e.g.
 both are set. Exceptions: `path` is config-only, and the SharePoint site id uses
 `TEAMS_SHAREPOINT_SITE_ID` (shared with the chat plane).
 
+<Note>
+  **The secrets are the exception to the prefix.** They read `MSTEAMS_CALL_SECRET`,
+  `MSTEAMS_CALL_CALLING_SECRET` and `MSTEAMS_CALL_MESSAGES_SECRET` - not `TEAMS_CALL_*`. Everything
+  else on this page keeps the `TEAMS_CALL_*` prefix it has always had.
+</Note>
+
 ## config.yaml
 
 `%LOCALAPPDATA%\hermes\config.yaml` (Windows) / `~/.hermes/config.yaml`:
@@ -24,9 +31,12 @@ plugins:
   entries:
     msteams_call:
       config:
-        calling_secret: ${MSTEAMS_CALL_CALLING_SECRET}   # must equal the secret set in StandIn
-        host: 127.0.0.1
-        port: 8443
+        # ONE secret covers BOTH lanes - calling and messages. StandIn issues it per connection
+        # and you paste it once. (Per-lane overrides exist; see "Two lanes" below.)
+        secret: ${MSTEAMS_CALL_SECRET}   # must equal the secret StandIn shows you
+        host: 0.0.0.0                    # 127.0.0.1 only works behind a tunnel on the same machine
+        calling_port: 8443               # the media WebSocket  -> /msteams/calling
+        messages_port: 8444              # the chat relay       -> /msteams/messages
         # Post meeting minutes to the chat with the .docx as a native file
         # card - no SharePoint needed; it rides the Bot Framework attachment
         # contract using the chat plane's bot credentials.
@@ -49,10 +59,10 @@ plugins:
 A fully env-only setup works too:
 
 ```bash
-MSTEAMS_CALL_CALLING_SECRET=...        # must equal the secret set in StandIn
+MSTEAMS_CALL_SECRET=...              # the ONE connection secret - covers calling AND messages
 AZURE_FOUNDRY_API_KEY=...            # realtime key (also used by the gateway)
 # fully env-only is fine too:
-TEAMS_CALL_HOST=127.0.0.1
+TEAMS_CALL_HOST=0.0.0.0
 TEAMS_CALL_PORT=8443
 TEAMS_CALL_REALTIME_BACKEND=azure
 TEAMS_CALL_AZURE_ENDPOINT=https://<your-azure-resource>.cognitiveservices.azure.com
@@ -80,8 +90,12 @@ matching `TEAMS_CALL_*` env var.
 
 | Key | Meaning |
 |---|---|
-| `calling_secret` | HMAC secret - **must match the secret set in StandIn** (keep in `.env`) |
-| `host` / `port` / `path` | media WebSocket the StandIn bridge connects to (default `127.0.0.1` : `8443`, `/msteams/calling`) |
+| `secret` | **The connection secret.** One value covers BOTH lanes; StandIn issues it per connection and you paste it once. Env: `MSTEAMS_CALL_SECRET`. Keep it in `.env` |
+| `calling_secret` / `messages_secret` | Per-lane OVERRIDES, for deployments that insist on separate keys. When set they win over `secret`. Env: `MSTEAMS_CALL_CALLING_SECRET` / `MSTEAMS_CALL_MESSAGES_SECRET`. Most installs need neither |
+| `host` | address BOTH lanes bind (default `0.0.0.0`; `127.0.0.1` is reachable only from the same machine, so it works only behind a tunnel that forwards to it) |
+| `calling_port` / `path` | the media WebSocket StandIn dials (default `8443`, `/msteams/calling`). `port` is still accepted as the old name for `calling_port` |
+| `messages_port` / `messages_path` | the chat relay (default `8444`, `/msteams/messages`) - the lane that carries Teams messages to and from your agent |
+| `gateway_reply_endpoint` | where the plugin posts chat replies back (default `https://teams.standin.komaa.com/api/chat/reply`) - override only for a self-hosted StandIn |
 | `allow_remote_worker` | SSRF guard for **outbound** "call me back": permit dialing a non-loopback `worker_base_url` (default `false` = loopback only). Does not affect inbound bridge connections |
 | `require_recording_status` | only engage once Teams reports recording active (default `true`) |
 | `allowlist` / `allowlist_allow_names` / `allow_all` | inbound caller policy (see [below](#inbound-policy-voice-hermes-vs-openclaw)): allowlisted caller AAD ids; **empty = deny all** inbound callers unless `allow_all: true` (`TEAMS_CALL_ALLOW_ALL`) explicitly opens it. `allowlist_allow_names` additionally matches display names (weaker; spoofable). When empty, `allowlist` inherits the chat plane's `TEAMS_ALLOWED_USERS`, so voice + chat can share one AAD allowlist |
@@ -136,8 +150,15 @@ Or run it standalone:
 python -m hermes_msteams_bridge.bridge_server
 ```
 
-Register your **Agent voice URL** (`wss://<your-public-host>:8443/msteams/calling` via your tunnel; local bind `ws://<host>:8443/...`) and a matching shared
-secret in your StandIn dashboard.
+Register **both endpoints** in your StandIn dashboard, with the same secret:
+
+| Field in StandIn | Value | Served by |
+|---|---|---|
+| **Agent calling URL** | `wss://<your-public-host>:8443/msteams/calling` | `msteams-call serve` |
+| **Agent messages URL** | `https://<your-public-host>:8444/msteams/messages` | the same process |
+
+Local binds are `ws://<host>:8443/msteams/calling` and `http://<host>:8444/msteams/messages`; StandIn
+dials the PUBLIC addresses, so both have to be reachable from the internet.
 
 ## Microsoft Graph permissions
 
@@ -145,8 +166,8 @@ The bot's Azure AD app needs admin-consented **application** permissions - see t
 [Graph permissions table](/teams/azure-bot#8-grant-graph-permissions) on the Create the Azure bot page.
 
 <Warning>
-  The `calling_secret` **must byte-match** the secret set in StandIn, or the HMAC handshake fails and no
-  call connects.
+  The `secret` **must byte-match** the value StandIn shows you, or the HMAC handshake fails: calls
+  connect and immediately hang up, and chat relays are rejected.
 </Warning>
 
 
@@ -162,7 +183,7 @@ plugins:
   entries:
     msteams_call:
       config:
-        calling_secret: ${MSTEAMS_CALL_CALLING_SECRET}
+        secret: ${MSTEAMS_CALL_SECRET}
 platforms:
   msteams_call:
     enabled: true         # layer 2: the gateway platform

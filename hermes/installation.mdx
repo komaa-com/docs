@@ -1,5 +1,6 @@
 ---
-title: "Installation"
+title: "Hermes installation"
+sidebarTitle: "Installation"
 description: "Install hermes-msteams-bridge into a Hermes Agent environment."
 keywords: ["hermes-msteams-bridge","Hermes Agent plugin","pip install Teams voice","msteams_call","uv pip"]
 ---
@@ -78,36 +79,53 @@ Run the bridge server (foreground):
 hermes msteams-call serve
 ```
 
-The bridge binds its media WebSocket (default `ws://<host>:8443/msteams/calling`).
+The bridge serves **two** endpoints from one process:
 
-## Expose the WebSocket (Agent voice URL)
+| Lane | Default local bind | What it carries |
+|---|---|---|
+| **Calling** | `ws://<host>:8443/msteams/calling` | the media WebSocket - live audio/video |
+| **Messages** | `http://<host>:8444/msteams/messages` | the chat relay - Teams messages to and from your agent |
 
-StandIn connects to your plugin **from the internet**, so port `8443` must be reachable - a public
-host, or a tunnel. With Tailscale Funnel, put voice on the **8443** slot (keeps the 443 slot free
-for a Teams chat webhook):
+Both are needed for a full connection. Calling alone gives you a bot that talks but cannot read chat;
+messages alone gives you chat with no calls.
+
+## Expose both endpoints
+
+StandIn connects to your plugin **from the internet**, so both ports must be reachable - a public
+host, or a tunnel. With Tailscale Funnel, expose them on two of its three slots:
 
 ```bash
-tailscale funnel --bg --https=8443 8443
+tailscale funnel --bg --https=8443 8443    # calling  -> /msteams/calling
+tailscale funnel --bg --https=10000 8444   # messages -> /msteams/messages
 ```
 
-Your **Agent voice URL** is then:
+That gives you the two values StandIn asks for:
 
-```
-wss://<machine>.<tailnet>.ts.net:8443/msteams/calling
-```
+| Field in StandIn | Value |
+|---|---|
+| **Agent calling URL** | `wss://<machine>.<tailnet>.ts.net:8443/msteams/calling` |
+| **Agent messages URL** | `https://<machine>.<tailnet>.ts.net:10000/msteams/messages` |
 
-Register that URL (with a **matching shared secret**) in the
-[StandIn sandbox](https://standin.komaa.com/sandbox) or on your identity in the
+Register both (with the **same connection secret**) on your connection in the
 [dashboard](https://standin.komaa.com/dashboard), then place a Teams call to your bot. Include the
-port - a bare host means the 443 slot, which is normally a chat webhook, not voice.
+port in each - a bare host means the 443 slot, which is neither of these.
 
 <Note>
-  Funnel serves up to 3 external ports (443, 8443, 10000). Also running the **OpenClaw** plugin on
-  the same machine? Use one canonical layout so the two runtimes never fight over a slot: keep
-  **OpenClaw voice on 8443 -> 9442** and move **Hermes voice to the 10000 slot**:
-  `tailscale funnel --bg --https=10000 8443` → `wss://<machine>.<tailnet>.ts.net:10000/msteams/calling`.
-  Register each runtime as its own agent, each with its own secret. This matches the OpenClaw page, so
-  following both guides sets the same funnel map instead of overwriting the already-registered 8443 slot.
+  Funnel serves exactly **3** external ports: 443, 8443 and 10000. The layout above spends two of
+  them, which leaves 443 free.
+
+  Also running the **OpenClaw** plugin on the same machine? Three slots cannot cover two full runtimes
+  (that would need four). Put OpenClaw on 443, keep Hermes calling on 8443 and Hermes messages on
+  10000, or give each runtime its own tailnet machine. Register each runtime as its own connection with
+  its own secret.
+</Note>
+
+<Note>
+  **The bot answers but does nothing until recording starts.** `require_recording_status` defaults to
+  `true`, so the plugin engages only once Teams reports recording active - which is why a call can
+  connect and the agent stay silent or refuse to act. Turn recording on in the call, or set
+  `require_recording_status: false`. What the agent then *does* with a request - replying, posting a
+  message, running a skill - is Hermes Agent's own logic and configuration, not the bridge's.
 </Note>
 
 <Note>
@@ -143,7 +161,7 @@ plugins:
   entries:
     msteams_call:
       config:
-        calling_secret: ${MSTEAMS_CALL_CALLING_SECRET}
+        secret: ${MSTEAMS_CALL_SECRET}   # one secret, both lanes
 platforms:
   msteams_call:
     enabled: true         # layer 2: the gateway platform

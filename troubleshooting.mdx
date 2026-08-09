@@ -11,7 +11,7 @@ The issues below cover almost every failed first call. Work top to bottom: secre
 **Symptom:** the bot joins the call (or the bridge connects), then nothing: no greeting, no
 response, no error in your plugin logs.
 
-The `sharedSecret` (OpenClaw) / `shared_secret` (Hermes) must **byte-match** the secret set in your
+The `sharedSecret` (OpenClaw) / `secret` (Hermes) must **byte-match** the secret set in your
 StandIn dashboard. A mismatch fails the HMAC handshake **silently** - the bridge simply drops the
 connection, so both sides look "up" while no audio flows. This is the #1 first-call issue.
 
@@ -20,10 +20,10 @@ connection, so both sides look "up" while no audio flows. This is the #1 first-c
 - Re-paste the secret on both sides. Watch for a trailing newline or whitespace picked up when
   copying, and for shell quoting that swallows characters like `$` or `!`.
 - If the secret lives in `.env`, confirm the variable actually resolves (Hermes:
-  `hermes teams-call status`).
+  `hermes msteams-call status`).
 - Rotate the secret in the StandIn dashboard and set the new value in the plugin config. A rotated
   secret is **not picked up hot** yet (hot-reload is being worked on): restart your plugin after
-  changing it - `openclaw gateway run` again (OpenClaw); on Hermes, `hermes teams-call serve` again
+  changing it - `openclaw gateway run` again (OpenClaw); on Hermes, `hermes msteams-call serve` again
   (standalone) or `hermes gateway restart` (gateway-managed - never start `serve` next to a
   gateway-managed setup, the two would fight over the port).
   On the StandIn side the rotated secret is picked up automatically: the caller hot-reloads it within
@@ -40,8 +40,8 @@ the bot has nothing to bridge to and does not join.
 **Fix, in order:**
 
 1. **Is the plugin running?** Start it - `openclaw gateway run` (OpenClaw); on Hermes,
-   `hermes teams-call serve --handler realtime` (standalone) or `hermes gateway run`
-   (gateway-managed, with `platforms.teams_call.enabled: true`) - and confirm it is
+   `hermes msteams-call serve --handler realtime` (standalone) or `hermes gateway run`
+   (gateway-managed, with `platforms.msteams_call.enabled: true`) - and confirm it is
    listening on its port. Run one Hermes mode or the other, never both.
 2. **Is the tunnel up?** If you expose the endpoint via a tunnel (e.g. Tailscale), a dropped tunnel
    is the most common cause. Restart it and test the public URL from outside your network.
@@ -78,7 +78,7 @@ Then send the message again. Alternatively set `channels.msteams.dmPolicy: "open
 `openclaw.json` to accept DMs from anyone (less safe; pairing is recommended).
 
 **Hermes: gated too, but visible by default.** Teams chat runs through the Hermes gateway's Teams
-platform (`hermes gateway run`), not the `teams_call` plugin. With no allowlist configured, an
+platform (`hermes gateway run`), not the `msteams_call` plugin. With no allowlist configured, an
 unknown sender is not ignored: the bot **replies with a pairing code** ("I don't recognize you
 yet!") instead of answering. Approve that code once:
 
