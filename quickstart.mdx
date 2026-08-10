@@ -178,12 +178,12 @@ Prefer to wire it up by hand? Pick your runtime:
         </Note>
       </Step>
       <Step title="Configure">
-        Add a `msteams-voice` entry to your OpenClaw config - `sharedSecret` must match the value you set in StandIn:
+        Add a `msteams-call` entry to your OpenClaw config - `sharedSecret` must match the value you set in StandIn:
         ```jsonc
         {
           "plugins": {
             "entries": {
-              "msteams-voice": {
+              "msteams-call": {
                 "config": {
                   "enabled": true,
                   "mode": "realtime",

@@ -1,10 +1,10 @@
 ---
 title: "OpenClaw configuration"
 description: "Full config reference for @komaa/openclaw-msteams-bridge - realtime, streaming, outbound, and security."
-keywords: ["OpenClaw msteams-bridge config","msteams-voice config key","Teams voice configuration","realtime config","streaming config","Microsoft Graph permissions"]
+keywords: ["OpenClaw msteams-bridge config","msteams-call config key","Teams voice configuration","realtime config","streaming config","Microsoft Graph permissions"]
 ---
 
-Config lives under `plugins.entries."msteams-voice".config` in your OpenClaw config.
+Config lives under `plugins.entries."msteams-call".config` in your OpenClaw config.
 **`sharedSecret` must match the secret you set in StandIn** for the hosted bridge that connects to
 this plugin's media WebSocket.
 
@@ -19,7 +19,7 @@ call-backs, recording gate, and `sessionScope` agent memory. See [Modes](/concep
 {
   "plugins": {
     "entries": {
-      "msteams-voice": {
+      "msteams-call": {
         "config": {
           "enabled": true,
           "mode": "realtime",
@@ -62,7 +62,7 @@ call-backs, recording gate, and `sessionScope` agent memory. See [Modes](/concep
 {
   "plugins": {
     "entries": {
-      "msteams-voice": {
+      "msteams-call": {
         "config": {
           "enabled": true,
           "mode": "streaming",
