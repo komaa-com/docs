@@ -78,6 +78,16 @@ back, verified end to end against a live call:
 Defaults that need no config: `port` 9442 (calling), `messagesPort` 9444, `path` `/msteams/calling`,
 `messagesPath` `/msteams/messages`.
 
+### You do not need the `voice-call` plugin
+
+`voice-call` is OpenClaw's **telephony** plugin (Twilio, `fromNumber`, webhook URLs). This one is
+separate and self-contained: install `msteams-call` and nothing else.
+
+If you are moving from an older setup, note the Teams settings used to live *nested inside* it as
+`plugins.entries."voice-call".config.msteams`. Lift that block up to
+`plugins.entries."msteams-call".config` and delete the `voice-call` entry - leaving it behind does no
+harm, but it configures a phone system you are not using.
+
 ### Four things that bite on a first install
 
 <Warning>
@@ -88,12 +98,61 @@ Defaults that need no config: `port` 9442 (calling), `messagesPort` 9444, `path`
 </Warning>
 
 <Warning>
+  **Azure needs all three `azure*` keys.** With only `apiKey` set, the plugin dials `api.openai.com`
+  with an Azure key: the call answers and then drops a second later. See the Azure tab above.
+</Warning>
+
+<Warning>
+  **The call answers, then goes quiet when asked to look something up.** Two *different* models are in
+  play and only one of them is configured here - see [Two models, two
+  places](#two-models-two-places) below.
+</Warning>
+
+<Warning>
   **If you tunnel the calling lane, the `/{callId}` suffix must survive.** StandIn dials
   `wss://<host>/msteams/calling/{callId}`. A reverse proxy that mounts a path prefix and strips it
   delivers `/` instead, and the upgrade 404s. With Tailscale Funnel, give the backend path explicitly
   (`--set-path=/msteams/calling http://127.0.0.1:9442/msteams/calling`); a bare port target strips the
   prefix.
 </Warning>
+
+## Two models, two places
+
+This trips people up because the failure looks like a call bug, not a config one.
+
+| | configured in | used for |
+|---|---|---|
+| **Voice model** | `realtime.providers.<provider>.model` (here) | the speech-to-speech conversation - listening and talking |
+| **Agent model** | `agents.defaults.model.primary` (**your OpenClaw config, not this plugin**) | `openclaw_agent_consult` and `openclaw_agent_task` - lookups and background work |
+
+The agent model is **inherited**. You do not configure it here, and in a normal install there is
+nothing to set: the plugin reads whatever your OpenClaw agent already uses.
+
+```json5
+{
+  agents: { defaults: { model: { primary: "microsoft-foundry/gpt-5.6-sol" } } },
+  // ...the msteams-call entry needs no model key at all
+}
+```
+
+<Warning>
+  **`FailoverError: Unknown model: openai/gpt-5.5`**, logged mid-call while the voice side works fine.
+
+  On **v0.2.x and earlier**, the agent model fell back to OpenClaw's compiled-in default pair
+  (`openai` / `gpt-5.5`) instead of your configured agent. If that model is not registered on your
+  host, every consult fails - but only *after* the caller has already been greeted, because the voice
+  lane has its own provider block and connects normally. Nothing in your config names `gpt-5.5`, so
+  there is nothing to grep for.
+
+  Fixed in **v0.3.1**: upgrade. To stay on an older version, pin it explicitly with `responseModel`.
+</Warning>
+
+`responseModel` is an **optional override**, for when the voice lane should consult a different model
+than your default agent. Resolution order:
+
+1. `responseModel`, if you set it
+2. `agents.defaults.model.primary` - the normal case
+3. OpenClaw's built-in default, only if you have configured no agent at all
 
 ## Mode selection
 
@@ -229,6 +288,7 @@ voicemail / no-answer); the `outbound` block enables it.
 | `meetingRecap` / `bilingual` | both | post-call minutes / Arabic-English |
 | `realtime.{provider,providers,instructions,toolPolicy,…}` | realtime (echo knobs: both) | realtime voice provider + behavior; provider key is a secret input |
 | `stt.{provider,providers}` | streaming | live transcription provider (else openclaw STT / file fallback); provider key is a secret input |
+| `responseModel` | both | **Optional.** Override the agent model for consult/task. Omit it and the plugin inherits `agents.defaults.model.primary` (see [Two models, two places](#two-models-two-places)) |
 | `outbound.{enabled,workerBaseUrl,tenantId,answerTimeoutMs,defaultMode}` | both | outbound call-backs / voicemail |
 
 <Note>
