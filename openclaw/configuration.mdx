@@ -78,6 +78,26 @@ back, verified end to end against a live call:
 Defaults that need no config: `port` 9442 (calling), `messagesPort` 9444, `path` `/msteams/calling`,
 `messagesPath` `/msteams/messages`.
 
+### Realtime provider options
+
+Everything inside `realtime.providers.<name>` is passed to the voice provider. The full known set -
+only `apiKey` is required (plus the three `azure*` keys on Azure):
+
+| Key | Meaning |
+|---|---|
+| `apiKey` | Provider API key. **Required.** Treat as a secret |
+| `model` | Realtime voice model (e.g. `gpt-realtime`) |
+| `azureEndpoint` / `azureDeployment` / `azureApiVersion` | The Azure trio - all three or none (see the warning above) |
+| `voice` | Voice name (e.g. `cedar`) |
+| `silenceDurationMs` | How long a pause counts as end-of-turn (default provider-side) |
+| `prefixPaddingMs` | Audio kept from before speech was detected |
+| `vadThreshold` | Voice-activity sensitivity, 0-1; raise in noisy rooms |
+| `interruptResponseOnInputAudio` | Barge-in: caller speech interrupts the agent |
+| `minBargeInAudioEndMs` | Minimum speech length that counts as a barge-in |
+
+Spelling matters: from plugin v0.4.1 the known keys are schema-checked, so a typo like
+`azureEndpont` fails validation instead of surfacing as a runtime mystery.
+
 ### You do not need the `voice-call` plugin
 
 `voice-call` is OpenClaw's **telephony** plugin (Twilio, `fromNumber`, webhook URLs). This one is
@@ -200,7 +220,12 @@ at a different cause:
 4. **The agent never mentions seeing at all, or refuses.**
    Check `realtime.toolPolicy` is not `"none"`.
 
-5. **Mid-call lookups fail generally (not just vision), e.g. an "Unknown model" error in the gateway log.**
+5. **In a MEETING, the agent neither hears nor sees until recording starts.**
+   That is `requireRecordingStatus: true` doing its job: a compliance gate that holds all media until
+   Teams reports recording active. Start recording in the meeting, or set the key to `false` where
+   your policy allows. 1:1 direct calls are not affected - the gate opens on connect.
+
+6. **Mid-call lookups fail generally (not just vision), e.g. an "Unknown model" error in the gateway log.**
    The agent model, not vision - see [Two models, two places](#two-models-two-places).
 
 Two places show you what actually happened, both on your machine:
