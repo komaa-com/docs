@@ -10,13 +10,6 @@ The plugin serves **two lanes**: **calling** (the media WebSocket StandIn dials)
 managed chat relay). **Set `secret` and you configure both.** It must match the connection secret shown
 in your StandIn dashboard.
 
-<Warning>
-  **`sharedSecret` and `messagesSecret` are gone.** Earlier versions of this page taught `sharedSecret`
-  as the main key; it configured calling and left the **messages lane off with no error**, so those
-  setups looked fine and were half-working. There is now exactly one key, `secret`, and it fills both
-  lanes. A config still carrying the old keys resolves to nothing rather than half-working.
-</Warning>
-
 ## Minimal working config (start here)
 
 Everything else on this page is tuning. This is the smallest config that answers a Teams call and talks
@@ -107,12 +100,6 @@ Defaults that need no config: `port` 9442 (calling), `messagesPort` 9444, `path`
   delivers `/` instead, and the upgrade 404s. With Tailscale Funnel, give the backend path explicitly
   (`--set-path=/msteams/calling http://127.0.0.1:9442/msteams/calling`); a bare port target strips the
   prefix.
-</Warning>
-
-<Warning>
-  **`secret` is the only secret key.** The former `sharedSecret` and `messagesSecret` per-lane overrides
-  are gone. `sharedSecret` in particular configured calling and left the messages lane off with no error,
-  so setups built on it looked fine and were half-working.
 </Warning>
 
 ## Mode selection
