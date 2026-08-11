@@ -44,13 +44,19 @@ start the gateway:
 openclaw gateway run
 ```
 
-The plugin registers a host-managed service and binds its media WebSocket (default
-`ws://<host>:9442/msteams/calling`).
+The plugin registers a host-managed service and binds **two** listeners:
 
-## Expose the WebSocket (Agent calling URL)
+| lane | default | what reaches it |
+|---|---|---|
+| **calling** | `ws://<host>:9442/msteams/calling` | the media WebSocket StandIn dials, one connection per call |
+| **messages** | `http://<host>:9444/msteams/messages` | the chat relay, if you use the managed chat lane |
 
-StandIn connects to your plugin **from the internet**, so port `9442` must be reachable - a public
-host, or a tunnel.
+One `secret` turns both on. Expose only the lanes you use.
+
+## Expose the lanes
+
+StandIn connects to your plugin **from the internet**, so the ports you use must be reachable - a
+public host, or a tunnel.
 
 With Tailscale Funnel, map the **path** onto your single public host rather than spending a whole
 external port on it (Funnel offers only three). The proxy target must repeat the path, or the request
@@ -66,13 +72,31 @@ Your **Agent calling URL** is then, with no port to mistype:
 wss://<machine>.<tailnet>.ts.net/msteams/calling
 ```
 
-Register that URL (with a **matching `sharedSecret`**) in the
+Register that URL (with a **matching `secret`**) in the
 [StandIn sandbox](https://standin.komaa.com/sandbox) or on your identity in the
 [dashboard](https://standin.komaa.com/dashboard), then place a Teams call to your bot.
 
 Prefer a dedicated port? `tailscale funnel --bg --https=8443 9442` works too - this is what the
 one-line installer does - and the URL then carries the port:
 `wss://<machine>.<tailnet>.ts.net:8443/msteams/calling`.
+
+### The messages lane
+
+Using managed chat as well? Expose the second listener the same way, pointing at `9444` and repeating
+its path:
+
+```bash
+tailscale funnel --bg --set-path=/msteams/messages http://127.0.0.1:9444/msteams/messages
+```
+
+Both lanes then share one public host:
+
+```
+wss://<machine>.<tailnet>.ts.net/msteams/calling     calling
+https://<machine>.<tailnet>.ts.net/msteams/messages  messages
+```
+
+Voice-only? Skip it - leaving `9444` unexposed simply means nothing posts chat to you.
 
 <Note>
   Funnel serves up to 3 external ports (443, 8443, 10000), which is why path routing is the better
