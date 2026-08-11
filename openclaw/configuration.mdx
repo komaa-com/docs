@@ -88,13 +88,6 @@ Defaults that need no config: `port` 9442 (calling), `messagesPort` 9444, `path`
 </Warning>
 
 <Warning>
-  **On Azure, the deployment must be preview-API compatible.** A GA-only model fails with
-  `realtime connection closed before ready` AFTER a successful handshake, so it looks like a network
-  fault and is not: Azure returns `Model "..." is only available on the GA API`. `gpt-realtime` and
-  `gpt-realtime-1.5` work with `2025-04-01-preview`.
-</Warning>
-
-<Warning>
   **If you tunnel the calling lane, the `/{callId}` suffix must survive.** StandIn dials
   `wss://<host>/msteams/calling/{callId}`. A reverse proxy that mounts a path prefix and strips it
   delivers `/` instead, and the upgrade 404s. With Tailscale Funnel, give the backend path explicitly
