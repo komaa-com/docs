@@ -154,6 +154,66 @@ than your default agent. Resolution order:
 2. `agents.defaults.model.primary` - the normal case
 3. OpenClaw's built-in default, only if you have configured no agent at all
 
+## Vision: the agent sees your screen and camera
+
+Share your screen (or turn your camera on) in the call, and the agent can look at it: ask *"what's on
+my screen?"*, *"read this error"*, or *"what am I holding?"*. StandIn's hosted bridge samples what is
+shown and delivers frames to your plugin; the agent looks on demand with its `look_at_screen` tool.
+
+Ask about something shown **earlier** - *"what did the previous slide say?"* - and the agent reviews
+its recent scene-change keyframes instead of only the live frame.
+
+Configuration is minimal, and both switches default sensibly:
+
+| Key | Default | Meaning |
+|---|---|---|
+| `maxVisionPerMinute` | `30` | Per-call cap on vision looks per minute. Each look costs a model call; raise for demo-heavy calls, lower to bound spend |
+| `realtime.toolPolicy` | `"safe-read-only"` | Vision needs any value except `"none"`. `"none"` deliberately locks the call down - the agent is never offered the look tool and will say it cannot see |
+
+<Warning>
+  **Needs plugin v0.4.1+.** On earlier versions the image was silently dropped between the plugin and
+  the agent on every published OpenClaw host, so the agent replied *"I'm not receiving the
+  shared-screen image"* even though everything was configured correctly. If you see that exact
+  sentence, upgrade - it is the version, not your config.
+</Warning>
+
+### Debugging: "the agent says it can't see"
+
+The agent's own wording tells you which layer to look at. Work down this ladder - each answer points
+at a different cause:
+
+1. **"I can't see anything yet - make sure your camera or screen-share is on."**
+   No frame has arrived at the plugin. Start (or restart) the share; it can take a few seconds after
+   sharing starts. If it never arrives, confirm the call actually connected through StandIn (you hear
+   the agent) and that your **Agent calling URL** points at this plugin instance.
+
+2. **"I'm not receiving the shared-screen image."**
+   Frames arrived but were not attached to the agent's look. That is the pre-0.4.1 bug - upgrade the
+   plugin and restart the gateway.
+
+3. **"I've been looking quite a lot in the last minute..."**
+   The `maxVisionPerMinute` budget. Wait a few seconds or raise the cap.
+
+4. **The agent never mentions seeing at all, or refuses.**
+   Check `realtime.toolPolicy` is not `"none"`.
+
+5. **Mid-call lookups fail generally (not just vision), e.g. an "Unknown model" error in the gateway log.**
+   The agent model, not vision - see [Two models, two places](#two-models-two-places).
+
+Two places show you what actually happened, both on your machine:
+
+- **The gateway terminal.** A healthy look logs nothing dramatic; failures name themselves
+  (`look failed for <callId> - ...`, `invalid message from <callId>: ...`).
+- **The agent session log** - `~/.openclaw/agents/<agentId>/sessions/*.jsonl`. Find the newest file
+  and look for the consult turns: a working look shows the user turn carrying **image parts**; a
+  broken one shows text only. This one check separates "frames are not arriving" from "frames are
+  arriving but not attached", which sound identical in the agent's spoken answer.
+
+<Note>
+  **Restart the gateway after upgrading.** OpenClaw loads plugin code at startup; an upgrade on disk
+  changes nothing until the gateway restarts. If a fix "didn't work", check this first.
+</Note>
+
 ## Mode selection
 
 Set `mode` to `"realtime"` or `"streaming"`. If omitted, the runtime auto-selects **realtime** when a
@@ -311,7 +371,7 @@ arbitrary user id would turn any of it into "ring this person". Requires the mes
 | `sessionScope` | both | `per-phone` \| `per-call` \| `per-thread` agent-memory scope |
 | `maxConcurrentCalls` / `maxDurationSeconds` / `staleCallReaperSeconds` | both | capacity + reaper |
 | `groupCall.{requireAddress,wakePhrases,followUpWindowMs}` | both | speak-only-when-addressed gating |
-| `maxVisionPerMinute` | both | vision spend cap |
+| `maxVisionPerMinute` | both | vision spend cap (see [Vision](#vision-the-agent-sees-your-screen-and-camera)) |
 | `meetingRecap` / `bilingual` | both | post-call minutes / Arabic-English |
 | `realtime.{provider,providers,instructions,toolPolicy,…}` | realtime (echo knobs: both) | realtime voice provider + behavior; provider key is a secret input |
 | `stt.{provider,providers}` | streaming | live transcription provider (else openclaw STT / file fallback); provider key is a secret input |
