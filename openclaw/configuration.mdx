@@ -5,8 +5,17 @@ keywords: ["OpenClaw msteams-bridge config","msteams-call config key","Teams voi
 ---
 
 Config lives under `plugins.entries."msteams-call".config` in your OpenClaw config.
-**`sharedSecret` must match the secret you set in StandIn** for the hosted bridge that connects to
-this plugin's media WebSocket.
+
+The plugin serves **two lanes**: **calling** (the media WebSocket StandIn dials) and **messages** (the
+managed chat relay). **Set `secret` and you configure both.** It must match the connection secret shown
+in your StandIn dashboard.
+
+<Warning>
+  **Do not set `sharedSecret` on its own.** It is a per-lane override for **calling only** - setting it
+  alone configures voice and leaves the **messages lane off**, with no error. Earlier versions of this
+  page taught `sharedSecret` as the main key; use `secret` unless you deliberately want different
+  secrets per lane.
+</Warning>
 
 ## Mode selection
 
@@ -25,7 +34,7 @@ call-backs, recording gate, and `sessionScope` agent memory. See [Modes](/concep
           "mode": "realtime",
           "port": 9442,
           "path": "/msteams/calling",
-          "sharedSecret": "<same secret as in your StandIn dashboard>",
+          "secret": "<connection secret from your StandIn dashboard>",
           "requireRecordingStatus": true,
           "inboundPolicy": "allowlist",
           "allowFrom": ["<caller AAD object id or phone number>"],
@@ -68,7 +77,7 @@ call-backs, recording gate, and `sessionScope` agent memory. See [Modes](/concep
           "mode": "streaming",
           "port": 9442,
           "path": "/msteams/calling",
-          "sharedSecret": "<same secret as in your StandIn dashboard>",
+          "secret": "<connection secret from your StandIn dashboard>",
           "requireRecordingStatus": true,
           "inboundPolicy": "allowlist",
           "allowFrom": ["<caller id>"],
@@ -126,7 +135,13 @@ voicemail / no-answer); the `outbound` block enables it.
 | `enabled` | both | master on/off |
 | `mode` | both | `"realtime"` \| `"streaming"` (auto if omitted) |
 | `port` / `bindAddress` / `path` | both | media WebSocket server the StandIn bridge connects to |
-| `sharedSecret` | both | HMAC secret - **must match the secret set in StandIn** (secret input) |
+| `secret` | both lanes | **The connection secret. Start here.** One value covering calling *and* messages - all most deployments need (secret input) |
+| `sharedSecret` | calling only | Per-lane **override**. Setting it alone configures calling and leaves messages **off** - prefer `secret` |
+| `messagesSecret` | messages only | Per-lane **override** for messages. Prefer `secret` |
+| `callingPort` | calling | Explicit port for the calling lane (default `9442`). Alias of `port` |
+| `messagesPort` / `messagesPath` / `messagesBindAddress` | messages | Messages lane listener (defaults `9444`, `/msteams/messages`, root `bindAddress`) |
+| `gatewayReplyUrl` | messages | Where replies are POSTed. Defaults to the StandIn gateway; override only for a private deployment |
+| `managedBot` | messages | **Compatibility block** for older configs. Prefer the flat `messages*` keys above |
 | `requireRecordingStatus` | both | only engage once Teams reports recording active |
 | `inboundPolicy` | both | `disabled` \| `allowlist` \| `pairing` \| `open` - **enforced** on inbound. Today `pairing` behaves **exactly like `allowlist`** in this plugin (see the note below) |
 | `allowFrom` | both | allowlisted caller ids (Teams aadId or phone digits) |
@@ -152,7 +167,7 @@ voicemail / no-answer); the `outbound` block enables it.
 </Note>
 
 <Warning>
-  Treat `sharedSecret` and all provider `apiKey` values as secrets - keep them out of source control.
+  Treat `secret`, `sharedSecret`, `messagesSecret` and all provider `apiKey` values as secrets - keep them out of source control.
 </Warning>
 
 ## Microsoft Graph permissions
