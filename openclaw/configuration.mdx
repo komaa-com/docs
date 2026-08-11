@@ -17,6 +17,104 @@ in your StandIn dashboard.
   lanes. A config still carrying the old keys resolves to nothing rather than half-working.
 </Warning>
 
+## Minimal working config (start here)
+
+Everything else on this page is tuning. This is the smallest config that answers a Teams call and talks
+back, verified end to end against a live call:
+
+<CodeGroup>
+```json5 OpenAI
+{
+  plugins: {
+    entries: {
+      "msteams-call": {
+        enabled: true,
+        config: {
+          // 1. The connection secret from your StandIn dashboard. Turns the plugin ON and covers
+          //    BOTH lanes (calling + messages). Nothing runs without it.
+          secret: "<connection secret from StandIn>",
+
+          // 2. WITHOUT THIS EVERY CALL IS REJECTED. The default is "disabled" - fail-closed by
+          //    design, but it means a fresh install refuses calls until you say who may ring it.
+          inboundPolicy: "allowlist",
+          allowFrom: ["<your AAD object id>"],
+
+          // 3. The voice model.
+          realtime: {
+            provider: "openai",
+            providers: { openai: { apiKey: "<openai api key>" } },
+          },
+        },
+      },
+    },
+  },
+}
+```
+
+```json5 Azure OpenAI
+{
+  plugins: {
+    entries: {
+      "msteams-call": {
+        enabled: true,
+        config: {
+          secret: "<connection secret from StandIn>",
+          inboundPolicy: "allowlist",
+          allowFrom: ["<your AAD object id>"],
+          realtime: {
+            provider: "openai",
+            providers: {
+              openai: {
+                apiKey: "<azure api key>",
+                // All three are required for Azure. Without them the plugin dials api.openai.com
+                // with an Azure key and the call answers, then drops.
+                azureEndpoint: "https://<your-resource>.cognitiveservices.azure.com",
+                azureDeployment: "gpt-realtime",
+                azureApiVersion: "2025-04-01-preview",
+              },
+            },
+          },
+        },
+      },
+    },
+  },
+}
+```
+</CodeGroup>
+
+Defaults that need no config: `port` 9442 (calling), `messagesPort` 9444, `path` `/msteams/calling`,
+`messagesPath` `/msteams/messages`.
+
+### Four things that bite on a first install
+
+<Warning>
+  **`inboundPolicy` defaults to `"disabled"`.** A fresh install answers nothing and logs
+  `inbound call rejected by policy "disabled"`. Set `allowlist` + `allowFrom`, or `"open"` for a
+  controlled demo. Note `"pairing"` behaves exactly like `"allowlist"` here - it issues no pairing codes
+  for calls.
+</Warning>
+
+<Warning>
+  **On Azure, the deployment must be preview-API compatible.** A GA-only model fails with
+  `realtime connection closed before ready` AFTER a successful handshake, so it looks like a network
+  fault and is not: Azure returns `Model "..." is only available on the GA API`. `gpt-realtime` and
+  `gpt-realtime-1.5` work with `2025-04-01-preview`.
+</Warning>
+
+<Warning>
+  **If you tunnel the calling lane, the `/{callId}` suffix must survive.** StandIn dials
+  `wss://<host>/msteams/calling/{callId}`. A reverse proxy that mounts a path prefix and strips it
+  delivers `/` instead, and the upgrade 404s. With Tailscale Funnel, give the backend path explicitly
+  (`--set-path=/msteams/calling http://127.0.0.1:9442/msteams/calling`); a bare port target strips the
+  prefix.
+</Warning>
+
+<Warning>
+  **`secret` is the only secret key.** The former `sharedSecret` and `messagesSecret` per-lane overrides
+  are gone. `sharedSecret` in particular configured calling and left the messages lane off with no error,
+  so setups built on it looked fine and were half-working.
+</Warning>
+
 ## Mode selection
 
 Set `mode` to `"realtime"` or `"streaming"`. If omitted, the runtime auto-selects **realtime** when a
