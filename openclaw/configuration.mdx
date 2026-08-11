@@ -11,10 +11,10 @@ managed chat relay). **Set `secret` and you configure both.** It must match the 
 in your StandIn dashboard.
 
 <Warning>
-  **Do not set `sharedSecret` on its own.** It is a per-lane override for **calling only** - setting it
-  alone configures voice and leaves the **messages lane off**, with no error. Earlier versions of this
-  page taught `sharedSecret` as the main key; use `secret` unless you deliberately want different
-  secrets per lane.
+  **`sharedSecret` and `messagesSecret` are gone.** Earlier versions of this page taught `sharedSecret`
+  as the main key; it configured calling and left the **messages lane off with no error**, so those
+  setups looked fine and were half-working. There is now exactly one key, `secret`, and it fills both
+  lanes. A config still carrying the old keys resolves to nothing rather than half-working.
 </Warning>
 
 ## Mode selection
@@ -136,8 +136,6 @@ voicemail / no-answer); the `outbound` block enables it.
 | `mode` | both | `"realtime"` \| `"streaming"` (auto if omitted) |
 | `port` / `bindAddress` / `path` | both | media WebSocket server the StandIn bridge connects to |
 | `secret` | both lanes | **The connection secret. Start here.** One value covering calling *and* messages - all most deployments need (secret input) |
-| `sharedSecret` | calling only | Per-lane **override**. Setting it alone configures calling and leaves messages **off** - prefer `secret` |
-| `messagesSecret` | messages only | Per-lane **override** for messages. Prefer `secret` |
 | `callingPort` | calling | Explicit port for the calling lane (default `9442`). Alias of `port` |
 | `messagesPort` / `messagesPath` / `messagesBindAddress` | messages | Messages lane listener (defaults `9444`, `/msteams/messages`, root `bindAddress`) |
 | `gatewayReplyUrl` | messages | Where replies are POSTed. Defaults to the StandIn gateway; override only for a private deployment |
@@ -167,7 +165,7 @@ voicemail / no-answer); the `outbound` block enables it.
 </Note>
 
 <Warning>
-  Treat `secret`, `sharedSecret`, `messagesSecret` and all provider `apiKey` values as secrets - keep them out of source control.
+  Treat `secret` and all provider `apiKey` values as secrets - keep them out of source control.
 </Warning>
 
 ## Microsoft Graph permissions
