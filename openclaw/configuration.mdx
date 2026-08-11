@@ -258,12 +258,39 @@ transcription. The `realtime.*` block is ignored **except** the echo-guard knobs
 }
 ```
 
-`placeCall(userObjectId, { message, mode })` is implemented on the runtime (no-answer / declined →
-voicemail / no-answer); the `outbound` block enables it.
+This one block enables **two** things, both of which are silently unavailable without it:
+
+**Call me back when done.** During a call, `openclaw_agent_task` takes `deliverVia`. The default,
+`"message"`, sends the result as a Teams chat message. Set `"call"` and the agent rings the caller back
+and speaks it once the work is finished.
+
+**Chat-to-call.** Ask in a Teams chat and get the answer as a phone call, via the
+`call_me_with_the_answer` tool. It rings the person it is chatting with - always, and only. There is no
+target parameter, deliberately: the agent reads untrusted text all day, and a tool that accepted an
+arbitrary user id would turn any of it into "ring this person". Requires the messages lane too.
 
 <Note>
   `workerBaseUrl` is **StandIn's outbound API URL from your dashboard** - not a server you host.
 </Note>
+
+<Warning>
+  **Both are offered only when the block is complete.** `outbound.enabled`, `workerBaseUrl`, `tenantId`
+  and `secret` must all be set. With any of them missing the plugin does not expose the capability at
+  all - `openclaw_agent_task` quietly delivers by message instead, and `call_me_with_the_answer` refuses
+  and says why. That is deliberate: an agent that promises "I'll call you back" and then cannot is worse
+  than one that answers in the chat.
+</Warning>
+
+<Note>
+  Needs **v0.4.0+**. Earlier versions accepted `deliverVia: "call"` and acknowledged it to the caller,
+  but never placed a call - the delivery was routed to a tool that does not exist in OpenClaw. Nothing
+  errored; the caller simply waited for a call that was never made.
+</Note>
+
+<Warning>
+  **Your Azure bot needs `Calls.Initiate.All`**, admin-consented, on top of the join/media permissions.
+  Without it every outbound attempt fails at Graph no matter how the plugin is configured.
+</Warning>
 
 ## Key reference
 
@@ -289,7 +316,7 @@ voicemail / no-answer); the `outbound` block enables it.
 | `realtime.{provider,providers,instructions,toolPolicy,…}` | realtime (echo knobs: both) | realtime voice provider + behavior; provider key is a secret input |
 | `stt.{provider,providers}` | streaming | live transcription provider (else openclaw STT / file fallback); provider key is a secret input |
 | `responseModel` | both | **Optional.** Override the agent model for consult/task. Omit it and the plugin inherits `agents.defaults.model.primary` (see [Two models, two places](#two-models-two-places)) |
-| `outbound.{enabled,workerBaseUrl,tenantId,answerTimeoutMs,defaultMode}` | both | outbound call-backs / voicemail |
+| `outbound.{enabled,workerBaseUrl,tenantId,answerTimeoutMs,defaultMode}` | both | Enables call-back delivery (`openclaw_agent_task` `deliverVia: "call"`) and chat-to-call (`call_me_with_the_answer`). All of `enabled`/`workerBaseUrl`/`tenantId` required, plus `Calls.Initiate.All` on the bot |
 
 <Note>
   **What `inboundPolicy: "pairing"` actually does today.** The plugin issues no pairing codes,
