@@ -1,10 +1,16 @@
 ---
 title: "OpenClaw configuration"
 description: "Full config reference for @komaa/openclaw-msteams-bridge - realtime, streaming, outbound, and security."
-keywords: ["OpenClaw msteams-bridge config","msteams-call config key","Teams voice configuration","realtime config","streaming config","Microsoft Graph permissions"]
+keywords: ["OpenClaw msteams-bridge config","msteams-bridge config key","Teams voice configuration","realtime config","streaming config","Microsoft Graph permissions"]
 ---
 
-Config lives under `plugins.entries."msteams-call".config` in your OpenClaw config.
+Config lives under `plugins.entries."msteams-bridge".config` in your OpenClaw config.
+
+<Note>
+  **The plugin id is `msteams-bridge` from v0.5.0** (it was `msteams-call`). There is no alias: OpenClaw
+  looks config up by plugin id, so rename the entry key or the plugin loads with no configuration at
+  all and every call is refused.
+</Note>
 
 The plugin serves **two lanes**: **calling** (the media WebSocket StandIn dials) and **messages** (the
 managed chat relay). **Set `secret` and you configure both.** It must match the connection secret shown
@@ -20,7 +26,7 @@ back, verified end to end against a live call:
 {
   plugins: {
     entries: {
-      "msteams-call": {
+      "msteams-bridge": {
         enabled: true,
         config: {
           // 1. The connection secret from your StandIn dashboard. Turns the plugin ON and covers
@@ -48,7 +54,7 @@ back, verified end to end against a live call:
 {
   plugins: {
     entries: {
-      "msteams-call": {
+      "msteams-bridge": {
         enabled: true,
         config: {
           secret: "<connection secret from StandIn>",
@@ -101,11 +107,11 @@ Spelling matters: from plugin v0.4.1 the known keys are schema-checked, so a typ
 ### You do not need the `voice-call` plugin
 
 `voice-call` is OpenClaw's **telephony** plugin (Twilio, `fromNumber`, webhook URLs). This one is
-separate and self-contained: install `msteams-call` and nothing else.
+separate and self-contained: install `msteams-bridge` and nothing else.
 
 If you are moving from an older setup, note the Teams settings used to live *nested inside* it as
 `plugins.entries."voice-call".config.msteams`. Lift that block up to
-`plugins.entries."msteams-call".config` and delete the `voice-call` entry - leaving it behind does no
+`plugins.entries."msteams-bridge".config` and delete the `voice-call` entry - leaving it behind does no
 harm, but it configures a phone system you are not using.
 
 ### Four things that bite on a first install
@@ -151,7 +157,7 @@ nothing to set: the plugin reads whatever your OpenClaw agent already uses.
 ```json5
 {
   agents: { defaults: { model: { primary: "microsoft-foundry/gpt-5.6-sol" } } },
-  // ...the msteams-call entry needs no model key at all
+  // ...the msteams-bridge entry needs no model key at all
 }
 ```
 
@@ -182,6 +188,14 @@ shown and delivers frames to your plugin; the agent looks on demand with its `lo
 
 Ask about something shown **earlier** - *"what did the previous slide say?"* - and the agent reviews
 its recent scene-change keyframes instead of only the live frame.
+
+<Note>
+  **When the agent sees.** On a published OpenClaw host, frames are delivered with the agent's next
+  turn - so it sees your screen whenever it reasons, which covers every question you ask it. Truly
+  *continuous* awareness between turns needs a realtime image channel no published host exposes yet;
+  the plugin uses it automatically if your host gains one. The gateway log says which route it took at
+  the start of each call.
+</Note>
 
 Configuration is minimal, and both switches default sensibly:
 
@@ -242,6 +256,27 @@ Two places show you what actually happened, both on your machine:
   changes nothing until the gateway restarts. If a fix "didn't work", check this first.
 </Note>
 
+## Voice messages
+
+Someone sends the bot a Teams voice note. By default the agent sees only that an attachment exists -
+it can name the file back and nothing else, which reads as being ignored.
+
+Turn transcription on and the clip is transcribed into the turn, so "listen to this and tell me what
+you think" is a question the agent can actually answer:
+
+```json5
+{ transcribeVoiceMessages: true }   // default false
+```
+
+<Note>
+  **Off by default on purpose.** Each clip is a speech-to-text call and a voice note can run for
+  minutes, so this is real per-message cost - something to opt into, not discover on a bill. It also
+  needs the **messages lane** configured (the `secret`), since voice notes arrive as chat attachments.
+</Note>
+
+A clip that cannot be fetched or transcribed is not dropped silently: the agent is told it exists and
+could not be read, so it can say so rather than answering as though nothing was sent.
+
 ## Mode selection
 
 Set `mode` to `"realtime"` or `"streaming"`. If omitted, the runtime auto-selects **realtime** when a
@@ -253,7 +288,7 @@ call-backs, recording gate, and `sessionScope` agent memory. See [Modes](/concep
 {
   "plugins": {
     "entries": {
-      "msteams-call": {
+      "msteams-bridge": {
         "config": {
           "enabled": true,
           "mode": "realtime",
@@ -296,7 +331,7 @@ call-backs, recording gate, and `sessionScope` agent memory. See [Modes](/concep
 {
   "plugins": {
     "entries": {
-      "msteams-call": {
+      "msteams-bridge": {
         "config": {
           "enabled": true,
           "mode": "streaming",
@@ -403,6 +438,7 @@ arbitrary user id would turn any of it into "ring this person". Requires the mes
 | `meetingRecap` / `bilingual` | both | post-call minutes / Arabic-English |
 | `realtime.{provider,providers,instructions,toolPolicy,…}` | realtime (echo knobs: both) | realtime voice provider + behavior; provider key is a secret input |
 | `stt.{provider,providers}` | streaming | live transcription provider (else openclaw STT / file fallback); provider key is a secret input |
+| `transcribeVoiceMessages` | messages | Transcribe inbound Teams voice notes into the agent's turn. Default `false`; each clip costs an STT call |
 | `responseModel` | both | **Optional.** Override the agent model for consult/task. Omit it and the plugin inherits `agents.defaults.model.primary` (see [Two models, two places](#two-models-two-places)) |
 | `outbound.{enabled,workerBaseUrl,tenantId,answerTimeoutMs,defaultMode}` | both | Enables call-back delivery (`openclaw_agent_task` `deliverVia: "call"`) and chat-to-call (`call_me_with_the_answer`). All of `enabled`/`workerBaseUrl`/`tenantId` required, plus `Calls.Initiate.All` on the bot |
 
