@@ -82,7 +82,7 @@ and Hermes plugins implement:
 | Aspect | Value |
 |---|---|
 | **Handshake** | `HMAC-SHA256(secret, "{timestampMs}.{callId}")`, lowercase hex, sent as `X-StandIn-Timestamp` / `-Signature` (legacy `X-OpenClawTeamsBridge-*` still accepted) headers on the WS upgrade. ±60 s window; each `(callId, ts, sig)` is single-use (replay-guarded). |
-| **Path** | `/msteams/calling/{callId}` on the StandIn-maintained bridges (Hermes, OpenClaw); `/voice/msteams/stream/{callId}` on the ElevenLabs, LiveKit, OpenAI, Deepgram and Cartesia bridges. StandIn derives the first from a bare host, and respects any full URL you paste, so either works. |
+| **Path** | `/msteams/calling/{callId}` on Hermes, OpenClaw and LiveKit - LiveKit now ANCHORS on that base and rejects anything outside it. ElevenLabs takes the LAST path segment as the callId, so it accepts whatever path you register; `/voice/msteams/stream/{callId}` is the conventional one. StandIn derives the first from a bare host, and respects any full URL you paste, so either works. |
 | **Audio** | PCM 16 kHz, 16-bit, mono, little-endian; 20 ms / 640-byte frames, base64 |
 | **Inbound msgs** | `session.start` · `session.end` · `recording.status` · `audio.frame` · `video.frame` · `participants` · `dtmf` · `ping` |
 | **Outbound msgs** | `audio.frame` · `expression` · `speech.marks` · `display.image` · `assistant.cancel` · `pong` |
