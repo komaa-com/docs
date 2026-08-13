@@ -1,10 +1,10 @@
 ---
 title: "Hermes installation"
 description: "Install hermes-msteams-bridge into a Hermes Agent environment."
-keywords: ["hermes-msteams-bridge","Hermes Agent plugin","pip install Teams voice","msteams_call","uv pip"]
+keywords: ["hermes-msteams-bridge","Hermes Agent plugin","pip install Teams voice","msteams_bridge","uv pip"]
 ---
 
-The plugin (**`msteams_call`**) is the Python half of the Teams CVI for
+The plugin (**`msteams_bridge`**) is the Python half of the Teams CVI for
 **Hermes Agent**. It hosts the HMAC WebSocket that StandIn connects to, runs the dialogue +
 perception, and emits avatar driver cues. Chat-plane features live in the existing Teams adapter.
 
@@ -49,10 +49,10 @@ the full block):
 ```yaml
 plugins:
   enabled:
-    - msteams_call
+    - msteams_bridge
 ```
 
-`hermes plugins enable msteams_call` works too when run interactively, but it may
+`hermes plugins enable msteams_bridge` works too when run interactively, but it may
 prompt for tool-override consent, so scripts and installers should write the
 YAML instead.
 
@@ -69,13 +69,13 @@ probed - those surface on the first real call. Tested against Hermes Agent
 0.19.0 (PyPI floor) and the current 0.20.x line:
 
 ```bash
-hermes msteams-call status
+hermes msteams-bridge status
 ```
 
 Run the bridge server (foreground):
 
 ```bash
-hermes msteams-call serve
+hermes msteams-bridge serve
 ```
 
 The bridge serves **two** endpoints from one process:
@@ -155,12 +155,12 @@ Register both (with the **same connection secret**) on your connection in the
 
 ## Gateway-managed mode (one process)
 
-With the `msteams_call` platform enabled in the gateway config, `hermes gateway
+With the `msteams_bridge` platform enabled in the gateway config, `hermes gateway
 run` hosts the voice bridge itself - no separate `serve` process. Two layers
 must both be on:
 
-1. the **plugin**: `msteams_call` under `plugins.enabled` in `config.yaml`;
-2. the **platform**: a `msteams_call` platform entry enabled in the gateway
+1. the **plugin**: `msteams_bridge` under `plugins.enabled` in `config.yaml`;
+2. the **platform**: a `msteams_bridge` platform entry enabled in the gateway
    configuration (same place as your Teams chat platform).
 
 The complete `config.yaml` shape:
@@ -168,20 +168,20 @@ The complete `config.yaml` shape:
 ```yaml
 plugins:
   enabled:
-    - msteams_call          # layer 1: the plugin
+    - msteams_bridge        # layer 1: the plugin
   entries:
-    msteams_call:
+    msteams_bridge:
       config:
-        secret: ${MSTEAMS_CALL_SECRET}   # one secret, both lanes
+        secret: ${MSTEAMS_BRIDGE_SECRET}   # one secret, both lanes
 platforms:
-  msteams_call:
+  msteams_bridge:
     enabled: true         # layer 2: the gateway platform
 ```
 
 In this mode, streaming-mode utterances run as real gateway agent turns
 (sessions, authorization, approvals), and scheduled jobs can deliver by voice
-(`deliver=msteams_call` - the bot calls you and speaks the result). If a
-standalone `hermes msteams-call serve` is already bound to the port, the
+(`deliver=msteams_bridge` - the bot calls you and speaks the result). If a
+standalone `hermes msteams-bridge serve` is already bound to the port, the
 adapter fails loudly instead of splitting traffic - run one or the other.
 
 Using the StandIn one-line installer? Set `STANDIN_GATEWAY_MODE=1` in the
@@ -189,7 +189,7 @@ environment **before** running it: the installer then writes both layers
 above, stops any standalone bridge, and restarts the gateway instead of
 launching `serve`.
 
-`hermes msteams-call smoke` is an **offline install check**: it proves config
+`hermes msteams-bridge smoke` is an **offline install check**: it proves config
 resolution, the HMAC handshake, wire decode, and session lifecycle against an
 ephemeral local listener. It does **not** test the configured listener,
 gateway platform activation, Teams connectivity, provider credentials, or the

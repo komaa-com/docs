@@ -1,7 +1,7 @@
 ---
 title: "Quickstart"
 description: "Install the plugin, connect it to StandIn, and place a test Teams call."
-keywords: ["Teams voice plugin quickstart","install Teams AI bot","StandIn setup","place a test Teams call","OpenClaw","Hermes Agent"]
+keywords: ["Teams bridge plugin quickstart","install Teams AI bot","StandIn setup","place a test Teams call","OpenClaw","Hermes Agent"]
 ---
 
 Pick your runtime. Both paths get you to a live Teams call where your agent answers in voice.
@@ -12,13 +12,24 @@ Pick your runtime. Both paths get you to a live Teams call where your agent answ
 - A **StandIn** account ([standin.komaa.com](https://standin.komaa.com)) - the hosted media bridge that
   joins the Teams call and connects to your plugin. No worker to run. A paid plan is not required to
   start: the **free identity** gives you one BYO-bot identity with 5 minutes of call time per day included.
-- Your own **Microsoft Teams bot** (an Azure AD app) connected to StandIn - see the
-  [Teams setup](/teams/overview) to create and upload it.
+- A **Teams identity** for the bot. You have two ways to get one, and this is the choice that decides
+  how much Azure work you do:
+  - **Install StandIn from the Microsoft Teams Store.** No Azure app registration, no App ID, no client
+    secret, no endpoint. Add the app, type `signin`, and connect your agent from the StandIn portal.
+    A Microsoft 365 admin approves calling once for the organization; chat works before that.
+  - **Bring your own Microsoft Teams bot** (an Azure AD app) and connect it to StandIn - see
+    [Teams setup](/teams/overview) to create and upload it. Choose this when the bot must carry your
+    own name and live entirely in your tenant.
+
+  [Connection modes](/teams/connection-modes) compares the two in full.
 
 <Note>
-This quickstart is the **standard setup**: you connect your **own** Microsoft Teams bot and callers dial it. To try
-StandIn with **no Azure bot** (a shared bot joins a public meeting you generate), use the
-[Sandbox (community tier)](/community) instead. The sandbox is metered: 5 minutes of bot time per day per room,
+The steps below show the **bring-your-own-bot** path, because it is the one with setup to describe. If
+you installed StandIn from the Store, skip the Teams setup entirely: everything from **Connect the
+plugin to StandIn** onward is identical.
+
+To try StandIn with **no Teams identity at all** (a shared bot joins a public meeting you generate),
+use the [Sandbox (community tier)](/community). It is metered: 5 minutes of bot time per day per room,
 up to 5 new rooms per day, one bot per meeting, and a 7-day room link, with the call ending at the daily limit.
 </Note>
 - A realtime voice provider key (for **realtime** mode) - e.g. OpenAI or Azure OpenAI. Streaming mode
@@ -85,17 +96,25 @@ At the approve step you choose what the pairing becomes: a **paid identity** (co
 [Sandbox (community tier)](/community)).
 </Note>
 
-## Free identity vs Sandbox: which am I?
+## Which plan am I on?
 
-Two free ways to run StandIn - pick by whether you have an Azure bot:
+Four ways to run StandIn. The first two questions are whether you want to own the Teams bot, and
+whether you need calls to run longer than 5 minutes.
 
-- **You run the official `msteams` channel plugin** (so you already have an Azure Bot App ID + secret;
-  this is the normal OpenClaw/Hermes Teams journey): use a **Free identity**. It is the same BYO-bot setup
-  as paid - your own bot, your own tenant, inbound calls to your own Teams identity - with
-  **5 minutes of call time per day** included, one free identity per account, held alongside any paid identities.
-- **You have no Azure bot** (you never installed the msteams channel plugin and just want to hear your
-  agent talk): use the **[sandbox (community tier)](/community)**. A shared StandIn bot joins a public
-  meeting StandIn generates - zero Azure setup.
+| | Teams identity | Azure work | Call length | Good for |
+|---|---|---|---|---|
+| **StandIn from the Teams Store** | StandIn's bot, connected to your organization | none | per your plan | the fastest route to a working call |
+| **Free identity** | your own Azure bot | you create it | **5 min/day** | building the integration on your own identity |
+| **Paid plan** (Team / Business / Enterprise) | your own bot, or StandIn's | depends on the route above | uncapped | production |
+| **Sandbox (community tier)** | a shared StandIn bot in a meeting it generates | none | **5 min/day per room** | hearing your agent talk before committing |
+
+The **free identity** is the same BYO-bot setup as paid - your own bot, your own tenant, inbound calls
+to your own Teams identity - with 5 minutes of call time per day, one per account, held alongside any
+paid identities. Production runs on a paid plan, where calls are not time-capped.
+
+The **sandbox** is the only option that needs no Teams identity of any kind: a shared StandIn bot joins
+a public meeting StandIn generates, so anyone can join as a guest. See
+[Sandbox (community tier)](/community).
 
 <Warning>
 If you already run the Teams `msteams` plugin, use a Free identity instead of the sandbox - the sandbox
@@ -178,18 +197,18 @@ Prefer to wire it up by hand? Pick your runtime:
         </Note>
       </Step>
       <Step title="Configure">
-        Add a `msteams-call` entry to your OpenClaw config - `sharedSecret` must match the value you set in StandIn:
+        Add a `msteams-bridge` entry to your OpenClaw config - `secret` must match the value you set in StandIn:
         ```jsonc
         {
           "plugins": {
             "entries": {
-              "msteams-call": {
+              "msteams-bridge": {
                 "config": {
                   "enabled": true,
                   "mode": "realtime",
                   "port": 9442,
                   "path": "/msteams/calling",
-                  "sharedSecret": "<same secret as in your StandIn dashboard>",
+                  "secret": "<same secret as in your StandIn dashboard>",
                   "inboundPolicy": "allowlist",
                   "allowFrom": ["<caller AAD object id>"],
                   "realtime": {
@@ -220,18 +239,18 @@ Prefer to wire it up by hand? Pick your runtime:
         uv pip install --python /path/to/hermes/venv/bin/python "hermes-msteams-bridge[documents]"
         ```
         The `[documents]` extra enables `show_file` document rendering and the
-        progress panel. Enablement happens in the config below: `msteams_call`
+        progress panel. Enablement happens in the config below: `msteams_bridge`
         under `plugins.enabled` is all Hermes needs.
       </Step>
       <Step title="Configure">
-        In `~/.hermes/config.yaml` under `plugins.entries.msteams_call.config` (secrets in `.env`):
+        In `~/.hermes/config.yaml` under `plugins.entries.msteams_bridge.config` (secrets in `.env`):
         ```yaml
         plugins:
-          enabled: [msteams_call]
+          enabled: [msteams_bridge]
           entries:
-            msteams_call:
+            msteams_bridge:
               config:
-                secret: ${MSTEAMS_CALL_SECRET}   # must match the secret set in StandIn
+                secret: ${MSTEAMS_BRIDGE_SECRET}   # must match the secret set in StandIn
                 host: 127.0.0.1
                 port: 8443
                 # Inbound caller policy: Hermes has no `inboundPolicy` key and no
@@ -248,7 +267,7 @@ Prefer to wire it up by hand? Pick your runtime:
       </Step>
       <Step title="Run + call">
         ```bash
-        hermes msteams-call serve --handler realtime
+        hermes msteams-bridge serve --handler realtime
         ```
         In your StandIn dashboard, register your **Agent calling URL** (`wss://<your-public-host>:8443/msteams/calling` via the funnel; local bind `ws://<host>:8443/...`)
         and the matching secret, then place a Teams call to your bot.
@@ -260,7 +279,7 @@ Prefer to wire it up by hand? Pick your runtime:
 <Warning>
   **StandIn connects to your plugin from the internet**, so its WebSocket must be reachable - expose it
   via a public URL or a tunnel (e.g. Tailscale), not loopback-only. Default ports **9442** (OpenClaw) /
-  **8443** (Hermes); path `/msteams/calling`. A `sharedSecret` mismatch fails the HMAC handshake
+  **8443** (Hermes); path `/msteams/calling`. A `secret` mismatch fails the HMAC handshake
   **silently** - the most common first-call issue.
 </Warning>
 

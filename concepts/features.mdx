@@ -39,7 +39,7 @@ Both plugins implement the same feature set over the shared CVI bridge.
 
 ## Chat & governance
 
-- **"Ask about this"** message action · **voice-message transcription** (opt-in) ·
+- **voice-message transcription** (opt-in) ·
   **audit-log channel** (opt-in, loop-guarded) · **DLP outbound redaction** (opt-in) on text,
   adaptive cards, and captions.
 
@@ -60,7 +60,7 @@ Both plugins implement the same feature set over the shared CVI bridge.
 <CardGroup cols={2}>
   <Card title="HMAC bridge" icon="key">
     Every StandIn connection is HMAC-SHA256 signed with a replay guard and a ±60 s window. The
-    `sharedSecret` must byte-match the secret set in StandIn.
+    `secret` must byte-match the secret set in StandIn.
   </Card>
   <Card title="Caller allowlist" icon="user-shield">
     Restrict who the bot answers by AAD object id - closed by default when an allowlist is set.

@@ -52,7 +52,7 @@ available.
 
 ## Register your agent in StandIn
 
-In your StandIn dashboard, register your **Agent calling URL** and the matching HMAC `sharedSecret`
+In your StandIn dashboard, register your **Agent calling URL** and the matching HMAC `secret`
 (done automatically if you used [pairing](/quickstart#connect-your-agent-by-pairing-recommended)).
 If you also want Teams chat, set the optional **Agent chat URL**
 (`https://<your-public-host>/api/messages`; leave it empty if you only use voice).
@@ -76,7 +76,7 @@ then **call the bot**. StandIn answers, connects to your bridge, and your agent 
 - Bot never joins the call → check the **calling webhook** on the
   [Teams channel](/teams/azure-bot#6-enable-calling-and-set-the-webhook) and that
   [Graph permissions](/teams/azure-bot#8-grant-graph-permissions) are admin-consented.
-- Bot joins but stays silent → usually a `sharedSecret` mismatch or an unreachable Agent calling URL;
+- Bot joins but stays silent → usually a `secret` mismatch or an unreachable Agent calling URL;
   see [Troubleshooting](/troubleshooting).
 - Upload rejected → re-check the [package layout](/teams/app-package#packaging-it-manually) (files
   at the zip root) and bump the manifest `version` on republish.
