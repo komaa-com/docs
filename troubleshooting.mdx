@@ -11,7 +11,7 @@ The issues below cover almost every failed first call. Work top to bottom: secre
 **Symptom:** the bot joins the call (or the bridge connects), then nothing: no greeting, no
 response, no error in your plugin logs.
 
-The `sharedSecret` (OpenClaw) / `secret` (Hermes) must **byte-match** the secret set in your
+The `secret` - one key on both OpenClaw and Hermes - must **byte-match** the secret set in your
 StandIn dashboard. A mismatch fails the HMAC handshake **silently** - the bridge simply drops the
 connection, so both sides look "up" while no audio flows. This is the #1 first-call issue.
 
@@ -20,10 +20,10 @@ connection, so both sides look "up" while no audio flows. This is the #1 first-c
 - Re-paste the secret on both sides. Watch for a trailing newline or whitespace picked up when
   copying, and for shell quoting that swallows characters like `$` or `!`.
 - If the secret lives in `.env`, confirm the variable actually resolves (Hermes:
-  `hermes msteams-call status`).
+  `hermes msteams-bridge status`).
 - Rotate the secret in the StandIn dashboard and set the new value in the plugin config. A rotated
   secret is **not picked up hot** yet (hot-reload is being worked on): restart your plugin after
-  changing it - `openclaw gateway run` again (OpenClaw); on Hermes, `hermes msteams-call serve` again
+  changing it - `openclaw gateway run` again (OpenClaw); on Hermes, `hermes msteams-bridge serve` again
   (standalone) or `hermes gateway restart` (gateway-managed - never start `serve` next to a
   gateway-managed setup, the two would fight over the port).
   On the StandIn side the rotated secret is picked up automatically: the caller hot-reloads it within
@@ -40,8 +40,8 @@ the bot has nothing to bridge to and does not join.
 **Fix, in order:**
 
 1. **Is the plugin running?** Start it - `openclaw gateway run` (OpenClaw); on Hermes,
-   `hermes msteams-call serve --handler realtime` (standalone) or `hermes gateway run`
-   (gateway-managed, with `platforms.msteams_call.enabled: true`) - and confirm it is
+   `hermes msteams-bridge serve --handler realtime` (standalone) or `hermes gateway run`
+   (gateway-managed, with `platforms.msteams_bridge.enabled: true`) - and confirm it is
    listening on its port. Run one Hermes mode or the other, never both.
 2. **Is the tunnel up?** If you expose the endpoint via a tunnel (e.g. Tailscale), a dropped tunnel
    is the most common cause. Restart it and test the public URL from outside your network.
@@ -78,7 +78,7 @@ Then send the message again. Alternatively set `channels.msteams.dmPolicy: "open
 `openclaw.json` to accept DMs from anyone (less safe; pairing is recommended).
 
 **Hermes: gated too, but visible by default.** Teams chat runs through the Hermes gateway's Teams
-platform (`hermes gateway run`), not the `msteams_call` plugin. With no allowlist configured, an
+platform (`hermes gateway run`), not the `msteams_bridge` plugin. With no allowlist configured, an
 unknown sender is not ignored: the bot **replies with a pairing code** ("I don't recognize you
 yet!") instead of answering. Approve that code once:
 
@@ -176,3 +176,28 @@ see the [plugin README](https://github.com/komaa-com/openclaw-msteams-bridge#ins
   key living in the wrong section, or a Graph permission that was never admin-consented
   (see [Hermes configuration](/hermes/configuration#microsoft-graph-permissions)).
 </Tip>
+
+## Contact support
+
+If none of the above resolves it, write to us and include the `callId` from your plugin logs, the
+backend you are running (OpenClaw, Hermes, LiveKit, ElevenLabs, OpenAI, Deepgram or Cartesia), and
+roughly when the call happened. We do not keep transcripts, so that context is what we work from.
+
+{/* The address is written "user [at] domain" on purpose: the rendered HTML then contains no "@"
+    and no "mailto:", so address-harvesting crawlers - which match a plain email regex - find
+    nothing on this page. It is the same shape the portal's <Email> component
+    (standin-portal/components/Email.tsx) renders before hydration, so the two sites read
+    identically to a human and to a scraper.
+
+    The portal can upgrade that to a real mailto: link on the client because it is a Next.js app.
+    This site cannot: Mintlify's docs.json schema exposes no custom-script or head hook, so there
+    is no runtime step to re-assemble it. Static obfuscation is therefore the whole mechanism here,
+    and the separator is deliberately NOT aria-hidden - hiding it would have a screen reader say
+    "supportkomaa.com". Do not "tidy" this into a normal mailto: link. */}
+
+<Note>
+  **Support: support [at] komaa.com**
+
+  StandIn is operated by Komaa DigiTech. For privacy requests and data-subject rights, see the
+  [Privacy Statement](https://standin.komaa.com/privacy).
+</Note>

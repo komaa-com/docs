@@ -13,7 +13,7 @@ dialogue + perception, and emits avatar driver cues. **StandIn bridges + renders
 ```mermaid
 flowchart LR
     A["Your agent<br/>OpenClaw / Hermes"]
-    P["Teams Voice Plugin<br/>(WebSocket server)"]
+    P["Teams Bridge Plugin<br/>(WebSocket server)"]
     S["StandIn<br/>hosted media bridge"]
     T["Microsoft Teams<br/>call / meeting"]
 
@@ -65,7 +65,7 @@ sequenceDiagram
 | Component | Role |
 |---|---|
 | **Your agent** (OpenClaw / Hermes) | the dialogue brain - answers consults, runs background tasks, produces vision/image results |
-| **Teams Voice Plugin** (WS server) | hosts the bridge · realtime / streaming dialogue · vision ring + budget · emits `expression` / `speech.marks` / `display.image` cues |
+| **Teams Bridge Plugin** (WS server) | hosts the bridge · realtime / streaming dialogue · vision ring + budget · emits `expression` / `speech.marks` / `display.image` cues |
 | **StandIn** (hosted, standin.komaa.com) | fully-managed media bridge - joins the Teams call, renders the avatar tile, samples inbound A/V, forwards DTMF, enforces the recording-status gate, places outbound calls. No infrastructure for you to run. |
 | **Microsoft Teams** | the live call / meeting and its media plane |
 
@@ -81,14 +81,14 @@ and Hermes plugins implement:
 
 | Aspect | Value |
 |---|---|
-| **Handshake** | `HMAC-SHA256(sharedSecret, "{timestampMs}.{callId}")`, lowercase hex, sent as `X-StandIn-Timestamp` / `-Signature` (legacy `X-OpenClawTeamsBridge-*` still accepted) headers on the WS upgrade. ±60 s window; each `(callId, ts, sig)` is single-use (replay-guarded). |
+| **Handshake** | `HMAC-SHA256(secret, "{timestampMs}.{callId}")`, lowercase hex, sent as `X-StandIn-Timestamp` / `-Signature` (legacy `X-OpenClawTeamsBridge-*` still accepted) headers on the WS upgrade. ±60 s window; each `(callId, ts, sig)` is single-use (replay-guarded). |
 | **Path** | `/msteams/calling/{callId}` on the StandIn-maintained bridges (Hermes, OpenClaw); `/voice/msteams/stream/{callId}` on the ElevenLabs, LiveKit, OpenAI, Deepgram and Cartesia bridges. StandIn derives the first from a bare host, and respects any full URL you paste, so either works. |
 | **Audio** | PCM 16 kHz, 16-bit, mono, little-endian; 20 ms / 640-byte frames, base64 |
 | **Inbound msgs** | `session.start` · `session.end` · `recording.status` · `audio.frame` · `video.frame` · `participants` · `dtmf` · `ping` |
 | **Outbound msgs** | `audio.frame` · `expression` · `speech.marks` · `display.image` · `assistant.cancel` · `pong` |
 
 <Warning>
-  The plugin's `sharedSecret` **must byte-match** the value registered for your bot in StandIn, or the
+  The plugin's `secret` **must byte-match** the value registered for your bot in StandIn, or the
   HMAC handshake fails and no call connects.
 </Warning>
 

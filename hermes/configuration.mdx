@@ -1,23 +1,18 @@
 ---
 title: "Hermes configuration"
-description: "Configure msteams_call via config.yaml + .env, pick a realtime backend, and run the bridge."
-keywords: ["Hermes msteams_call config","config.yaml env","Azure OpenAI realtime","Microsoft Graph permissions","allow_remote_worker"]
+description: "Configure msteams_bridge via config.yaml + .env, pick a realtime backend, and run the bridge."
+keywords: ["Hermes msteams_bridge config","config.yaml env","Azure OpenAI realtime","Microsoft Graph permissions","allow_remote_worker"]
 ---
 
 Two sources are supported: **`config.yaml` takes precedence, `.env` is the fallback.** The recommended
 pattern keeps **secrets in `.env`** and references them from `config.yaml` with `${VAR}` (the loader
 expands them), so config lives in one declarative file.
 
-Most `config.yaml` keys have a matching `TEAMS_CALL_*` env var (e.g.
-`realtime.azure_endpoint` ↔ `TEAMS_CALL_AZURE_ENDPOINT`); `config.yaml` wins where
-both are set. Exceptions: `path` is config-only, and the SharePoint site id uses
-`TEAMS_SHAREPOINT_SITE_ID` (shared with the chat plane).
-
-<Note>
-  **The secrets are the exception to the prefix.** They read `MSTEAMS_CALL_SECRET`,
-  `MSTEAMS_CALL_CALLING_SECRET` and `MSTEAMS_CALL_MESSAGES_SECRET` - not `TEAMS_CALL_*`. Everything
-  else on this page keeps the `TEAMS_CALL_*` prefix it has always had.
-</Note>
+Most `config.yaml` keys have a matching `MSTEAMS_BRIDGE_*` env var (e.g.
+`realtime.azure_endpoint` ↔ `MSTEAMS_BRIDGE_AZURE_ENDPOINT`, `secret` ↔
+`MSTEAMS_BRIDGE_SECRET`); `config.yaml` wins where both are set. Exceptions: `path` is
+config-only, and the SharePoint site id uses `TEAMS_SHAREPOINT_SITE_ID` (shared with the
+chat plane).
 
 ## config.yaml
 
@@ -26,13 +21,13 @@ both are set. Exceptions: `path` is config-only, and the SharePoint site id uses
 ```yaml
 plugins:
   enabled:
-    - msteams_call
+    - msteams_bridge
   entries:
-    msteams_call:
+    msteams_bridge:
       config:
         # ONE secret covers BOTH lanes - calling and messages. StandIn issues it per connection
         # and you paste it once. (Per-lane overrides exist; see "Two lanes" below.)
-        secret: ${MSTEAMS_CALL_SECRET}   # must equal the secret StandIn shows you
+        secret: ${MSTEAMS_BRIDGE_SECRET} # must equal the secret StandIn shows you
         host: 0.0.0.0                    # 127.0.0.1 only works behind a tunnel on the same machine
         calling_port: 8443               # the media WebSocket  -> /msteams/calling
         messages_port: 8444              # the chat relay       -> /msteams/messages
@@ -58,16 +53,16 @@ plugins:
 A fully env-only setup works too:
 
 ```bash
-MSTEAMS_CALL_SECRET=...              # the ONE connection secret - covers calling AND messages
+MSTEAMS_BRIDGE_SECRET=...            # the ONE connection secret - covers calling AND messages
 AZURE_FOUNDRY_API_KEY=...            # realtime key (also used by the gateway)
 # fully env-only is fine too:
-TEAMS_CALL_HOST=0.0.0.0
-TEAMS_CALL_PORT=8443
-TEAMS_CALL_REALTIME_BACKEND=azure
-TEAMS_CALL_AZURE_ENDPOINT=https://<your-azure-resource>.cognitiveservices.azure.com
-TEAMS_CALL_AZURE_DEPLOYMENT=gpt-realtime
-TEAMS_CALL_AZURE_API_VERSION=2025-04-01-preview
-TEAMS_CALL_REALTIME_VOICE=cedar
+MSTEAMS_BRIDGE_HOST=0.0.0.0
+MSTEAMS_BRIDGE_PORT=8443
+MSTEAMS_BRIDGE_REALTIME_BACKEND=azure
+MSTEAMS_BRIDGE_AZURE_ENDPOINT=https://<your-azure-resource>.cognitiveservices.azure.com
+MSTEAMS_BRIDGE_AZURE_DEPLOYMENT=gpt-realtime
+MSTEAMS_BRIDGE_AZURE_API_VERSION=2025-04-01-preview
+MSTEAMS_BRIDGE_REALTIME_VOICE=cedar
 ```
 
 <Tip>
@@ -85,25 +80,25 @@ TEAMS_CALL_REALTIME_VOICE=cedar
 ## Key reference
 
 Hermes implements the same feature set as the OpenClaw plugin; keys are `snake_case` and each has a
-matching `TEAMS_CALL_*` env var.
+matching `MSTEAMS_BRIDGE_*` env var.
 
 | Key | Meaning |
 |---|---|
-| `secret` | **The connection secret.** One value covers BOTH lanes; StandIn issues it per connection and you paste it once. Env: `MSTEAMS_CALL_SECRET`. Keep it in `.env` |
-| `calling_secret` / `messages_secret` | Per-lane OVERRIDES, for deployments that insist on separate keys. When set they win over `secret`. Env: `MSTEAMS_CALL_CALLING_SECRET` / `MSTEAMS_CALL_MESSAGES_SECRET`. Most installs need neither |
+| `secret` | **The connection secret.** One value covers BOTH lanes; StandIn issues it per connection and you paste it once. Env: `MSTEAMS_BRIDGE_SECRET`. Keep it in `.env` |
+| `calling_secret` / `messages_secret` | Per-lane OVERRIDES, for deployments that insist on separate keys. When set they win over `secret`. Env: `MSTEAMS_BRIDGE_CALLING_SECRET` / `MSTEAMS_BRIDGE_MESSAGES_SECRET`. Most installs need neither |
 | `host` | address BOTH lanes bind (default `0.0.0.0`; `127.0.0.1` is reachable only from the same machine, so it works only behind a tunnel that forwards to it) |
 | `calling_port` / `path` | the media WebSocket StandIn dials (default `8443`, `/msteams/calling`). `port` is still accepted as the old name for `calling_port` |
 | `messages_port` / `messages_path` | the chat relay (default `8444`, `/msteams/messages`) - the lane that carries Teams messages to and from your agent |
 | `gateway_reply_endpoint` | where the plugin posts chat replies back (default `https://teams.standin.komaa.com/api/chat/reply`) - override only for a self-hosted StandIn |
 | `allow_remote_worker` | SSRF guard for **outbound** "call me back": permit dialing a non-loopback `worker_base_url` (default `false` = loopback only). Does not affect inbound bridge connections |
 | `require_recording_status` | only engage once Teams reports recording active (default `true`) |
-| `allowlist` / `allowlist_allow_names` / `allow_all` | inbound caller policy (see [below](#inbound-policy-voice-hermes-vs-openclaw)): allowlisted caller AAD ids; **empty = deny all** inbound callers unless `allow_all: true` (`TEAMS_CALL_ALLOW_ALL`) explicitly opens it. `allowlist_allow_names` additionally matches display names (weaker; spoofable). When empty, `allowlist` inherits the chat plane's `TEAMS_ALLOWED_USERS`, so voice + chat can share one AAD allowlist |
+| `allowlist` / `allowlist_allow_names` / `allow_all` | inbound caller policy (see [below](#inbound-policy-voice-hermes-vs-openclaw)): allowlisted caller AAD ids; **empty = deny all** inbound callers unless `allow_all: true` (`MSTEAMS_BRIDGE_ALLOW_ALL`) explicitly opens it. `allowlist_allow_names` additionally matches display names (weaker; spoofable). When empty, `allowlist` inherits the chat plane's `TEAMS_ALLOWED_USERS`, so voice + chat can share one AAD allowlist |
 | `wake_phrases` | group-call "speak only when addressed" wake words (default `assistant`, `hermes`) |
-| `watch_browser_tasks` | opt-in "watch it work" (default `false`): while a background task runs, the tile shows live frames of the agent's own browser session instead of the plain progress panel. Off by default because each capture can invoke the auxiliary vision model (`TEAMS_CALL_WATCH_BROWSER_TASKS`) |
+| `watch_browser_tasks` | opt-in "watch it work" (default `false`): while a background task runs, the tile shows live frames of the agent's own browser session instead of the plain progress panel. Off by default because each capture can invoke the auxiliary vision model (`MSTEAMS_BRIDGE_WATCH_BROWSER_TASKS`) |
 | `max_vision_per_minute` | vision spend cap (default `30`, `0` = unlimited) |
 | `session_scope` | `per-call` \| `per-thread` \| `per-aad` agent-memory scope |
 | `meeting_recap` | post end-of-meeting minutes (default `false`) |
-| `show_file_root` | root directory `show_file` may display from (workspace containment; default `<hermes home>/workspace/msteams_call_show`) |
+| `show_file_root` | root directory `show_file` may display from (workspace containment; default `<hermes home>/workspace/msteams_bridge_show`) |
 | `languages` | (realtime block) list like `[en, fr, de, ar]` - reply in the caller's language when configured; empty = auto-detect and mirror. `bilingual` remains a deprecated alias for `[ar, en]` |
 | `share_point_site_id` | optional; reserved for a future large-file SharePoint path. The minutes `.docx` file card itself needs **no** SharePoint - it rides the Bot Framework attachment contract using the chat plane's `TEAMS_CLIENT_ID`/`SECRET`/`TENANT_ID` |
 | `worker_base_url` / `tenant_id` | outbound "call me back" - StandIn's outbound endpoint + your tenant |
@@ -118,13 +113,13 @@ inbound policy:
 - `allowlist` set → only those AAD object ids may call (add `allowlist_allow_names: true` to also
   match display names, which is weaker).
 - `allowlist` empty → **all inbound callers are denied**, unless you explicitly opt out with
-  `allow_all: true` (env: `TEAMS_CALL_ALLOW_ALL`). An unset allowlist never means "open to all".
+  `allow_all: true` (env: `MSTEAMS_BRIDGE_ALLOW_ALL`). An unset allowlist never means "open to all".
 - When `allowlist` is empty, it inherits `TEAMS_ALLOWED_USERS` (the chat plane's allowlist), so one
   AAD list can cover both voice and chat.
 
 The `openclaw pairing approve msteams <CODE>` steps you will see in the Quickstart and Teams app
 pages are **OpenClaw-only**. The Hermes equivalents are: edit `allowlist` for **voice** callers, and
-for Teams **chat** DMs (handled by the Hermes gateway's Teams platform, not `msteams_call`) either
+for Teams **chat** DMs (handled by the Hermes gateway's Teams platform, not `msteams_bridge`) either
 approve the pairing code the bot sends an unknown sender (`hermes pairing approve teams <CODE>`) or
 set `TEAMS_ALLOWED_USERS` - see
 [the bot ignores Teams chat](/troubleshooting#the-bot-answers-calls-but-ignores-teams-chat-dm-pairing).
@@ -134,13 +129,13 @@ set `TEAMS_ALLOWED_USERS` - see
 Show config + readiness:
 
 ```bash
-hermes msteams-call status
+hermes msteams-bridge status
 ```
 
 Serve the bridge (use `--handler streaming` for streaming mode, which needs ffmpeg):
 
 ```bash
-hermes msteams-call serve --handler realtime
+hermes msteams-bridge serve --handler realtime
 ```
 
 Or run it standalone:
@@ -153,7 +148,7 @@ Register **both endpoints** in your StandIn dashboard, with the same secret:
 
 | Field in StandIn | Value | Served by |
 |---|---|---|
-| **Agent calling URL** | `wss://<your-public-host>:8443/msteams/calling` | `msteams-call serve` |
+| **Agent calling URL** | `wss://<your-public-host>:8443/msteams/calling` | `msteams-bridge serve` |
 | **Agent messages URL** | `https://<your-public-host>:8444/msteams/messages` | the same process |
 
 Local binds are `ws://<host>:8443/msteams/calling` and `http://<host>:8444/msteams/messages`; StandIn
@@ -178,19 +173,19 @@ separate `serve`), enable both the plugin and the platform:
 ```yaml
 plugins:
   enabled:
-    - msteams_call          # layer 1: the plugin
+    - msteams_bridge        # layer 1: the plugin
   entries:
-    msteams_call:
+    msteams_bridge:
       config:
-        secret: ${MSTEAMS_CALL_SECRET}
+        secret: ${MSTEAMS_BRIDGE_SECRET}
 platforms:
-  msteams_call:
+  msteams_bridge:
     enabled: true         # layer 2: the gateway platform
 ```
 
 In this mode scheduled jobs can deliver **by voice**: a cron job with
-`deliver=msteams_call` places a call and speaks the result. Set
-`TEAMS_CALL_HOME_AAD` to the AAD object id the gateway should call for those
+`deliver=msteams_bridge` places a call and speaks the result. Set
+`MSTEAMS_BRIDGE_HOME_AAD` to the AAD object id the gateway should call for those
 deliveries (the callee must also be on the `allowlist`). Run gateway mode
 **or** standalone `serve`, never both - the second owner fails loudly on the
 port bind.

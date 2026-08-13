@@ -1,10 +1,10 @@
 ---
-title: "Teams Voice Plugin (StandIn)"
+title: "Teams Bridge Plugin (StandIn)"
 description: "Turn a Microsoft Teams call into a two-way video conversation with your AI agent - it sees, converses, and appears as a lip-synced avatar."
 keywords: ["Microsoft Teams AI bot","Teams voice agent","Teams video bot","conversational video interface","CVI","AI avatar","OpenClaw","Hermes Agent","ElevenLabs agent Teams","LiveKit agent Teams","OpenAI Realtime Teams","Deepgram Voice Agent Teams","StandIn"]
 ---
 
-**Teams Voice Plugin (StandIn)** gives your AI agent a **Conversational Video Interface (CVI)** inside
+**Teams Bridge Plugin (StandIn)** gives your AI agent a **Conversational Video Interface (CVI)** inside
 Microsoft Teams: it answers and places calls, **sees** the caller's camera and screen-share,
 **converses** in real time, and **appears** as a lip-synced animated avatar - a genuine *stand-in* that
 joins 1:1 and group meetings, speaks only when addressed, and handles Teams chat. All over
@@ -67,18 +67,30 @@ you in real time, and appears as an animated face.
 - 📞 **Outbound "call me back"** - speaks the result then hangs up; voicemail fallback when unanswered.
 - 📝 **Meeting recap & minutes** - key points / decisions / action items, plus an on-demand `.docx` with per-person attribution.
 - 🪄 **Avatar driver cues** - expression, viseme lip-sync, picture-in-picture image sharing.
-- 🛡️ **Chat governance** - "Ask about this" message action, voice-message transcription, audit-log mirror, outbound DLP redaction.
+- 🛡️ **Chat governance** - voice-message transcription, audit-log mirror, outbound DLP redaction.
 - 🔐 **Secure transport** - HMAC handshake (replay-proof), caller allowlist (closed by default), recording-status gate before any media is processed.
 
 ## How it fits together
 
-The Teams call media and avatar rendering are handled by **StandIn**, a hosted service at
-[standin.komaa.com](https://standin.komaa.com) - create an account (a paid plan, the free BYO-bot
-identity, or the no-Azure sandbox - see
-[Free identity vs Sandbox](/quickstart#free-identity-vs-sandbox-which-am-i)), connect your Teams
-bot, and StandIn's managed bridge connects to your plugin. The plugin is the cross-platform **brain**
-- dialogue, perception, group logic, governance, and the avatar cues. No media infrastructure for you
-to run. [Architecture →](/concepts/architecture)
+Two halves, and you only run one of them.
+
+**Your plugin is the brain.** Dialogue, perception, group logic, governance and the avatar cues all
+come from the agent you already run. StandIn never replaces it.
+
+**StandIn is the bridge.** Teams call media and avatar rendering happen in a hosted service at
+[standin.komaa.com](https://standin.komaa.com), so there is no media infrastructure for you to stand
+up. Create an account, connect a Teams identity, and StandIn dials your plugin.
+
+That second step is the only real choice, and it comes down to who owns the Teams bot:
+
+| Route | Azure work | Good for |
+|---|---|---|
+| **Install StandIn from the Microsoft Teams Store** | none | the fastest way to a working call |
+| **Bring your own Azure bot** | you create and own the app registration | full identity custody |
+| **Sandbox (community tier)** | none, but a shared bot joins a meeting StandIn generates | hearing your agent talk before committing |
+
+[Connection modes →](/teams/connection-modes) compares the first two in detail.
+[Architecture →](/concepts/architecture)
 
 ## Related
 

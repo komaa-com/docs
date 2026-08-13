@@ -4,13 +4,9 @@ description: "Full config reference for @komaa/openclaw-msteams-bridge - realtim
 keywords: ["OpenClaw msteams-bridge config","msteams-bridge config key","Teams voice configuration","realtime config","streaming config","Microsoft Graph permissions"]
 ---
 
-Config lives under `plugins.entries."msteams-bridge".config` in your OpenClaw config.
-
-<Note>
-  **The plugin id is `msteams-bridge` from v0.5.0** (it was `msteams-call`). There is no alias: OpenClaw
-  looks config up by plugin id, so rename the entry key or the plugin loads with no configuration at
-  all and every call is refused.
-</Note>
+Config lives under `plugins.entries."msteams-bridge".config` in your OpenClaw config. OpenClaw looks
+configuration up by plugin id, so the entry key must be exactly `msteams-bridge` - under any other
+key the plugin loads with no configuration at all and every call is refused.
 
 The plugin serves **two lanes**: **calling** (the media WebSocket StandIn dials) and **messages** (the
 managed chat relay). **Set `secret` and you configure both.** It must match the connection secret shown
