@@ -158,19 +158,31 @@ URL with its port, never the local `ws://` bind.
 
 ## `clawhub:` install does not resolve
 
-The ClawHub listing is being re-established under a new package name, so a `clawhub:` install will not
-resolve today. This is expected, not a fault on your side.
+Check the package name against the registry you asked for. The two are deliberately different: **npm**
+publishes `@komaa/openclaw-msteams-bridge`, **ClawHub** lists `@komaa/msteams-bridge`. A `clawhub:`
+install of the npm name resolves to nothing, and so does an `npm:` install of the ClawHub name.
 
-**Install from npm instead** - it is the same plugin, current, and is what OpenClaw falls back to anyway:
+**From npm:**
 
 ```bash
 openclaw plugins install npm:@komaa/openclaw-msteams-bridge
 ```
 
+**From ClawHub:**
+
+```bash
+openclaw plugins install clawhub:@komaa/msteams-bridge
+```
+
 (Not plain `npm install` - that only downloads the package into the current folder without registering
-it as an OpenClaw plugin.) The plugin is
-[`@komaa/openclaw-msteams-bridge`](https://www.npmjs.com/package/@komaa/openclaw-msteams-bridge) on npm;
+it as an OpenClaw plugin.) The npm package is
+[`@komaa/openclaw-msteams-bridge`](https://www.npmjs.com/package/@komaa/openclaw-msteams-bridge);
 see the [plugin README](https://github.com/komaa-com/openclaw-msteams-bridge#install) for the full steps.
+
+<Note>
+  Both paths install the same plugin, which loads under the id `msteams-bridge` either way - so your
+  `plugins.entries."msteams-bridge"` config is identical whichever registry you install from.
+</Note>
 
 <Tip>
   Still stuck? Recheck the [Quickstart](/quickstart) end to end - most remaining issues are a config
