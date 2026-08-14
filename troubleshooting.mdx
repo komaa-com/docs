@@ -133,8 +133,13 @@ section):
 curl -si --http1.1 \
   -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
   -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
-  https://<machine>.<tailnet>.ts.net/msteams/calling | head -1
+  https://<machine>.<tailnet>.ts.net/msteams/calling/probe | head -1
 ```
+
+The trailing `/probe` is a stand-in call id, and it matters: only **OpenClaw** answers the bare
+`/msteams/calling`. Hermes, LiveKit and ElevenLabs register the route as `/msteams/calling/{callId}`,
+so a bare path returns `404` on a perfectly healthy bridge. A path mount forwards everything under
+`/msteams/calling`, so the segment reaches the bridge either way.
 
 Run the same two probes against the local port to tell "the tunnel is wrong" from "nothing is
 listening":
@@ -143,10 +148,11 @@ listening":
 curl -si -X POST -H 'Content-Type: application/json' -d '{}' \
   http://127.0.0.1:3978/api/messages | head -1
 
+# voice port: 9442 on OpenClaw, 8443 on Hermes
 curl -si --http1.1 \
   -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
   -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
-  http://127.0.0.1:9442/msteams/calling | head -1
+  http://127.0.0.1:9442/msteams/calling/probe | head -1
 ```
 
 Then read the status line, not the body:
@@ -155,12 +161,14 @@ Then read the status line, not the body:
 |---|---|
 | `401` | **Alive.** Something is listening and it asked for authentication. This is the healthy answer for chat, and for voice with a call id segment. |
 | `405` | **Alive**, bound and `POST`-only. You sent a `GET` to the chat endpoint. |
-| `400` | **Alive** (voice, OpenClaw): the upgrade reached the bridge and it wants a call id. |
-| `404` | **No mount.** No rule maps that path, or the path is not the one that runtime serves. On a **voice** probe, first confirm you passed `--http1.1`: without it a perfectly healthy endpoint also answers 404. |
+| `400` | **Alive** (voice, OpenClaw on the bare `/msteams/calling`): the upgrade reached the bridge and it wants a call id. |
+| `404` | **No mount.** No rule maps that path, or the path is not the one that runtime serves. On a **voice** probe, first confirm you passed `--http1.1` **and** a call id segment: without either, a perfectly healthy endpoint also answers 404. |
 | `Connection refused` (curl exit 7) | **Nothing is listening** on that local port. The tunnel rule may be right; the process behind it is not running. |
 
-Only `404` and `Connection refused` are failures. A `401` means the lane is reachable and the next
-thing to check is the shared secret or the DM allowlist, not the tunnel.
+`Connection refused` is always a failure. A `404` is only a failure once you have ruled out the two
+probes that fake one: a missing `--http1.1` (see the next section) and a bare voice path. A `401`
+means the lane is reachable and the next thing to check is the shared secret or the DM allowlist, not
+the tunnel.
 
 ## A voice endpoint probes as 404 through a funnel
 
@@ -303,9 +311,9 @@ The **LiveKit and ElevenLabs bridges have no chat lane at all** - they serve the
 `/healthz` and `/metrics`, and nothing else. Leave the **Agent messages URL** empty for those two;
 a messages URL you register there points at nothing.
 
-Both of those bridges take their port from `PORT`, and `8080` is only the built-in default: LiveKit's
-`.env.example` leaves it commented out and ElevenLabs' sets it explicitly, so either way a local `.env`
-can move it without you noticing. Read the value you actually run (the bridge logs its listen address
+Both of those bridges take their port from `PORT`, and `8080` is only the built-in default: the Node
+`.env.example` in each repo sets `PORT=8080` outright while the Python one ships it commented, so
+either way a local `.env` can move it without you noticing. Read the value you actually run (the bridge logs its listen address
 at startup) rather than assuming. Both also default `BIND` to `0.0.0.0`, so they answer on every
 interface, not only loopback - set `BIND=127.0.0.1` if only the tunnel should reach them.
 Their paths differ too, which matters when you write the mount: LiveKit anchors on `WS_PATH` (default
