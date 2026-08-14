@@ -1,10 +1,11 @@
 ---
 title: "Troubleshooting"
-description: "Fix the most common issues: silent HMAC failures, an unreachable agent, community-tier daily limits, port/path mix-ups, and the ClawHub install."
-keywords: ["StandIn troubleshooting","HMAC handshake failed","shared secret mismatch","bot could not join","agent is not reachable","daily budget","port 9442","port 8443","ClawHub npm","hermes pairing approve teams","TEAMS_ALLOWED_USERS","Graph error 7505","tenant mismatch"]
+description: "Fix the most common issues: silent HMAC failures, an unreachable agent, a chat lane that was never published, misleading voice probes, community-tier daily limits, port/path mix-ups, and the ClawHub install."
+keywords: ["StandIn troubleshooting","HMAC handshake failed","shared secret mismatch","bot could not join","agent is not reachable","chat silent nothing in logs","tailscale funnel status","api/messages 404","port 3978","curl --http1.1 websocket 404","daily budget","port 9442","port 8443","ClawHub npm","hermes pairing approve teams","TEAMS_ALLOWED_USERS","Graph error 7505","tenant mismatch"]
 ---
 
-The issues below cover almost every failed first call. Work top to bottom: secret, reachability, limits, address.
+The issues below cover almost every failed first call. Work top to bottom: secret, reachability, the
+chat mount, limits, address.
 
 ## The bot joins but never speaks (HMAC mismatch)
 
@@ -49,6 +50,166 @@ the bot has nothing to bridge to and does not join.
    unless a tunnel forwards to it - bind `0.0.0.0` or keep the tunnel in front.
 4. **Does the registered URL match?** The URL in your StandIn dashboard must point at the live
    endpoint, including port and path (see below).
+
+## Voice works, chat is silent, and nothing appears in any log
+
+**Symptom:** calls connect and your agent talks, but a Teams **chat** message produces nothing: no
+reply, no error, and **no line in any log** - not the plugin, not the gateway, not your agent. Every
+component looks healthy, because every component is.
+
+The empty log is the diagnosis, not the mystery. Voice and chat are **two separate endpoints**. Chat
+arrives as an ordinary `POST` to your public `/api/messages`; if your tunnel has no rule for that path,
+the tunnel answers **404 at its own edge** and the request never reaches a process that writes logs.
+Voice keeps working the whole time because it rides a different rule. So there is nothing to grep for:
+you have to look at the tunnel, not at the agent.
+
+<Note>
+  If a log **does** show the message arriving (OpenClaw logs `received message`), the mount is fine and
+  this is DM gating instead - see
+  [The bot answers calls but ignores Teams chat](#the-bot-answers-calls-but-ignores-teams-chat-dm-pairing).
+</Note>
+
+### 1. Read what your tunnel actually publishes
+
+```bash
+tailscale funnel status
+```
+
+A working two-lane setup prints one line per public path, each pointing at the local port that serves
+it:
+
+```
+https://<machine>.<tailnet>.ts.net (Funnel on)
+|-- /api/messages    proxy http://127.0.0.1:3978/api/messages
+|-- /msteams/calling proxy http://127.0.0.1:9442/msteams/calling
+```
+
+Read it as a routing table:
+
+- **No `/api/messages` line at all.** Chat was never published. This is the bug, and it is why nothing
+  is logged.
+- **A `/` line** such as `|-- / proxy http://127.0.0.1:9442`. That is a whole-port mount: it publishes
+  every route on *that one port*, so the chat lane, which listens on a different port, is still
+  unreachable. It also spends one of Funnel's three slots (443, 8443, 10000).
+- **A target that drops the path**, e.g. `proxy http://127.0.0.1:3978` with no `/api/messages`. The
+  request arrives stripped and your plugin 404s it. The path must be repeated on both sides.
+
+### 2. Check the target for your runtime
+
+The public path is the same on every runtime; only the local port moves. Chat is `127.0.0.1:3978`
+`/api/messages` on **both** OpenClaw and Hermes, because chat is a listener separate from the voice
+bridge (`9442` on OpenClaw, `8443` on Hermes). That separation is the whole reason a perfectly healthy
+voice port tells you nothing about chat. Full table:
+[Wrong port or path](#wrong-port-or-path-and-callid-confusion).
+
+### 3. Publish the missing lane
+
+Mount the path exactly as [Expose your agent](/expose#mount-both-paths) shows - one rule per path, with
+the path repeated in the proxy target - then re-run `tailscale funnel status` and confirm both lines
+are there before testing again.
+
+<Warning>
+  **Installed before the chat lane was handled?** An older installer run mounted **voice** only on
+  Hermes: no `/api/messages` rule, an empty chat URL at pairing, no chat step printed, and the run
+  still reported success. That is exactly the silent failure above. A current run provisions both
+  lanes on Tailscale and prints the commands to run yourself on ngrok, cloudflared or devtunnel, so
+  re-running the installer is the quickest fix. Otherwise add the mount by hand as in step 3, then set
+  the chat URL on your connection in the [dashboard](https://standin.komaa.com/dashboard).
+</Warning>
+
+### 4. Prove each lane, from outside and from inside
+
+Chat is a plain `POST`, so no special flags are needed:
+
+```bash
+curl -si -X POST -H 'Content-Type: application/json' -d '{}' \
+  https://<machine>.<tailnet>.ts.net/api/messages | head -1
+```
+
+Voice is a WebSocket upgrade, and `--http1.1` is **not optional** through a funnel (see the next
+section):
+
+```bash
+curl -si --http1.1 \
+  -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+  -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
+  https://<machine>.<tailnet>.ts.net/msteams/calling/probe | head -1
+```
+
+The trailing `/probe` is a stand-in call id, and it matters: only **OpenClaw** answers the bare
+`/msteams/calling`. Hermes, LiveKit and ElevenLabs register the route as `/msteams/calling/{callId}`,
+so a bare path returns `404` on a perfectly healthy bridge. A path mount forwards everything under
+`/msteams/calling`, so the segment reaches the bridge either way.
+
+Run the same two probes against the local port to tell "the tunnel is wrong" from "nothing is
+listening":
+
+```bash
+curl -si -X POST -H 'Content-Type: application/json' -d '{}' \
+  http://127.0.0.1:3978/api/messages | head -1
+
+# voice port: 9442 on OpenClaw, 8443 on Hermes
+curl -si --http1.1 \
+  -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+  -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
+  http://127.0.0.1:9442/msteams/calling/probe | head -1
+```
+
+Then read the status line, not the body:
+
+| Response | What it means |
+|---|---|
+| `401` | **Alive.** Something is listening and it asked for authentication. This is the healthy answer for chat, and for voice with a call id segment. |
+| `405` | **Alive**, bound and `POST`-only. You sent a `GET` to the chat endpoint. |
+| `400` | **Alive** (voice, OpenClaw on the bare `/msteams/calling`): the upgrade reached the bridge and it wants a call id. |
+| `404` | **No mount.** No rule maps that path, or the path is not the one that runtime serves. On a **voice** probe, first confirm you passed `--http1.1` **and** a call id segment: without either, a perfectly healthy endpoint also answers 404. |
+| `Connection refused` (curl exit 7) | **Nothing is listening** on that local port. The tunnel rule may be right; the process behind it is not running. |
+
+`Connection refused` is always a failure. A `404` is only a failure once you have ruled out the two
+probes that fake one: a missing `--http1.1` (see the next section) and a bare voice path. A `401`
+means the lane is reachable and the next thing to check is the shared secret or the DM allowlist, not
+the tunnel.
+
+## A voice endpoint probes as 404 through a funnel
+
+**Symptom:** `tailscale funnel status` shows the `/msteams/calling` rule, the plugin is running, and a
+curl probe with WebSocket headers still returns **404**, which looks exactly like a missing mount. You
+go hunting for a routing bug that does not exist. This is an **HTTP/2 false negative**, and it is the
+probe that is wrong, not the endpoint.
+
+Tailscale Funnel serves **HTTP/2** to the client, and HTTP/2 has no connection-level upgrade. Over h2
+your `Connection: Upgrade` and `Upgrade: websocket` headers are not a handshake, they are just headers:
+curl sends an ordinary `GET`, the bridge sees a plain `GET` on a WebSocket-only route, and answers the
+only thing it can, **404**. Nothing is broken. The probe was never a handshake.
+
+Force HTTP/1.1 and the same URL answers properly:
+
+```bash
+curl -si --http1.1 \
+  -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+  -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
+  https://<machine>.<tailnet>.ts.net/msteams/calling | head -1
+```
+
+The probe carries no signature, so it can never open a session. That is the point: you are asking the
+route to prove it exists. What "alive" looks like per runtime:
+
+| Runtime | Probe path | Alive response |
+|---|---|---|
+| OpenClaw | `/msteams/calling` | `400` (the bridge wants a call id) |
+| Hermes | `/msteams/calling/probe` | `401`. A bare `/msteams/calling` returns `404` here: the route is `/msteams/calling/{callId}` |
+| LiveKit | `/msteams/calling/probe` | `401`, on `WS_PATH` and on any other path alike |
+| ElevenLabs | `/msteams/calling/probe` | `401`. It takes the **last** segment as the call id, so any mounted path plus a segment answers |
+
+<Warning>
+  **A plain `GET` is not a health check for voice.** Even locally and even with the bridge perfectly
+  healthy, `curl http://127.0.0.1:9442/msteams/calling` returns `404` on OpenClaw: only an upgrade gets
+  a real answer. If you want a plain-`GET` liveness check on the bridge port, Hermes serves
+  `GET /health` and LiveKit and ElevenLabs serve `GET /healthz`, each returning `200 ok`; OpenClaw has
+  neither, so the `--http1.1` upgrade probe above is the check there. Those health routes live at the
+  root of the bridge port, so a path-scoped funnel mount does not publish them - run them against
+  `127.0.0.1`.
+</Warning>
 
 ## The bot answers calls but ignores Teams chat (DM pairing)
 
@@ -137,18 +298,42 @@ that is the standard setup with your own Teams bot: see the [Quickstart](/quicks
 
 ## Wrong port or path (and callId confusion)
 
-The two runtimes listen on **different default ports** but the **same path**:
+The runtimes listen on **different default ports** but the **same path**:
 
-| Runtime | Default port | Path |
-|---|---|---|
-| OpenClaw | `9442` | `/msteams/calling` |
-| Hermes | `8443` | `/msteams/calling` |
+| Runtime | Voice: local bind | Voice: public path | Chat |
+|---|---|---|---|
+| OpenClaw | `127.0.0.1:9442` | `/msteams/calling` | `/api/messages` |
+| Hermes | `127.0.0.1:8443` | `/msteams/calling` | `/api/messages` |
+| LiveKit | `127.0.0.1:8080` | `/msteams/calling` | n/a - voice only |
+| ElevenLabs | `127.0.0.1:8080` | `/msteams/calling` | n/a - voice only |
+
+The **LiveKit and ElevenLabs bridges have no chat lane at all** - they serve the calling WebSocket,
+`/healthz` and `/metrics`, and nothing else. Leave the **Agent messages URL** empty for those two;
+a messages URL you register there points at nothing.
+
+Both of those bridges take their port from `PORT`, and `8080` is only the built-in default: the Node
+`.env.example` in each repo sets `PORT=8080` outright while the Python one ships it commented, so
+either way a local `.env` can move it without you noticing. Read the value you actually run (the bridge logs its listen address
+at startup) rather than assuming. Both also default `BIND` to `0.0.0.0`, so they answer on every
+interface, not only loopback - set `BIND=127.0.0.1` if only the tunnel should reach them.
+Their paths differ too, which matters when you write the mount: LiveKit anchors on `WS_PATH` (default
+`/msteams/calling`) and rejects any other path, while ElevenLabs takes the last path segment as the
+call id and therefore accepts whatever path you registered. See
+[Expose your agent](/expose) for the mount commands.
 
 Registering the OpenClaw URL with the Hermes port (or vice versa) is a frequent mix-up: the bridge
 connects to a closed port and the call never reaches your agent. Double-check the full URL you
-registered in the StandIn dashboard, e.g. `wss://<your-public-host>:8443/msteams/calling` (the
-public funnel URL; locally OpenClaw binds `9442` and Hermes binds `8443`). Always the public `wss://`
-URL with its port, never the local `ws://` bind.
+registered in the StandIn dashboard, e.g. `wss://<your-public-host>/msteams/calling` for a
+path-mapped funnel, or `wss://<your-public-host>:8443/msteams/calling` when you published a whole
+port. Always the public `wss://` URL, never the local `ws://` bind.
+
+<Note>
+  Before concluding a path is wrong, probe it properly: a voice endpoint needs a real WebSocket
+  upgrade **and** `--http1.1` through a funnel, or a healthy bridge answers `404` and sends you
+  hunting for nothing. See
+  [A voice endpoint probes as 404 through a funnel](#a-voice-endpoint-probes-as-404-through-a-funnel)
+  for the per-runtime probe paths and what "alive" looks like.
+</Note>
 
 <Note>
   Each call carries its own `callId`, and the HMAC handshake signs it per call - you never configure

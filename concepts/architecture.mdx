@@ -27,10 +27,14 @@ flowchart LR
     style T fill:#3730a3,stroke:#6366f1,color:#e0e7ff
 ```
 
-The **plugin is the WebSocket server** (default port `:9442` on OpenClaw, `:8443` on Hermes); the
-**hosted StandIn bridge is the client** that connects to it. You register your plugin's WebSocket URL
-and shared secret in your StandIn dashboard - expose it so the hosted bridge can reach it (a public
-URL, or a tunnel such as Tailscale).
+The **plugin is the WebSocket server** (default calling port `:9442` on OpenClaw, `:8443` on Hermes,
+`:8080` on the LiveKit and ElevenLabs bridges); the **hosted StandIn bridge is the client** that
+connects to it. You register your plugin's WebSocket URL and shared secret in your StandIn dashboard
+- expose it so the hosted bridge can reach it (a public URL, or a tunnel such as Tailscale).
+
+Only OpenClaw and Hermes also serve a **chat lane** (`/api/messages`). The LiveKit and ElevenLabs
+bridges are voice only: one calling WebSocket, plus `/healthz` and `/metrics`, and no messages
+endpoint to register.
 
 ## Call flow
 
@@ -82,7 +86,7 @@ and Hermes plugins implement:
 | Aspect | Value |
 |---|---|
 | **Handshake** | `HMAC-SHA256(secret, "{timestampMs}.{callId}")`, lowercase hex, sent as `X-StandIn-Timestamp` / `-Signature` (legacy `X-OpenClawTeamsBridge-*` still accepted) headers on the WS upgrade. ±60 s window; each `(callId, ts, sig)` is single-use (replay-guarded). |
-| **Path** | `/msteams/calling/{callId}` on Hermes, OpenClaw and LiveKit - LiveKit now ANCHORS on that base and rejects anything outside it. ElevenLabs takes the LAST path segment as the callId, so it accepts whatever path you register; `/voice/msteams/stream/{callId}` is the conventional one. StandIn derives the first from a bare host, and respects any full URL you paste, so either works. |
+| **Path** | `/msteams/calling` on all four runtimes; StandIn appends `/{callId}` per call. Hermes and LiveKit **anchor** on that base and reject anything outside it, so the segment is required. OpenClaw serves it bare (a missing `callId` is a `400`). ElevenLabs takes the LAST path segment as the callId and so accepts whatever base you register - use `/msteams/calling` there too. StandIn derives the path from a bare host, and respects any full URL you paste. |
 | **Audio** | PCM 16 kHz, 16-bit, mono, little-endian; 20 ms / 640-byte frames, base64 |
 | **Inbound msgs** | `session.start` · `session.end` · `recording.status` · `audio.frame` · `video.frame` · `participants` · `dtmf` · `ping` |
 | **Outbound msgs** | `audio.frame` · `expression` · `speech.marks` · `display.image` · `assistant.cancel` · `pong` |

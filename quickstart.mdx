@@ -4,7 +4,9 @@ description: "Install the plugin, connect it to StandIn, and place a test Teams 
 keywords: ["Teams bridge plugin quickstart","install Teams AI bot","StandIn setup","place a test Teams call","OpenClaw","Hermes Agent"]
 ---
 
-Pick your runtime. Both paths get you to a live Teams call where your agent answers in voice.
+Pick your runtime. Both paths get you to a live Teams call where your agent answers in voice. Teams
+**chat** is a second endpoint on its own port, published and registered separately from voice - see
+[Expose your agent](/expose) for both lanes in one place.
 
 ## Prerequisites
 
@@ -88,6 +90,17 @@ the bot silently never joins).
     StandIn dials your agent - you never type a voice URL, a port, or a secret.
   </Step>
 </Steps>
+
+<Warning>
+**Chat is a second lane.** It is a second mount (`/api/messages` in front of `127.0.0.1:3978`) and a
+second field on your connection. The installer provisions it alongside voice on Tailscale, and prints
+the commands to run yourself on ngrok, cloudflared or devtunnel. Confirm both public paths are there
+with `tailscale funnel status` before you test: an older run mounted voice only on **Hermes** and still
+reported success, and a missing chat mount is silent - nothing reaches any log. Mount it yourself with
+[Expose your agent](/expose#mount-both-paths). If you are already staring at a silent chat
+lane, start at
+[Voice works, chat is silent](/troubleshooting#voice-works-chat-is-silent-and-nothing-appears-in-any-log).
+</Warning>
 
 <Note>
 At the approve step you choose what the pairing becomes: a **paid identity** (consumes a plan slot), a
@@ -228,7 +241,13 @@ Prefer to wire it up by hand? Pick your runtime:
       </Step>
       <Step title="Run + call">
         Start the gateway (`openclaw gateway run`), then in your StandIn dashboard register your
-        **Agent calling URL** (`wss://<your-public-host>:8443/msteams/calling` via the funnel; local bind `ws://<host>:9442/...`) and the matching secret. Place a Teams call to your bot.
+        **Agent calling URL** (`wss://<your-public-host>/msteams/calling` via a path-mapped funnel; local bind `ws://<host>:9442/...`) and the matching secret. Place a Teams call to your bot.
+      </Step>
+      <Step title="Add the chat lane">
+        Voice and chat are separate endpoints: chat is OpenClaw's `msteams` channel on
+        `127.0.0.1:3978`, published as `/api/messages`. Mount it and register the **Agent chat URL**
+        as described in [Expose your agent](/expose#mount-both-paths). Voice-only? Skip this step;
+        nothing else changes.
       </Step>
     </Steps>
   </Tab>
@@ -270,18 +289,26 @@ Prefer to wire it up by hand? Pick your runtime:
         ```bash
         hermes msteams-bridge serve --handler realtime
         ```
-        In your StandIn dashboard, register your **Agent calling URL** (`wss://<your-public-host>:8443/msteams/calling` via the funnel; local bind `ws://<host>:8443/...`)
+        In your StandIn dashboard, register your **Agent calling URL** (`wss://<your-public-host>/msteams/calling` via a path-mapped funnel; local bind `ws://<host>:8443/...`)
         and the matching secret, then place a Teams call to your bot.
+      </Step>
+      <Step title="Add the chat lane">
+        The bridge above is **voice only**. Teams chat runs through the Hermes gateway's Teams
+        platform on `127.0.0.1:3978`, published as `/api/messages`, and it needs its own mount and its
+        own **Agent chat URL** on the same connection. Both commands and the fields to fill in are in
+        [Expose your agent](/expose#mount-both-paths). Skipping this is what produces a bot that talks
+        on calls and never answers a chat message, with nothing in any log.
       </Step>
     </Steps>
   </Tab>
 </Tabs>
 
 <Warning>
-  **StandIn connects to your plugin from the internet**, so its WebSocket must be reachable - expose it
-  via a public URL or a tunnel (e.g. Tailscale), not loopback-only. Default ports **9442** (OpenClaw) /
-  **8443** (Hermes); path `/msteams/calling`. A `secret` mismatch fails the HMAC handshake
-  **silently** - the most common first-call issue.
+  **StandIn connects to your plugin from the internet**, so both lanes must be reachable - expose them
+  via a public URL or a tunnel (e.g. Tailscale), not loopback-only. Voice is `/msteams/calling` in
+  front of **9442** (OpenClaw) or **8443** (Hermes); chat is `/api/messages` in front of **3978** on
+  both. [Expose your agent](/expose) carries the mount commands and the probes that prove a mount
+  works. A `secret` mismatch fails the HMAC handshake **silently** - the most common first-call issue.
 </Warning>
 
 <Tip>

@@ -77,8 +77,13 @@ back, verified end to end against a live call:
 ```
 </CodeGroup>
 
-Defaults that need no config: `port` 9442 (calling), `messagesPort` 9444, `path` `/msteams/calling`,
-`messagesPath` `/msteams/messages`.
+Defaults that need no config: `port` 9442 and `path` `/msteams/calling` for the calling lane;
+`messagesPort` 9444 and `messagesPath` `/msteams/messages` for the **managed-bot** chat relay.
+
+Teams chat on a bring-your-own Azure bot does **not** come through this plugin: it reaches OpenClaw's
+own `msteams` channel at `127.0.0.1:3978`, path `/api/messages`. So the two paths you publish are
+`/msteams/calling` (to `9442`) and `/api/messages` (to `3978`) - see
+[Expose your agent](/expose) for the mount commands.
 
 ### Realtime provider options
 
@@ -133,9 +138,8 @@ harm, but it configures a phone system you are not using.
 <Warning>
   **If you tunnel the calling lane, the `/{callId}` suffix must survive.** StandIn dials
   `wss://<host>/msteams/calling/{callId}`. A reverse proxy that mounts a path prefix and strips it
-  delivers `/` instead, and the upgrade 404s. With Tailscale Funnel, give the backend path explicitly
-  (`--set-path=/msteams/calling http://127.0.0.1:9442/msteams/calling`); a bare port target strips the
-  prefix.
+  delivers `/` instead, and the upgrade 404s. Mount the path with the backend path repeated, exactly as
+  [Expose your agent](/expose#mount-both-paths) shows.
 </Warning>
 
 ## Two models, two places
@@ -419,8 +423,8 @@ arbitrary user id would turn any of it into "ring this person". Requires the mes
 | `mode` | both | `"realtime"` \| `"streaming"` (auto if omitted) |
 | `port` / `bindAddress` / `path` | both | media WebSocket server the StandIn bridge connects to |
 | `secret` | both lanes | **The connection secret. Start here.** One value covering calling *and* messages - all most deployments need (secret input) |
-| `callingPort` | calling | Explicit port for the calling lane (default `9442`). Alias of `port` |
-| `messagesPort` / `messagesPath` / `messagesBindAddress` | messages | Messages lane listener (defaults `9444`, `/msteams/messages`, root `bindAddress`) |
+| `callingPort` | calling | Explicit port for the calling lane (default `9442`). Alias of `port`. StandIn dials `/msteams/calling/{callId}`; a real upgrade on the bare path answers `400 Bad Request (missing callId)`, which is a healthy plugin |
+| `messagesPort` / `messagesPath` / `messagesBindAddress` | messages | **Managed-bot** chat relay listener (defaults `9444`, `/msteams/messages`, root `bindAddress`). Only for identities on the StandIn Managed Bot. Chat for a bring-your-own bot goes to OpenClaw's `msteams` channel at `127.0.0.1:3978` `/api/messages` instead ([Expose your agent](/expose)) |
 | `gatewayReplyUrl` | messages | Where replies are POSTed. Defaults to the StandIn gateway; override only for a private deployment |
 | `managedBot` | messages | **Compatibility block** for older configs. Prefer the flat `messages*` keys above |
 | `requireRecordingStatus` | both | only engage once Teams reports recording active |

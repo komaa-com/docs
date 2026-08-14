@@ -12,7 +12,7 @@ negative value, so a typo stops the process with a clear message rather than sil
 
 | Variable | Meaning |
 |---|---|
-| `WORKER_SHARED_SECRET` | Must equal the shared secret from StandIn pairing. Both sides sign the WebSocket upgrade with it; a mismatch is rejected with `401`. |
+| `BRIDGE_SECRET` | Must equal the shared secret from StandIn pairing. Both sides sign the WebSocket upgrade with it; a mismatch is rejected with `401`. |
 | `LIVEKIT_URL` | LiveKit server URL - a Cloud project (`wss://<project>.livekit.cloud`) or self-hosted. |
 | `LIVEKIT_API_KEY` | LiveKit API key. Mints join tokens, dispatches agents, deletes rooms. Server-side only. |
 | `LIVEKIT_API_SECRET` | LiveKit API secret paired with the key. |
@@ -72,11 +72,20 @@ Relay an avatar agent's video track onto the caller's Teams tile. On by default 
 | `WORKER_IDLE_TIMEOUT_MS` | `90000` | Dead-peer window: end the call after this long with no worker message (the worker heartbeats every 30 s). |
 | `TRUST_PROXY_XFF` | `false` | Trust the first `X-Forwarded-For` hop for the per-IP cap. Enable only behind a single proxy that overwrites the header. |
 | `PORT` / `BIND` / `LOG_LEVEL` | `8080` / `0.0.0.0` / `info` | Listen port, bind address, log verbosity. |
+| `WS_PATH` | `/msteams/calling` | Base path the calling WebSocket is anchored on; a call dials `{WS_PATH}/{callId}`. The bridge rejects anything outside that base before the HMAC check, so it can share an origin with another service. `/healthz` and `/metrics` stay at the root. |
+
+<Note>
+  **There is no chat lane and no chat variable.** The bridge serves the calling WebSocket,
+  `/healthz` and `/metrics` - nothing else. Leave the identity's **Agent messages URL** empty.
+</Note>
 
 ## TLS
 
-There is no TLS variable: the bridge serves plain WebSocket by design. Front it with a TLS
-terminator (tunnel, ingress, or load balancer) - StandIn requires `wss://` in any real deployment.
+The **Node** package has no TLS variable: it serves plain WebSocket by design, so front it with a TLS
+terminator (tunnel, ingress, or load balancer). The **Python** package adds `TLS_CERT_PATH` and
+`TLS_KEY_PATH`: set **both** and it serves `wss://` natively, leave them unset and it behaves like the
+Node build. Either way StandIn requires `wss://` in any real deployment, so a bridge on a tunnel needs
+no cert of its own.
 
 ## Privacy
 
