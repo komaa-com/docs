@@ -54,9 +54,15 @@ tailscale funnel --bg --set-path=/api/messages    http://127.0.0.1:3978/api/mess
 tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:8443/msteams/calling
 tailscale funnel --bg --set-path=/api/messages    http://127.0.0.1:3978/api/messages
 ```
+
+```bash LiveKit / ElevenLabs
+tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:8080/msteams/calling
+```
 </CodeGroup>
 
-Only the voice port differs between the runtimes. The chat line is identical on both.
+OpenClaw and Hermes differ only in the voice port; their chat line is identical. The LiveKit and
+ElevenLabs bridges serve **voice only** and have no chat lane, so they get one mount and no
+`/api/messages`. Their default port is `8080`; set `PORT` and the mount follows it.
 
 <Warning>
   **Do not mount a whole port.** `tailscale funnel --bg --https=8443 9442` publishes *every* route on
