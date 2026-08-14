@@ -93,7 +93,7 @@ Open `.env` and fill in the three required values:
 |---|---|
 | `ELEVENLABS_API_KEY` | Your ElevenLabs API key (server-side only; never sent to the Teams side). |
 | `ELEVENLABS_AGENT_ID` | The agent that should answer calls, from the Agents dashboard. |
-| `WORKER_SHARED_SECRET` | The shared secret from StandIn pairing - both sides must match exactly. |
+| `BRIDGE_SECRET` | The shared secret from StandIn pairing - both sides must match exactly. |
 
 The example still boots with dummy values, so you can check the wiring before the credentials are
 real. Everything else (`PORT`, `MAX_CALL_MINUTES`, goodbye behavior, regional hosts) has sensible
@@ -105,42 +105,64 @@ defaults - see the [configuration reference](/elevenlabs/configuration).
 npm start
 ```
 
-The bridge prints the WebSocket URL to give StandIn:
+It listens on port `8080` and takes the **last path segment** of the upgrade URL as the `callId`, so
+register it under the standard calling path:
 
 ```
-Point your StandIn identity's agent WebSocket URL at ws://<this-host>:8080/voice/msteams/stream
+ws://<this-host>:8080/msteams/calling
 ```
 
-## 4. Expose port 8080
+<Warning>
+  The example still prints a legacy `…/voice/msteams/stream` line on startup. Ignore it - the bridge
+  anchors on nothing and answers on any base path, and `/msteams/calling` is the path StandIn and
+  every other runtime use.
+</Warning>
 
-StandIn connects **from the internet**, so the port needs a public `wss://` URL. Any tunnel works:
+There is **no chat lane** here - just this WebSocket, plus `/healthz` and `/metrics` at the root.
+
+## 4. Expose the calling path
+
+StandIn connects **from the internet**, so the endpoint needs a public `wss://` URL. Any tunnel
+works:
 
 <Tabs>
   <Tab title="Tailscale Funnel">
     ```bash
-    tailscale funnel --bg --https=8080 8080
+    tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:8080/msteams/calling
     ```
-    Your URL: `wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream`
+    Your URL, with no port: `wss://<machine>.<tailnet>.ts.net/msteams/calling`
+
+    The proxy target must repeat the path. Mapping a bare port
+    (`tailscale funnel --bg --https=8443 8080`) also works and gives you
+    `wss://<machine>.<tailnet>.ts.net:8443/msteams/calling`, but it spends one of only three
+    external ports.
   </Tab>
   <Tab title="cloudflared">
     ```bash
     cloudflared tunnel --url http://localhost:8080
     ```
-    Use the printed hostname: `wss://<hostname>/voice/msteams/stream`
+    Use the printed hostname: `wss://<hostname>/msteams/calling`
   </Tab>
   <Tab title="ngrok">
     ```bash
     ngrok http 8080
     ```
-    Use the printed hostname: `wss://<hostname>/voice/msteams/stream`
+    Use the printed hostname: `wss://<hostname>/msteams/calling`
   </Tab>
 </Tabs>
+
+<Tip>
+  Verify locally with `curl http://127.0.0.1:8080/healthz` (returns `ok`). A plain `GET` to
+  `/msteams/calling` answers `404` even on a healthy bridge - only a WebSocket upgrade is routed -
+  and through a Funnel you must add `--http1.1`, or curl's upgrade headers are ignored over HTTP/2
+  and you get the same misleading `404`.
+</Tip>
 
 ## 5. Connect it to StandIn and call
 
 1. In your [StandIn dashboard](https://standin.komaa.com/dashboard), set the identity's
-   **Agent calling URL** to the `wss://` URL from step 4.
-2. Make sure the identity's shared secret equals `WORKER_SHARED_SECRET`.
+   **Agent calling URL** to the `wss://` URL from step 4. Leave the **Agent messages URL** empty.
+2. Make sure the identity's shared secret equals `BRIDGE_SECRET`.
 3. Place a Teams call to your bot (or join the sandbox meeting). StandIn joins, connects to the
    bridge, and your ElevenLabs agent answers.
 
@@ -167,9 +189,11 @@ programmatic surface (config, server handle, hooks).
 
 ## If something does not work
 
-- **WebSocket rejected with `401`** - `WORKER_SHARED_SECRET` does not match the secret in StandIn.
+- **WebSocket rejected with `401`** - `BRIDGE_SECRET` does not match the secret in StandIn, or the
+  tunnel stripped the path so the `callId` the bridge signed against is not the one StandIn sent.
 - **Bot joins the call but stays silent** - the Agent calling URL is unreachable from the internet or
-  points at the wrong port; re-check the tunnel.
+  points at the wrong port; re-check the tunnel. Probing it with curl needs `--http1.1`, and a plain
+  `GET` returns `404` even when the mount is fine.
 - **Agent audio garbled or missing** - the ElevenLabs agent's audio input/output format is not
   **PCM 16000 Hz**.
 - More: [Troubleshooting](/troubleshooting).

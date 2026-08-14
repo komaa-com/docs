@@ -84,11 +84,24 @@ to be visibly yours.
 
 ## Endpoints
 
-StandIn dials your agent, so the endpoint you save in the portal has to match the path your bridge
+StandIn dials your agent, so the endpoint you save in the portal has to match the path your agent
 actually listens on. Give the portal a bare host and it fills in the default below; paste a full URL
 instead if your bridge serves something else.
 
-| Lane | Default path |
-|---|---|
-| Calling (media WebSocket) | `wss://host/msteams/calling` |
-| Messages (chat relay, managed only) | `https://host/msteams/messages` |
+**Calling is the same in both modes.** Only chat differs, and that is the line people get wrong:
+
+| Lane | Public path | Local target |
+|---|---|---|
+| Calling (media WebSocket), both modes | `wss://host/msteams/calling` | `127.0.0.1:9442` on OpenClaw, `127.0.0.1:8443` on Hermes, path `/msteams/calling` |
+| Chat, **bring your own Azure bot** | `https://host/api/messages` | `127.0.0.1:3978`, path `/api/messages`, on both runtimes |
+| Chat, **StandIn Managed Bot** with the plugin's managed chat lane | `https://host/msteams/messages` | `127.0.0.1:9444` on OpenClaw, `127.0.0.1:8444` on Hermes, path `/msteams/messages` |
+
+A **bring-your-own-bot** identity therefore uses `/api/messages`, served by your runtime's own Teams
+channel (OpenClaw's `msteams` channel, the Hermes gateway's Teams platform) rather than by the voice
+plugin. That is a different process from voice, which is why it has its own port. The portal suggests
+the right one of the two when you deploy the identity, so take the value it offers.
+
+<Card title="Expose your agent" icon="globe" href="/expose">
+  The mount commands that publish these paths, what a healthy probe looks like on each lane, and the
+  `--http1.1` gotcha that makes a working voice mount look broken.
+</Card>

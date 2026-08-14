@@ -78,57 +78,56 @@ Run the bridge server (foreground):
 hermes msteams-bridge serve
 ```
 
-The bridge serves **two** endpoints from one process:
+`serve` hosts the **calling** lane: the media WebSocket on `8443`, at `/msteams/calling`. Chat is a
+separate process on a separate port - the Hermes gateway's own Teams platform - so a full connection
+needs both of these reachable:
 
-| Lane | Default local bind | What it carries |
+| Public path | Lane | Local target |
 |---|---|---|
-| **Calling** | `ws://<host>:8443/msteams/calling` | the media WebSocket - live audio/video |
-| **Messages** | `http://<host>:8444/msteams/messages` | the chat relay - Teams messages to and from your agent |
+| `/msteams/calling` | media WebSocket, live audio and video | `127.0.0.1:8443`, path `/msteams/calling` (this plugin) |
+| `/api/messages` | Teams chat to and from your agent | `127.0.0.1:3978`, path `/api/messages` (the gateway's Teams platform) |
 
-Both are needed for a full connection. Calling alone gives you a bot that talks but cannot read chat;
-messages alone gives you chat with no calls.
+Calling alone gives you a bot that talks but cannot read chat; chat alone gives you chat with no
+calls.
 
 ## Expose both endpoints
 
-StandIn connects to your plugin **from the internet**, so both endpoints must be reachable - a public
-host, or a tunnel.
+StandIn connects to your agent **from the internet**, so both paths must be reachable - a public host,
+or a tunnel. The mount commands, the probe recipes, and the values you register live in one place:
 
-With Tailscale Funnel, map the two **paths** onto your single public host. This is better than giving
-each lane its own external port: Funnel offers only three (443, 8443, 10000), path routing spends just
-one of them, and the URLs come out clean with no port to mistype. The proxy target must repeat the
-path, or the request arrives at your bridge stripped and 404s:
+<Card title="Expose your agent" icon="globe" href="/expose">
+  The two mount commands for Hermes (`8443` for voice, `3978` for chat), how to check a mount actually
+  works, and what to paste into the StandIn dashboard.
+</Card>
 
-```bash
-tailscale funnel --bg --set-path=/msteams/calling  http://127.0.0.1:8443/msteams/calling
-tailscale funnel --bg --set-path=/msteams/messages http://127.0.0.1:8444/msteams/messages
-```
-
-Check it with `tailscale funnel status`:
-
-```
-https://<machine>.<tailnet>.ts.net (Funnel on)
-|-- /msteams/calling  proxy http://127.0.0.1:8443/msteams/calling
-|-- /msteams/messages proxy http://127.0.0.1:8444/msteams/messages
-```
-
-That gives you the two values StandIn asks for - note there is **no port** in either:
-
-| Field in StandIn | Value |
-|---|---|
-| **Agent calling URL** | `wss://<machine>.<tailnet>.ts.net/msteams/calling` |
-| **Agent messages URL** | `https://<machine>.<tailnet>.ts.net/msteams/messages` |
-
-Register both (with the **same connection secret**) on your connection in the
-[dashboard](https://standin.komaa.com/dashboard), then place a Teams call to your bot.
+Mount each path onto your public host with the target path repeated, and neither public URL carries a
+port. Register the resulting `wss://<machine>.<tailnet>.ts.net/msteams/calling` and
+`https://<machine>.<tailnet>.ts.net/api/messages` (with the **same connection secret**) on your
+connection in the [dashboard](https://standin.komaa.com/dashboard), then place a Teams call to your
+bot.
 
 <Note>
-  Because both lanes ride path routing on 443, the 8443 and 10000 slots stay free - so a second runtime
-  (the **OpenClaw** plugin, say) can share the same machine. Register each runtime as its own
-  connection with its own secret.
+  **Probing the voice path by hand? Pass `--http1.1`.** Through a funnel, curl without it sends a plain
+  GET and gets a `404` that looks exactly like a missing mount. And on Hermes the route is
+  `/msteams/calling/{call_id}`, so a bare `/msteams/calling` **legitimately 404s** even when the bridge
+  is healthy. Add any segment and a live bridge answers `401`. Full details on
+  [Expose your agent](/expose#probe-it-by-hand).
+</Note>
 
-  Prefer a port per lane? `tailscale funnel --bg --https=8443 8443` works too, and then the URL carries
-  the port: `wss://<machine>.<tailnet>.ts.net:8443/msteams/calling`. It costs a slot per lane and there
-  are only three.
+<Warning>
+  **Used the one-line installer? Check both lanes are mounted.** A current run provisions chat
+  alongside voice on Tailscale and prints the commands to run yourself on ngrok, cloudflared or
+  devtunnel. An older run mounted **voice only** on Hermes: no `/api/messages` rule, an empty chat URL
+  at pairing, no chat step printed, and the run still reported success. Voice is unaffected either way,
+  which is exactly why this went unnoticed. Confirm both public paths with `tailscale funnel status`
+  before you test, and if chat is missing, add the mount and set the chat URL on your connection:
+  [Voice works, chat is silent](/troubleshooting#voice-works-chat-is-silent-and-nothing-appears-in-any-log).
+</Warning>
+
+<Note>
+  Because both lanes ride path routing on 443, the 8443 and 10000 funnel slots stay free - so a second
+  runtime (the **OpenClaw** plugin, say) can share the same machine. Register each runtime as its own
+  connection with its own secret.
 </Note>
 
 <Note>

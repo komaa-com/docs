@@ -139,7 +139,7 @@ LIVEKIT_URL=wss://your-project.livekit.cloud \
 LIVEKIT_API_KEY=API... \
 LIVEKIT_API_SECRET=... \
 LIVEKIT_AGENT_NAME=standin-voice-agent \
-WORKER_SHARED_SECRET=... \
+BRIDGE_SECRET=... \
 npx @komaa/livekit-msteams-bridge
 ```
 
@@ -149,38 +149,53 @@ npx @komaa/livekit-msteams-bridge
   is created, the caller hears nothing, and the worker never gets a job.
 </Warning>
 
-The bridge listens on `ws://<host>:8080/voice/msteams/stream`.
+The bridge listens on `ws://<host>:8080/msteams/calling/{callId}` (`PORT` and `WS_PATH` move the
+port and the base path). It has **no chat lane** - just this WebSocket, plus `/healthz` and
+`/metrics` at the root.
 
-## 3. Expose port 8080
+## 3. Expose the calling path
 
-StandIn connects **from the internet**, so the port needs a public `wss://` URL. Any tunnel works:
+StandIn connects **from the internet**, so the endpoint needs a public `wss://` URL. Any tunnel
+works:
 
 <Tabs>
   <Tab title="Tailscale Funnel">
     ```bash
-    tailscale funnel --bg --https=8080 8080
+    tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:8080/msteams/calling
     ```
-    Your URL: `wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream`
+    Your URL, with no port: `wss://<machine>.<tailnet>.ts.net/msteams/calling`
+
+    The proxy target must repeat the path. Mapping a bare port
+    (`tailscale funnel --bg --https=8443 8080`) also works and gives you
+    `wss://<machine>.<tailnet>.ts.net:8443/msteams/calling`, but it spends one of only three
+    external ports.
   </Tab>
   <Tab title="cloudflared">
     ```bash
     cloudflared tunnel --url http://localhost:8080
     ```
-    Use the printed hostname: `wss://<hostname>/voice/msteams/stream`
+    Use the printed hostname: `wss://<hostname>/msteams/calling`
   </Tab>
   <Tab title="ngrok">
     ```bash
     ngrok http 8080
     ```
-    Use the printed hostname: `wss://<hostname>/voice/msteams/stream`
+    Use the printed hostname: `wss://<hostname>/msteams/calling`
   </Tab>
 </Tabs>
+
+<Tip>
+  Verify locally with `curl http://127.0.0.1:8080/healthz` (returns `ok`). A plain `GET` to
+  `/msteams/calling` answers `404` even on a healthy bridge - only a WebSocket upgrade is routed -
+  and through a Funnel you must add `--http1.1`, or curl's upgrade headers are ignored over HTTP/2
+  and you get the same misleading `404`.
+</Tip>
 
 ## 4. Connect it to StandIn and call
 
 1. In your [StandIn dashboard](https://standin.komaa.com/dashboard), set the identity's
-   **Agent voice host** to the host (and port) from step 3 - StandIn appends `/voice/msteams/stream`.
-2. Make sure the identity's shared secret equals `WORKER_SHARED_SECRET`.
+   **Agent calling URL** to the `wss://` URL from step 3. Leave the **Agent messages URL** empty.
+2. Make sure the identity's shared secret equals `BRIDGE_SECRET`.
 3. Call your Teams bot (or join the sandbox meeting). StandIn joins, connects to the bridge, the
    bridge creates a room and dispatches the agent, and the agent answers.
 
@@ -243,11 +258,13 @@ documents the programmatic surface.
 
 ## If something does not work
 
-- **WebSocket rejected with `401`** - `WORKER_SHARED_SECRET` does not match the secret in StandIn.
+- **WebSocket rejected with `401`** - `BRIDGE_SECRET` does not match the secret in StandIn, or the
+  registered URL is missing the `/msteams/calling` path.
 - **Room is created but no agent joins** - `LIVEKIT_AGENT_NAME` does not match the worker's
   `agent_name`, or the worker is not running / registered with a different LiveKit project.
-- **Bot joins the call but stays silent** - the Agent voice host is unreachable from the internet;
-  re-check the tunnel.
+- **Bot joins the call but stays silent** - the Agent calling URL is unreachable from the internet;
+  re-check the tunnel. Probing it with curl needs `--http1.1`, and a plain `GET` returns `404` even
+  when the mount is fine.
 - More: [Troubleshooting](/troubleshooting).
 
 ## Links

@@ -56,7 +56,7 @@ Env-configured, no install step needed:
 ```bash
 ELEVENLABS_API_KEY=sk_... \
 ELEVENLABS_AGENT_ID=agent_... \
-WORKER_SHARED_SECRET=... \
+BRIDGE_SECRET=... \
 npx @komaa/elevenlabs-msteams-bridge
 ```
 
@@ -64,23 +64,68 @@ Or add it to a project (`npm i @komaa/elevenlabs-msteams-bridge`) and embed it -
 [library API](https://komaa-com.github.io/elevenlabs-msteams-bridge/library-api/) for the
 programmatic surface and a custom vision hook.
 
-The bridge binds its media WebSocket (default `ws://<host>:8080/voice/msteams/stream`; StandIn
-appends `/{callId}` per call).
+The bridge serves **one** endpoint:
+
+| Lane | Default local bind | What it carries |
+|---|---|---|
+| **Calling** | `ws://<host>:8080/msteams/calling/{callId}` | the media WebSocket - live audio/video |
+
+`PORT` moves the port; the default is `8080`. There is no path variable: the bridge reads the
+**last path segment** of the upgrade URL as the `callId` and accepts whatever base path you
+register, so use `/msteams/calling` - the same path OpenClaw, Hermes and LiveKit use, so one StandIn
+identity URL shape works for every backend. `/healthz` and `/metrics` stay at the root.
+
+<Note>
+  **Voice only.** This bridge has no chat lane. It serves the calling WebSocket, `/healthz` and
+  `/metrics`, and nothing else - there is no `/api/messages`, so leave the **Agent messages URL**
+  empty on the identity. Teams chat comes from a runtime that has its own messaging channel
+  (OpenClaw or Hermes).
+</Note>
 
 ## Expose the WebSocket (Agent calling URL)
 
-StandIn connects to the bridge **from the internet**, so the port must be reachable - a public host
-or a tunnel. With Tailscale Funnel:
+StandIn connects to the bridge **from the internet**, so the endpoint must be reachable - a public
+host, or a tunnel.
+
+With Tailscale Funnel, map the **path** onto your single public host. The proxy target must repeat
+the path, or the request arrives at the bridge stripped and the last segment is no longer the
+`callId`:
 
 ```bash
-tailscale funnel --bg --https=8080 8080
+tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:8080/msteams/calling
 ```
 
-Your **Agent calling URL** is then:
+Check it with `tailscale funnel status`:
 
 ```
-wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream
+https://<machine>.<tailnet>.ts.net (Funnel on)
+|-- /msteams/calling  proxy http://127.0.0.1:8080/msteams/calling
 ```
+
+Your **Agent calling URL** is then - note there is **no port**:
+
+```
+wss://<machine>.<tailnet>.ts.net/msteams/calling
+```
+
+<Note>
+  Path routing spends one of Funnel's three external ports (443, 8443, 10000) instead of one per
+  runtime, so a second bridge can share the same machine on its own path. Prefer a dedicated port?
+  `tailscale funnel --bg --https=8443 8080` works too, and then the URL carries the port:
+  `wss://<machine>.<tailnet>.ts.net:8443/msteams/calling`.
+
+  cloudflared (`cloudflared tunnel --url http://localhost:8080`), ngrok (`ngrok http 8080`) and
+  devtunnel (`devtunnel host -p 8080 --allow-anonymous`) publish the whole port instead, so the
+  path comes through unchanged: use `wss://<printed-host>/msteams/calling`.
+</Note>
+
+<Tip>
+  **Health check.** `curl http://127.0.0.1:8080/healthz` returns `ok` when the bridge is up. Do not
+  probe the calling path with a plain `GET` - it answers `404` even when healthy, because only a
+  WebSocket upgrade is routed. And when probing **through a Funnel**, pass `--http1.1`: Funnel
+  serves HTTP/2, where curl's `Connection: Upgrade` header is not a real handshake, so curl sends a
+  plain GET and gets the same misleading `404`.
+</Tip>
 
 ## Connect it to StandIn
 
@@ -88,8 +133,9 @@ Register that URL (with a **matching shared secret**) on your identity in the
 [dashboard](https://standin.komaa.com/dashboard), or use the
 [sandbox](https://standin.komaa.com/sandbox) to try it without your own Teams bot:
 
-1. Set the identity's **Agent calling URL** to where the bridge listens.
-2. Set `WORKER_SHARED_SECRET` to the **shared secret from pairing** - both sides must match exactly,
+1. Set the identity's **Agent calling URL** to where the bridge listens. Leave the **Agent messages
+   URL** empty - this bridge has no chat lane.
+2. Set `BRIDGE_SECRET` to the **shared secret from pairing** - both sides must match exactly,
    or the WebSocket handshake is rejected with `401`.
 3. Place a Teams call (or join the sandbox meeting). StandIn joins, connects to the bridge, and your
    ElevenLabs agent answers.

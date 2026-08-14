@@ -1,0 +1,188 @@
+---
+title: "Expose your agent"
+description: "The two public paths StandIn dials, the local target behind each, and the exact mount commands that publish them."
+keywords: ["expose agent StandIn","Tailscale Funnel set-path","msteams/calling","api/messages","port 9442","port 8443","port 3978","ngrok cloudflared devtunnel","funnel 401 404"]
+---
+
+StandIn is hosted, so it reaches your agent **from the internet**. Your machine publishes **two public
+paths**, and each one has a different local process behind it. Get either the path or the target
+wrong and the symptom is the same: a call that connects and dies, or chat that never arrives.
+
+This is the **only** page that carries the mount commands. Every other page links here.
+
+## The contract
+
+| Public path | Lane | OpenClaw local target | Hermes local target |
+|---|---|---|---|
+| `/msteams/calling` | voice and video (WebSocket) | `127.0.0.1:9442`, path `/msteams/calling` | `127.0.0.1:8443`, path `/msteams/calling` |
+| `/api/messages` | Teams chat (HTTP POST) | `127.0.0.1:3978`, path `/api/messages` | `127.0.0.1:3978`, path `/api/messages` |
+
+Two paths, two processes:
+
+- **Voice** is the `msteams-bridge` / `msteams_bridge` plugin. It binds `9442` on OpenClaw and `8443`
+  on Hermes, and StandIn dials `/msteams/calling/{callId}` on it, one connection per call.
+- **Chat** is your runtime's **own Teams channel**, not the voice plugin: OpenClaw's `msteams`
+  channel (`channels.msteams.webhook.port`, default `3978`) and the Hermes gateway's Teams platform.
+  That is why chat lives on a different port from voice on both runtimes, and why the path is
+  `/api/messages` rather than anything under `/msteams/`.
+
+Voice-only? Mount `/msteams/calling` alone. Nothing posts chat to you, and calls work normally.
+
+<Note>
+  **Voice-only bridges.** The [ElevenLabs](/elevenlabs/installation) and
+  [LiveKit](/livekit/installation) bridges have **no chat lane at all** - mount the voice path only.
+  Both default to local port `8080`, and both use `/msteams/calling` as their public path. LiveKit
+  anchors on it (`WS_PATH`) and dials `{WS_PATH}/{callId}`; ElevenLabs takes the **last** path
+  segment as the call id, so it accepts whatever path you register - mount it on `/msteams/calling`
+  anyway, so one URL shape works across every runtime. Older docs and the bridge's own startup line
+  mention `/voice/msteams/stream`; that path still works on ElevenLabs, but it is not the one to
+  standardize on.
+</Note>
+
+## Mount both paths
+
+With Tailscale Funnel, map each **path** onto your one public host. The proxy target must **repeat
+the path**, or the request arrives at your agent stripped and 404s:
+
+<CodeGroup>
+```bash OpenClaw
+tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:9442/msteams/calling
+tailscale funnel --bg --set-path=/api/messages    http://127.0.0.1:3978/api/messages
+```
+
+```bash Hermes
+tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:8443/msteams/calling
+tailscale funnel --bg --set-path=/api/messages    http://127.0.0.1:3978/api/messages
+```
+</CodeGroup>
+
+Only the voice port differs between the runtimes. The chat line is identical on both.
+
+<Warning>
+  **Do not mount a whole port.** `tailscale funnel --bg --https=8443 9442` publishes *every* route on
+  that port, burns one of the three funnel slots (443, 8443, 10000), and puts a port in the URL you
+  then have to type correctly everywhere. Path mounts spend one slot for both lanes and give you
+  portless URLs.
+</Warning>
+
+Confirm with `tailscale funnel status` before you register anything:
+
+```
+https://<machine>.<tailnet>.ts.net (Funnel on)
+|-- /msteams/calling proxy http://127.0.0.1:9442/msteams/calling
+|-- /api/messages    proxy http://127.0.0.1:3978/api/messages
+```
+
+<Warning>
+  **A registered mount is not a working mount.** `tailscale funnel --bg` returns as soon as the rule
+  exists, whether or not anything listens behind it. Its exit status proves nothing. Probe both paths
+  (below) before you conclude the agent is exposed.
+</Warning>
+
+### Other tunnels
+
+ngrok, cloudflared, and devtunnel forward a **whole local port** rather than a path, so each lane
+needs its own tunnel and its own public host:
+
+<CodeGroup>
+```bash ngrok
+ngrok http 9442      # voice  -> https://<id>.ngrok.app/msteams/calling
+ngrok http 3978      # chat   -> https://<id>.ngrok.app/api/messages
+```
+
+```bash cloudflared
+cloudflared tunnel --url http://localhost:9442
+cloudflared tunnel --url http://localhost:3978
+```
+
+```bash devtunnel
+devtunnel host -p 9442 --allow-anonymous
+devtunnel host -p 3978 --allow-anonymous
+```
+</CodeGroup>
+
+The path is preserved either way, so the public URL is still the host plus `/msteams/calling` or
+`/api/messages`. Use `8443` in place of `9442` on Hermes.
+
+## What you register in StandIn
+
+Both fields live on your connection in the [dashboard](https://standin.komaa.com/dashboard), and both
+take the **same connection secret**. With path mounts there is **no port** in either value:
+
+| Field in StandIn | Value |
+|---|---|
+| **Agent calling URL** | `wss://<machine>.<tailnet>.ts.net/msteams/calling` |
+| **Agent chat URL** (labelled **Agent messages URL** in the deploy wizard) | `https://<machine>.<tailnet>.ts.net/api/messages` |
+
+Paste the bare host and StandIn appends the default path for you; paste a full URL and it is respected
+as given.
+
+<Note>
+  **Two labels, one field.** The pairing console calls it **Agent chat URL** and the dashboard deploy
+  wizard calls it **Agent messages URL**. They are the same value, and on a bring-your-own-bot identity
+  that value is your `/api/messages` endpoint regardless of which screen you are on.
+</Note>
+
+<Note>
+  **StandIn's own endpoints are a separate layer.** The `https://<identity>.standin.komaa.com/api/calling`
+  and `/api/messages` addresses you point your **Azure Bot** at are hosted by StandIn and are not
+  affected by anything on this page. Those go in the Azure portal
+  ([Create the Azure bot](/teams/azure-bot)); the two above go in the StandIn dashboard.
+</Note>
+
+## Probe it by hand
+
+<Warning>
+  **Always pass `--http1.1` when probing the voice path through a funnel.** Tailscale Funnel serves
+  HTTP/2, where curl's `Connection: Upgrade` headers are **not** a real WebSocket handshake. curl
+  quietly sends a plain GET instead, and the server answers **404** - identical to a missing mount.
+  People have chased that phantom for hours. The chat path is ordinary HTTP and needs no flag.
+</Warning>
+
+Chat, which is a plain POST:
+
+```bash
+curl -i -X POST https://<your-host>/api/messages \
+  -H 'content-type: application/json' -d '{}'
+```
+
+Voice, which only answers a real upgrade:
+
+```bash
+curl -i --http1.1 -N https://<your-host>/msteams/calling \
+  -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
+  -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: AAAAAAAAAAAAAAAAAAAAAA=='
+```
+
+Read the answers like this:
+
+| You get | On | Means |
+|---|---|---|
+| `401` | either lane | **Alive.** The mount works and auth rejected an unsigned probe, which is correct |
+| `400 Bad Request (missing callId)` | OpenClaw voice, bare `/msteams/calling` | **Alive.** OpenClaw reaches the upgrade handler and then wants the call id |
+| `404` | Hermes voice, bare `/msteams/calling` | **Expected, not a fault.** Hermes registers only `/msteams/calling/{call_id}`, so the bare path has no route. Retry with any segment (`/msteams/calling/probe`) and a live Hermes answers `401` |
+| `404` | any lane | Otherwise: nothing is mounted at that path, or the mount target dropped the path |
+| `405` | chat, on a GET | **Alive.** The endpoint is bound and POST-only |
+| connection refused / timeout | either lane | The mount exists but nothing is listening locally, or the local bind is wrong |
+
+<Warning>
+  **A plain `GET` is not a voice health check.** OpenClaw answers `404` to a plain GET on
+  `/msteams/calling` even locally, with no tunnel involved. Only an upgrade gets a meaningful answer.
+  Never write a troubleshooting step around GET-ing the voice path.
+</Warning>
+
+## Managed bot chat uses a different path
+
+Everything above describes the chat lane for an identity with **your own Azure bot**. If your identity
+uses the **StandIn Managed Bot** *and* you turn on the plugin's managed chat lane, chat goes to the
+plugin's own listener instead of your runtime's Teams channel, on a different port and path:
+
+| | Public path | Local target |
+|---|---|---|
+| OpenClaw managed chat | `/msteams/messages` | `127.0.0.1:9444`, path `/msteams/messages` |
+| Hermes managed chat | `/msteams/messages` | `127.0.0.1:8444`, path `/msteams/messages` |
+
+In that mode your agent holds no Bot Framework credential: StandIn runs the bot and speaks a
+normalized chat protocol to the plugin. The dashboard suggests the matching URL when you deploy a
+managed identity, so take the value it offers rather than typing a path from memory. Voice is
+unchanged either way. See [Connection modes](/teams/connection-modes).

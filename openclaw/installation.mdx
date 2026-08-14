@@ -46,66 +46,53 @@ start the gateway:
 openclaw gateway run
 ```
 
-The plugin registers a host-managed service and binds **two** listeners:
+The plugin registers a host-managed service and binds the **calling** listener on `9442`. Teams chat
+is not this plugin: it is OpenClaw's own `msteams` channel, on its own port. A full connection needs
+both of these reachable:
 
-| lane | default | what reaches it |
+| Public path | Lane | Local target |
 |---|---|---|
-| **calling** | `ws://<host>:9442/msteams/calling` | the media WebSocket StandIn dials, one connection per call |
-| **messages** | `http://<host>:9444/msteams/messages` | the chat relay, if you use the managed chat lane |
+| `/msteams/calling` | the media WebSocket StandIn dials, one connection per call | `127.0.0.1:9442`, path `/msteams/calling` (this plugin) |
+| `/api/messages` | Teams chat to and from your agent | `127.0.0.1:3978`, path `/api/messages` (OpenClaw's `msteams` channel, `channels.msteams.webhook.port`) |
 
-One `secret` turns both on. Expose only the lanes you use.
+Voice-only? Mount the calling path alone - leaving `3978` unexposed simply means nothing posts chat to
+you.
 
 ## Expose the lanes
 
-StandIn connects to your plugin **from the internet**, so the ports you use must be reachable - a
-public host, or a tunnel.
+StandIn connects to your agent **from the internet**, so both paths must be reachable - a public host,
+or a tunnel. The mount commands, the probe recipes, and the values you register live in one place:
 
-With Tailscale Funnel, map the **path** onto your single public host rather than spending a whole
-external port on it (Funnel offers only three). The proxy target must repeat the path, or the request
-reaches your plugin stripped and 404s:
+<Card title="Expose your agent" icon="globe" href="/expose">
+  The two mount commands for OpenClaw (`9442` for voice, `3978` for chat), how to check a mount
+  actually works, and what to paste into the StandIn dashboard.
+</Card>
 
-```bash
-tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:9442/msteams/calling
-```
-
-Your **Agent calling URL** is then, with no port to mistype:
-
-```
-wss://<machine>.<tailnet>.ts.net/msteams/calling
-```
-
-Register that URL (with a **matching `secret`**) in the
+Mount each path onto your public host with the target path repeated, then register the resulting
+`wss://<machine>.<tailnet>.ts.net/msteams/calling` (with a **matching `secret`**) in the
 [StandIn sandbox](https://standin.komaa.com/sandbox) or on your identity in the
-[dashboard](https://standin.komaa.com/dashboard), then place a Teams call to your bot.
+[dashboard](https://standin.komaa.com/dashboard). Add
+`https://<machine>.<tailnet>.ts.net/api/messages` as the **Agent chat URL** if you want chat, then
+place a Teams call to your bot. With path mounts neither public URL carries a port.
 
-Prefer a dedicated port? `tailscale funnel --bg --https=8443 9442` works too - this is what the
-one-line installer does - and the URL then carries the port:
-`wss://<machine>.<tailnet>.ts.net:8443/msteams/calling`.
-
-### The messages lane
-
-Using managed chat as well? Expose the second listener the same way, pointing at `9444` and repeating
-its path:
-
-```bash
-tailscale funnel --bg --set-path=/msteams/messages http://127.0.0.1:9444/msteams/messages
-```
-
-Both lanes then share one public host:
-
-```
-wss://<machine>.<tailnet>.ts.net/msteams/calling     calling
-https://<machine>.<tailnet>.ts.net/msteams/messages  messages
-```
-
-Voice-only? Skip it - leaving `9444` unexposed simply means nothing posts chat to you.
+<Note>
+  **Probing the voice path by hand? Pass `--http1.1`.** Through a funnel, curl without it sends a plain
+  GET and gets a `404` that looks exactly like a missing mount. A live OpenClaw answers a real upgrade
+  on the bare path with `400 Bad Request (missing callId)`, which means the plugin is healthy. Full
+  details on [Expose your agent](/expose#probe-it-by-hand).
+</Note>
 
 <Note>
   Funnel serves up to 3 external ports (443, 8443, 10000), which is why path routing is the better
   default: every lane can share 443. Running the **Hermes** plugin on the same machine? Give it its own
-  paths on the same host (`/msteams/calling` there points at Hermes's own port) and register each
-  runtime as its own
-  agent with its own secret.
+  paths on the same host (`/msteams/calling` there points at Hermes's own port, `8443`) and register
+  each runtime as its own agent with its own secret.
+</Note>
+
+<Note>
+  Using the **StandIn Managed Bot** with the plugin's managed chat lane? That mode uses a different
+  chat path and port (`/msteams/messages` on `9444`) instead of `/api/messages` - see
+  [Managed bot chat](/expose#managed-bot-chat-uses-a-different-path).
 </Note>
 
 <Note>

@@ -13,6 +13,7 @@
 |---|---|
 | `index.mdx` | Landing page: what StandIn is, CVI pillars, capabilities |
 | `quickstart.mdx` | Install the plugin, connect to StandIn, place a test call |
+| `expose.mdx` | **Canonical** "expose your agent": the two public paths (`/msteams/calling`, `/api/messages`), the local target behind each, the mount commands, and how to probe them |
 | `teams/overview.mdx` | Teams setup landing: what you create, setup path, applies to all six bridges |
 | `teams/azure-bot.mdx` | Entra app + Azure Bot + Teams channel/calling (redacted portal screenshots); canonical Microsoft Graph permissions table |
 | `teams/app-package.mdx` | Download the generated manifest zip from StandIn; example manifest, placeholders, manual packaging |
@@ -50,6 +51,15 @@
 
 ## Single sources of truth
 
+- **The tunnel/funnel mount commands live ONLY in `expose.mdx`.** Every page that tells a user how to
+  reach their agent links there instead of repeating them. Three divergent forms of the messages URL
+  in three pages is what caused a live incident; do not re-add commands elsewhere. Any page that does
+  name the endpoints must state BOTH public paths **and** the local target behind each:
+  `/msteams/calling` -> `127.0.0.1:9442` (OpenClaw) or `8443` (Hermes), and `/api/messages` ->
+  `127.0.0.1:3978` on both runtimes.
+- StandIn's own hosted `<identity>.standin.komaa.com/api/calling` and `/api/messages` endpoints (the
+  ones the customer's Azure Bot points at) are a **separate layer** from the plugin-side paths above.
+  Never merge the two lists.
 - The Microsoft Graph permissions table lives ONLY in
   `teams/azure-bot.mdx#8-grant-graph-permissions`. Other pages (`concepts/architecture.mdx`,
   `openclaw/configuration.mdx`, `hermes/configuration.mdx`) link to it; do not re-add copies.
