@@ -53,7 +53,10 @@ plugins:
       "msteams-bridge": {
         "enabled": true,
         "config": {
-          "secret": { "env": "MSTEAMS_BRIDGE_SECRET" }
+          // A STRING. The ${VAR} form is resolved from the environment at startup.
+          // An object secret reference is rejected here: `secret` is typed string,
+          // and OpenClaw validates the config before it resolves any reference.
+          "secret": "${MSTEAMS_BRIDGE_SECRET}"
         }
       }
     }

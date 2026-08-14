@@ -1,7 +1,7 @@
 ---
 title: "OpenClaw installation"
 description: "Install @komaa/openclaw-msteams-bridge into an OpenClaw host."
-keywords: ["@komaa/openclaw-msteams-bridge","OpenClaw plugin install","openclaw plugins install","npm Teams bridge plugin"]
+keywords: ["@komaa/openclaw-msteams-bridge","@komaa/msteams-bridge","OpenClaw plugin install","openclaw plugins install","npm Teams bridge plugin"]
 ---
 
 This is a self-contained Teams CVI plugin for **OpenClaw**. It depends only on the
@@ -30,8 +30,10 @@ openclaw plugins install npm:@komaa/openclaw-msteams-bridge
 The package ships **prebuilt** (v0.1.10+): no build step, install and go.
 
 <Note>
-  Also on ClawHub: `openclaw plugins install clawhub:@komaa/openclaw-msteams-bridge` - OpenClaw falls back to npm
-  automatically if the ClawHub fetch fails. See the
+  The two registries carry different names. On **npm** it is `@komaa/openclaw-msteams-bridge` - the
+  install above. On **ClawHub** the listing is `@komaa/msteams-bridge`:
+  `openclaw plugins install clawhub:@komaa/msteams-bridge`. Either path installs the same plugin under
+  the id `msteams-bridge`, so the configuration is identical. See the
   [plugin README](https://github.com/komaa-com/openclaw-msteams-bridge#install).
 </Note>
 
