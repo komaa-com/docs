@@ -87,20 +87,10 @@ identity URL shape works for every backend. `/healthz` and `/metrics` stay at th
 StandIn connects to the bridge **from the internet**, so the endpoint must be reachable - a public
 host, or a tunnel.
 
-With Tailscale Funnel, map the **path** onto your single public host. The proxy target must repeat
-the path, or the request arrives at the bridge stripped and the last segment is no longer the
-`callId`:
-
-```bash
-tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:8080/msteams/calling
-```
-
-Check it with `tailscale funnel status`:
-
-```
-https://<machine>.<tailnet>.ts.net (Funnel on)
-|-- /msteams/calling  proxy http://127.0.0.1:8080/msteams/calling
-```
+**[Expose your agent](/expose)** carries the mount commands, the other tunnels (cloudflared, ngrok,
+devtunnel), and the probes that tell a working mount from a registered one. Use the
+**LiveKit / ElevenLabs** tab: this bridge is voice only, so it needs `/msteams/calling` on port
+`8080` and no `/api/messages`.
 
 Your **Agent calling URL** is then - note there is **no port**:
 
@@ -109,14 +99,9 @@ wss://<machine>.<tailnet>.ts.net/msteams/calling
 ```
 
 <Note>
-  Path routing spends one of Funnel's three external ports (443, 8443, 10000) instead of one per
-  runtime, so a second bridge can share the same machine on its own path. Prefer a dedicated port?
-  `tailscale funnel --bg --https=8443 8080` works too, and then the URL carries the port:
-  `wss://<machine>.<tailnet>.ts.net:8443/msteams/calling`.
-
-  cloudflared (`cloudflared tunnel --url http://localhost:8080`), ngrok (`ngrok http 8080`) and
-  devtunnel (`devtunnel host -p 8080 --allow-anonymous`) publish the whole port instead, so the
-  path comes through unchanged: use `wss://<printed-host>/msteams/calling`.
+  Path routing lets a second bridge share the same machine on its own path. Whole-port mounts and
+  the other tunnels, which publish the port rather than the path, are covered in
+  [Expose your agent](/expose).
 </Note>
 
 <Tip>

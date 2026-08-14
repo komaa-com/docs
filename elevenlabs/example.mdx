@@ -127,15 +127,10 @@ works:
 
 <Tabs>
   <Tab title="Tailscale Funnel">
-    ```bash
-    tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:8080/msteams/calling
-    ```
-    Your URL, with no port: `wss://<machine>.<tailnet>.ts.net/msteams/calling`
+    See **[Expose your agent](/expose)**, the **LiveKit / ElevenLabs** tab: one mount for
+    `/msteams/calling` on port `8080`, and no `/api/messages` because this bridge is voice only.
 
-    The proxy target must repeat the path. Mapping a bare port
-    (`tailscale funnel --bg --https=8443 8080`) also works and gives you
-    `wss://<machine>.<tailnet>.ts.net:8443/msteams/calling`, but it spends one of only three
-    external ports.
+    Your URL, with no port: `wss://<machine>.<tailnet>.ts.net/msteams/calling`
   </Tab>
   <Tab title="cloudflared">
     ```bash
