@@ -62,7 +62,7 @@ Or add it to a project (`npm i @komaa/openai-msteams-bridge`) and embed it - see
 [library API](https://komaa-com.github.io/openai-msteams-bridge/library-api/) for the programmatic
 surface, custom tools, and a custom vision hook.
 
-The bridge binds its media WebSocket (default `ws://<host>:8080/voice/msteams/stream`; StandIn
+The bridge binds its media WebSocket (default `ws://<host>:9442/voice/msteams/stream`; StandIn
 appends `/{callId}` per call).
 
 <Warning>
@@ -77,13 +77,13 @@ StandIn connects to the bridge **from the internet**, so the port must be reacha
 or a tunnel. With Tailscale Funnel:
 
 ```bash
-tailscale funnel --bg --https=8080 8080
+tailscale funnel --bg --set-path=/voice/msteams/stream http://127.0.0.1:9442/voice/msteams/stream
 ```
 
 Your **Agent calling URL** is then:
 
 ```
-wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream
+wss://<machine>.<tailnet>.ts.net/voice/msteams/stream
 ```
 
 ## Connect it to StandIn

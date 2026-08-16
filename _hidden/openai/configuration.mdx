@@ -32,7 +32,7 @@ There is no dashboard - these variables define the agent:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `PORT` | `8080` | Port the media WebSocket listens on. |
+| `PORT` | `9442` | Port the media WebSocket listens on. |
 | `BIND` | `0.0.0.0` | Bind address. |
 | `MAX_CALL_MINUTES` | `0` (off) | Bridge-side hard cap per call. On expiry the agent speaks a goodbye, then the call ends. **Keep it below 60**: the Realtime API caps sessions at 60 minutes server-side, and a call reaching that ceiling drops abruptly instead of saying goodbye. |
 | `OPENAI_TTS_VOICE` | (unset) | With a voice set, the time-limit goodbye is spoken as the **exact** `GOODBYE_TEXT` via the standalone TTS endpoint. Without it, the agent is asked to say goodbye (wording may vary). |

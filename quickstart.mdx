@@ -272,7 +272,7 @@ Prefer to wire it up by hand? Pick your runtime:
               config:
                 secret: ${MSTEAMS_BRIDGE_SECRET}   # must match the secret set in StandIn
                 host: 127.0.0.1
-                port: 8443
+                calling_port: 9442
                 # Inbound caller policy: Hermes has no `inboundPolicy` key and no
                 # pairing mode for calls - the allowlist IS the policy. Empty means
                 # deny all inbound callers (set `allow_all: true` to opt out).
@@ -289,7 +289,7 @@ Prefer to wire it up by hand? Pick your runtime:
         ```bash
         hermes msteams-bridge serve --handler realtime
         ```
-        In your StandIn dashboard, register your **Agent calling URL** (`wss://<your-public-host>/msteams/calling` via a path-mapped funnel; local bind `ws://<host>:8443/...`)
+        In your StandIn dashboard, register your **Agent calling URL** (`wss://<your-public-host>/msteams/calling` via a path-mapped funnel; local bind `ws://<host>:9442/...`)
         and the matching secret, then place a Teams call to your bot.
       </Step>
       <Step title="Add the chat lane">
@@ -306,7 +306,7 @@ Prefer to wire it up by hand? Pick your runtime:
 <Warning>
   **StandIn connects to your plugin from the internet**, so both lanes must be reachable - expose them
   via a public URL or a tunnel (e.g. Tailscale), not loopback-only. Voice is `/msteams/calling` in
-  front of **9442** (OpenClaw) or **8443** (Hermes); chat is `/api/messages` in front of **3978** on
+  front of **9442** on both runtimes; chat is `/api/messages` in front of **3978** on
   both. [Expose your agent](/expose) carries the mount commands and the probes that prove a mount
   works. A `secret` mismatch fails the HMAC handshake **silently** - the most common first-call issue.
 </Warning>

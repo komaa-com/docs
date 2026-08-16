@@ -20,7 +20,7 @@ stops the process with a clear message rather than silently misbehaving.
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `PORT` | `8080` | Port the media WebSocket listens on. Register `/msteams/calling` as its path - there is no path variable; the bridge reads the **last** path segment of the upgrade URL as the `callId` and accepts whatever base you put in front of it. `/healthz` and `/metrics` stay at the root. |
+| `PORT` | `9442` | Port the media WebSocket listens on. Register `/msteams/calling` as its path - there is no path variable; the bridge reads the **last** path segment of the upgrade URL as the `callId` and accepts whatever base you put in front of it. `/healthz` and `/metrics` stay at the root. |
 | `BIND` | `0.0.0.0` | Bind address. |
 | `MAX_CALL_MINUTES` | `0` (off) | Bridge-side hard cap per call. On expiry the agent speaks a goodbye, then the call ends. ElevenLabs does not know your billing, so enforce limits here. |
 | `EL_TTS_VOICE_ID` | (unset) | With a voice id, the time-limit goodbye is spoken as the **exact** `GOODBYE_TEXT` via standalone TTS. Without it, the agent is asked to say goodbye (wording may vary). |

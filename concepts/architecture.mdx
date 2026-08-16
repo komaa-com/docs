@@ -27,8 +27,8 @@ flowchart LR
     style T fill:#3730a3,stroke:#6366f1,color:#e0e7ff
 ```
 
-The **plugin is the WebSocket server** (default calling port `:9442` on OpenClaw, `:8443` on Hermes,
-`:8080` on the LiveKit and ElevenLabs bridges); the **hosted StandIn bridge is the client** that
+The **plugin is the WebSocket server** (default calling port `:9442` on every runtime: OpenClaw,
+Hermes, and the LiveKit and ElevenLabs bridges); the **hosted StandIn bridge is the client** that
 connects to it. You register your plugin's WebSocket URL and shared secret in your StandIn dashboard
 - expose it so the hosted bridge can reach it (a public URL, or a tunnel such as Tailscale).
 

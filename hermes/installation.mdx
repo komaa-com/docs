@@ -78,13 +78,13 @@ Run the bridge server (foreground):
 hermes msteams-bridge serve
 ```
 
-`serve` hosts the **calling** lane: the media WebSocket on `8443`, at `/msteams/calling`. Chat is a
+`serve` hosts the **calling** lane: the media WebSocket on `9442`, at `/msteams/calling`. Chat is a
 separate process on a separate port - the Hermes gateway's own Teams platform - so a full connection
 needs both of these reachable:
 
 | Public path | Lane | Local target |
 |---|---|---|
-| `/msteams/calling` | media WebSocket, live audio and video | `127.0.0.1:8443`, path `/msteams/calling` (this plugin) |
+| `/msteams/calling` | media WebSocket, live audio and video | `127.0.0.1:9442`, path `/msteams/calling` (this plugin) |
 | `/api/messages` | Teams chat to and from your agent | `127.0.0.1:3978`, path `/api/messages` (the gateway's Teams platform) |
 
 Calling alone gives you a bot that talks but cannot read chat; chat alone gives you chat with no
@@ -96,7 +96,7 @@ StandIn connects to your agent **from the internet**, so both paths must be reac
 or a tunnel. The mount commands, the probe recipes, and the values you register live in one place:
 
 <Card title="Expose your agent" icon="globe" href="/expose">
-  The two mount commands for Hermes (`8443` for voice, `3978` for chat), how to check a mount actually
+  The two mount commands for Hermes (`9442` for voice, `3978` for chat), how to check a mount actually
   works, and what to paste into the StandIn dashboard.
 </Card>
 

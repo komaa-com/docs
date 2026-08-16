@@ -44,7 +44,7 @@ require an endpoint** that Deepgram dials itself:
 
 | Variable | Default | Meaning |
 |---|---|---|
-| `PORT` | `8080` | Port the media WebSocket listens on. |
+| `PORT` | `9442` | Port the media WebSocket listens on. |
 | `BIND` | `0.0.0.0` | Bind address. |
 | `MAX_CALL_MINUTES` | `0` (off) | Bridge-side hard cap per call. On expiry the agent speaks a goodbye, then the call ends. Deepgram does not know your billing, so enforce limits here. |
 | `DEEPGRAM_TTS_MODEL` | (unset) | With an Aura model set, the time-limit goodbye is spoken as the **exact** `GOODBYE_TEXT` via the standalone TTS endpoint (agent muted). Without it, the live agent speaks the exact text via `InjectAgentMessage`. |

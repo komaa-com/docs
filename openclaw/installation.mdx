@@ -85,8 +85,9 @@ place a Teams call to your bot. With path mounts neither public URL carries a po
 <Note>
   Funnel serves up to 3 external ports (443, 8443, 10000), which is why path routing is the better
   default: every lane can share 443. Running the **Hermes** plugin on the same machine? Give it its own
-  paths on the same host (`/msteams/calling` there points at Hermes's own port, `8443`) and register
-  each runtime as its own agent with its own secret.
+  paths on the same host and its own local calling port (both plugins default to `9442`, so move one
+  of them: `port` on OpenClaw, `calling_port` on Hermes), and register each runtime as its own agent
+  with its own secret.
 </Note>
 
 <Note>

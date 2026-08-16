@@ -92,9 +92,9 @@ instead if your bridge serves something else.
 
 | Lane | Public path | Local target |
 |---|---|---|
-| Calling (media WebSocket), both modes | `wss://host/msteams/calling` | `127.0.0.1:9442` on OpenClaw, `127.0.0.1:8443` on Hermes, path `/msteams/calling` |
+| Calling (media WebSocket), both modes | `wss://host/msteams/calling` | `127.0.0.1:9442`, path `/msteams/calling`, on both runtimes |
 | Chat, **bring your own Azure bot** | `https://host/api/messages` | `127.0.0.1:3978`, path `/api/messages`, on both runtimes |
-| Chat, **StandIn Managed Bot** with the plugin's managed chat lane | `https://host/msteams/messages` | `127.0.0.1:9444` on OpenClaw, `127.0.0.1:8444` on Hermes, path `/msteams/messages` |
+| Chat, **StandIn Managed Bot** with the plugin's managed chat lane | `https://host/msteams/messages` | `127.0.0.1:9444`, path `/msteams/messages`, on both runtimes |
 
 A **bring-your-own-bot** identity therefore uses `/api/messages`, served by your runtime's own Teams
 channel (OpenClaw's `msteams` channel, the Hermes gateway's Teams platform) rather than by the voice
