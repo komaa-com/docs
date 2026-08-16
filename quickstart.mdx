@@ -55,14 +55,56 @@ curl -fsSL https://standin.komaa.com/install.sh | bash
 irm https://standin.komaa.com/install.ps1 | iex
 ```
 
-It also runs non-interactively - pass flags (`--runtime`, `--mode`, `--secret`, `--provider`,
-`--api-key`, `--model`, `--port`) or set the matching `STANDIN_*` environment variables.
+It also runs non-interactively - pass flags (`--connection`, `--runtime`, `--mode`, `--secret`,
+`--provider`, `--api-key`, `--model`, `--port`, `--messages-port`) or set the matching `STANDIN_*`
+environment variables.
 
 <Note>
 For **secrets** (`--secret`, `--api-key`), prefer the `STANDIN_SECRET` / `STANDIN_API_KEY` environment variables over
 CLI flags, so the values do not land in your shell history. The installer never transmits your secrets: they are only
 written to your local plugin config.
 </Note>
+
+### StandIn Managed Bot
+
+The default run sets up a **bring-your-own-bot** connection and pairs it with the portal. If you created
+a **StandIn Managed Bot** connection in the dashboard instead (see
+[Connection modes](/teams/connection-modes#standin-managed-bot)), pass `--connection managed` and the
+connection secret the dashboard showed you:
+
+**Linux / macOS / WSL**
+
+```bash
+curl -fsSL https://standin.komaa.com/install.sh | bash -s -- --connection managed --runtime hermes --secret '<connection secret>'
+```
+
+**Windows (PowerShell)**
+
+```powershell
+$env:STANDIN_CONNECTION='managed'; $env:STANDIN_RUNTIME='hermes'; $env:STANDIN_SECRET='<connection secret>'; irm https://standin.komaa.com/install.ps1 | iex
+```
+
+Use `--runtime openclaw` (or `STANDIN_RUNTIME='openclaw'`) for OpenClaw. Without the flag the
+installer asks **Connection type** interactively.
+
+What is different in managed mode:
+
+- **The secret is the connection secret from the dashboard.** The installer never generates one for a
+  managed connection: it is the key StandIn already signs with, so a made-up value would turn both
+  lanes off silently. Leave `--secret` out and the installer prompts for it (masked), which also keeps
+  it out of your shell history.
+- **One secret, two lanes.** The installer writes the calling lane (`9442`) and the managed messages
+  lane (`9444`, `--messages-port` to change it) into the plugin config, plus the StandIn gateway reply
+  endpoint on Hermes.
+- **Two funnel mounts.** On Tailscale it mounts `/msteams/calling` -> `127.0.0.1:9442` and
+  `/msteams/messages` -> `127.0.0.1:9444`, then verifies both. The bring-your-own-bot chat lane
+  (`/api/messages` -> `3978`) is not mounted. On ngrok, cloudflared or devtunnel it prints the two
+  mounts for you to make yourself; see
+  [Managed bot chat](/expose#managed-bot-chat-uses-a-different-path).
+- **No pairing.** The connection already exists, so the installer prints the two values to paste into
+  it in the dashboard: **Agent calling URL** = your public host (StandIn appends `/msteams/calling`)
+  and **Agent chat URL** = `https://<your-public-host>/msteams/messages`. Restart the runtime as the
+  installer says, and calling switches on once your Microsoft 365 admin approves.
 
 ## Connect your agent by pairing (recommended)
 
