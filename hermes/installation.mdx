@@ -131,6 +131,13 @@ bot.
 </Note>
 
 <Note>
+  On a **StandIn Managed Bot** connection the chat lane is the plugin's own `/msteams/messages`
+  listener on `9444` rather than `/api/messages` on `3978`, and the one-line installer sets both lanes
+  up for you with `--connection managed --runtime hermes` and the connection secret from the
+  dashboard: [Quickstart: StandIn Managed Bot](/quickstart#standin-managed-bot).
+</Note>
+
+<Note>
   **The bot answers but does nothing until recording starts.** `require_recording_status` defaults to
   `true`, so the plugin engages only once Teams reports recording active - which is why a call can
   connect and the agent stay silent or refuse to act. Turn recording on in the call, or set

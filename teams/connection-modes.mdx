@@ -68,6 +68,11 @@ Advanced deployments can split the lanes with the per-lane overrides
 (`calling_secret`/`messages_secret` on Hermes) - when set, they win over `secret`. OpenClaw has no
 per-lane override: one `secret` covers both lanes.
 
+Prefer not to edit config by hand? Run the one-line installer with `--connection managed` and that
+secret: it writes both lanes, mounts `/msteams/calling` and `/msteams/messages` on your Tailscale
+Funnel, and prints the two URLs to paste into the connection - see
+[Quickstart: StandIn Managed Bot](/quickstart#standin-managed-bot).
+
 <Note>
 One agent instance serves **one** connection. The secrets belong to a single Microsoft organization -
 run a second instance for a second organization, and never share a secret across tenants.

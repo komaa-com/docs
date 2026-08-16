@@ -189,4 +189,6 @@ plugin's own listener instead of your runtime's Teams channel, on a different po
 In that mode your agent holds no Bot Framework credential: StandIn runs the bot and speaks a
 normalized chat protocol to the plugin. The dashboard suggests the matching URL when you deploy a
 managed identity, so take the value it offers rather than typing a path from memory. Voice is
-unchanged either way. See [Connection modes](/teams/connection-modes).
+unchanged either way. See [Connection modes](/teams/connection-modes). The one-line installer with
+`--connection managed` mounts both of these paths on Tailscale Funnel, verifies them, and prints the
+values to paste: [Quickstart: StandIn Managed Bot](/quickstart#standin-managed-bot).
