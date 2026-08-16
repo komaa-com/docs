@@ -69,29 +69,29 @@ npm start
 The bridge prints the WebSocket URL to give StandIn:
 
 ```
-Point your StandIn identity's agent WebSocket URL at ws://<this-host>:8080/voice/msteams/stream
+Point your StandIn identity's agent WebSocket URL at ws://<this-host>:9442/voice/msteams/stream
 ```
 
-## 4. Expose port 8080
+## 4. Expose port 9442
 
 StandIn connects **from the internet**, so the port needs a public `wss://` URL. Any tunnel works:
 
 <Tabs>
   <Tab title="Tailscale Funnel">
     ```bash
-    tailscale funnel --bg --https=8080 8080
+    tailscale funnel --bg --set-path=/voice/msteams/stream http://127.0.0.1:9442/voice/msteams/stream
     ```
-    Your URL: `wss://<machine>.<tailnet>.ts.net:8080/voice/msteams/stream`
+    Your URL: `wss://<machine>.<tailnet>.ts.net/voice/msteams/stream`
   </Tab>
   <Tab title="cloudflared">
     ```bash
-    cloudflared tunnel --url http://localhost:8080
+    cloudflared tunnel --url http://localhost:9442
     ```
     Use the printed hostname: `wss://<hostname>/voice/msteams/stream`
   </Tab>
   <Tab title="ngrok">
     ```bash
-    ngrok http 8080
+    ngrok http 9442
     ```
     Use the printed hostname: `wss://<hostname>/voice/msteams/stream`
   </Tab>

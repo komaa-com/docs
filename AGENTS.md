@@ -55,8 +55,10 @@
   reach their agent links there instead of repeating them. Three divergent forms of the messages URL
   in three pages is what caused a live incident; do not re-add commands elsewhere. Any page that does
   name the endpoints must state BOTH public paths **and** the local target behind each:
-  `/msteams/calling` -> `127.0.0.1:9442` (OpenClaw) or `8443` (Hermes), and `/api/messages` ->
-  `127.0.0.1:3978` on both runtimes.
+  `/msteams/calling` -> `127.0.0.1:9442` on every runtime (OpenClaw, Hermes, and the voice-only
+  bridges), and `/api/messages` -> `127.0.0.1:3978` on both OpenClaw and Hermes. The managed chat
+  lane, where a page mentions it, is `/msteams/messages` -> `127.0.0.1:9444` on both. All StandIn
+  plugins share this port layout: calling `9442`, managed chat `9444`, Bot Framework `3978`.
 - StandIn's own hosted `<identity>.standin.komaa.com/api/calling` and `/api/messages` endpoints (the
   ones the customer's Azure Bot points at) are a **separate layer** from the plugin-side paths above.
   Never merge the two lists.

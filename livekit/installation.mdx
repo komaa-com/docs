@@ -73,9 +73,9 @@ The bridge serves **one** endpoint:
 
 | Lane | Default local bind | What it carries |
 |---|---|---|
-| **Calling** | `ws://<host>:8080/msteams/calling/{callId}` | the media WebSocket - live audio/video |
+| **Calling** | `ws://<host>:9442/msteams/calling/{callId}` | the media WebSocket - live audio/video |
 
-`PORT` moves the port, `WS_PATH` moves the base path; the defaults are `8080` and `/msteams/calling`,
+`PORT` moves the port, `WS_PATH` moves the base path; the defaults are `9442` and `/msteams/calling`,
 the same path OpenClaw and Hermes use, so one StandIn identity URL shape works for every backend.
 StandIn appends `/{callId}` per call, and the bridge **anchors** on the base path: a request outside
 `{WS_PATH}/{callId}` is rejected before the HMAC check. `/healthz` and `/metrics` stay at the root.
@@ -95,7 +95,7 @@ host, or a tunnel.
 **[Expose your agent](/expose)** carries the mount commands, the other tunnels (cloudflared, ngrok,
 devtunnel), and the probes that tell a working mount from a registered one. Use the
 **LiveKit / ElevenLabs** tab: this bridge is voice only, so it needs `/msteams/calling` on port
-`8080` and no `/api/messages`.
+`9442` and no `/api/messages`.
 
 Your **Agent calling URL** is then - note there is **no port**:
 
@@ -110,7 +110,7 @@ wss://<machine>.<tailnet>.ts.net/msteams/calling
 </Note>
 
 <Tip>
-  **Health check.** `curl http://127.0.0.1:8080/healthz` returns `ok` when the bridge is up. Do not
+  **Health check.** `curl http://127.0.0.1:9442/healthz` returns `ok` when the bridge is up. Do not
   probe the calling path with a plain `GET` - it answers `404` even when healthy, because only a
   WebSocket upgrade is routed. And when probing **through a Funnel**, pass `--http1.1`: Funnel
   serves HTTP/2, where curl's `Connection: Upgrade` header is not a real handshake, so curl sends a

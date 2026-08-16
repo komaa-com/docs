@@ -149,7 +149,7 @@ npx @komaa/livekit-msteams-bridge
   is created, the caller hears nothing, and the worker never gets a job.
 </Warning>
 
-The bridge listens on `ws://<host>:8080/msteams/calling/{callId}` (`PORT` and `WS_PATH` move the
+The bridge listens on `ws://<host>:9442/msteams/calling/{callId}` (`PORT` and `WS_PATH` move the
 port and the base path). It has **no chat lane** - just this WebSocket, plus `/healthz` and
 `/metrics` at the root.
 
@@ -161,26 +161,26 @@ works:
 <Tabs>
   <Tab title="Tailscale Funnel">
     See **[Expose your agent](/expose)**, the **LiveKit / ElevenLabs** tab: one mount for
-    `/msteams/calling` on port `8080`, and no `/api/messages` because this bridge is voice only.
+    `/msteams/calling` on port `9442`, and no `/api/messages` because this bridge is voice only.
 
     Your URL, with no port: `wss://<machine>.<tailnet>.ts.net/msteams/calling`
   </Tab>
   <Tab title="cloudflared">
     ```bash
-    cloudflared tunnel --url http://localhost:8080
+    cloudflared tunnel --url http://localhost:9442
     ```
     Use the printed hostname: `wss://<hostname>/msteams/calling`
   </Tab>
   <Tab title="ngrok">
     ```bash
-    ngrok http 8080
+    ngrok http 9442
     ```
     Use the printed hostname: `wss://<hostname>/msteams/calling`
   </Tab>
 </Tabs>
 
 <Tip>
-  Verify locally with `curl http://127.0.0.1:8080/healthz` (returns `ok`). A plain `GET` to
+  Verify locally with `curl http://127.0.0.1:9442/healthz` (returns `ok`). A plain `GET` to
   `/msteams/calling` answers `404` even on a healthy bridge - only a WebSocket upgrade is routed -
   and through a Funnel you must add `--http1.1`, or curl's upgrade headers are ignored over HTTP/2
   and you get the same misleading `404`.

@@ -1,7 +1,7 @@
 ---
 title: "Expose your agent"
 description: "The two public paths StandIn dials, the local target behind each, and the exact mount commands that publish them."
-keywords: ["expose agent StandIn","Tailscale Funnel set-path","msteams/calling","api/messages","port 9442","port 8443","port 3978","ngrok cloudflared devtunnel","funnel 401 404"]
+keywords: ["expose agent StandIn","Tailscale Funnel set-path","msteams/calling","api/messages","port 9442","port 9444","port 3978","ngrok cloudflared devtunnel","funnel 401 404"]
 ---
 
 StandIn is hosted, so it reaches your agent **from the internet**. Your machine publishes **two public
@@ -12,26 +12,28 @@ This is the **only** page that carries the mount commands. Every other page link
 
 ## The contract
 
-| Public path | Lane | OpenClaw local target | Hermes local target |
-|---|---|---|---|
-| `/msteams/calling` | voice and video (WebSocket) | `127.0.0.1:9442`, path `/msteams/calling` | `127.0.0.1:8443`, path `/msteams/calling` |
-| `/api/messages` | Teams chat (HTTP POST) | `127.0.0.1:3978`, path `/api/messages` | `127.0.0.1:3978`, path `/api/messages` |
+| Public path | Lane | Local target (OpenClaw and Hermes) |
+|---|---|---|
+| `/msteams/calling` | voice and video (WebSocket) | `127.0.0.1:9442`, path `/msteams/calling` |
+| `/api/messages` | Teams chat (HTTP POST) | `127.0.0.1:3978`, path `/api/messages` |
 
 Two paths, two processes:
 
-- **Voice** is the `msteams-bridge` / `msteams_bridge` plugin. It binds `9442` on OpenClaw and `8443`
-  on Hermes, and StandIn dials `/msteams/calling/{callId}` on it, one connection per call.
+- **Voice** is the `msteams-bridge` / `msteams_bridge` plugin. It binds `9442` on both OpenClaw and
+  Hermes, and StandIn dials `/msteams/calling/{callId}` on it, one connection per call.
 - **Chat** is your runtime's **own Teams channel**, not the voice plugin: OpenClaw's `msteams`
   channel (`channels.msteams.webhook.port`, default `3978`) and the Hermes gateway's Teams platform.
   That is why chat lives on a different port from voice on both runtimes, and why the path is
   `/api/messages` rather than anything under `/msteams/`.
+
+All StandIn plugins share one port layout: calling `9442`, managed chat `9444`, Bot Framework `3978`.
 
 Voice-only? Mount `/msteams/calling` alone. Nothing posts chat to you, and calls work normally.
 
 <Note>
   **Voice-only bridges.** The [ElevenLabs](/elevenlabs/installation) and
   [LiveKit](/livekit/installation) bridges have **no chat lane at all** - mount the voice path only.
-  Both default to local port `8080`, and both use `/msteams/calling` as their public path. LiveKit
+  Both default to local port `9442`, and both use `/msteams/calling` as their public path. LiveKit
   anchors on it (`WS_PATH`) and dials `{WS_PATH}/{callId}`; ElevenLabs takes the **last** path
   segment as the call id, so it accepts whatever path you register - mount it on `/msteams/calling`
   anyway, so one URL shape works across every runtime. Older docs and the bridge's own startup line
@@ -45,24 +47,20 @@ With Tailscale Funnel, map each **path** onto your one public host. The proxy ta
 the path**, or the request arrives at your agent stripped and 404s:
 
 <CodeGroup>
-```bash OpenClaw
+```bash OpenClaw / Hermes
 tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:9442/msteams/calling
 tailscale funnel --bg --set-path=/api/messages    http://127.0.0.1:3978/api/messages
 ```
 
-```bash Hermes
-tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:8443/msteams/calling
-tailscale funnel --bg --set-path=/api/messages    http://127.0.0.1:3978/api/messages
-```
-
 ```bash LiveKit / ElevenLabs
-tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:8080/msteams/calling
+tailscale funnel --bg --set-path=/msteams/calling http://127.0.0.1:9442/msteams/calling
 ```
 </CodeGroup>
 
-OpenClaw and Hermes differ only in the voice port; their chat line is identical. The LiveKit and
-ElevenLabs bridges serve **voice only** and have no chat lane, so they get one mount and no
-`/api/messages`. Their default port is `8080`; set `PORT` and the mount follows it.
+OpenClaw and Hermes use the same two lines: the voice plugin binds `9442` on both, and chat is
+`3978` on both. The LiveKit and ElevenLabs bridges serve **voice only** and have no chat lane, so
+they get one mount and no `/api/messages`. Their default port is `9442` too; set `PORT` and the
+mount follows it.
 
 <Warning>
   **Do not mount a whole port.** `tailscale funnel --bg --https=8443 9442` publishes *every* route on
@@ -108,7 +106,7 @@ devtunnel host -p 3978 --allow-anonymous
 </CodeGroup>
 
 The path is preserved either way, so the public URL is still the host plus `/msteams/calling` or
-`/api/messages`. Use `8443` in place of `9442` on Hermes.
+`/api/messages`. The same ports apply on every runtime.
 
 ## What you register in StandIn
 
@@ -186,7 +184,7 @@ plugin's own listener instead of your runtime's Teams channel, on a different po
 | | Public path | Local target |
 |---|---|---|
 | OpenClaw managed chat | `/msteams/messages` | `127.0.0.1:9444`, path `/msteams/messages` |
-| Hermes managed chat | `/msteams/messages` | `127.0.0.1:8444`, path `/msteams/messages` |
+| Hermes managed chat | `/msteams/messages` | `127.0.0.1:9444`, path `/msteams/messages` |
 
 In that mode your agent holds no Bot Framework credential: StandIn runs the bot and speaks a
 normalized chat protocol to the plugin. The dashboard suggests the matching URL when you deploy a

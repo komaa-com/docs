@@ -1,7 +1,7 @@
 ---
 title: "Troubleshooting"
 description: "Fix the most common issues: silent HMAC failures, an unreachable agent, a chat lane that was never published, misleading voice probes, community-tier daily limits, port/path mix-ups, and the ClawHub install."
-keywords: ["StandIn troubleshooting","HMAC handshake failed","shared secret mismatch","bot could not join","agent is not reachable","chat silent nothing in logs","tailscale funnel status","api/messages 404","port 3978","curl --http1.1 websocket 404","daily budget","port 9442","port 8443","ClawHub npm","hermes pairing approve teams","TEAMS_ALLOWED_USERS","Graph error 7505","tenant mismatch"]
+keywords: ["StandIn troubleshooting","HMAC handshake failed","shared secret mismatch","bot could not join","agent is not reachable","chat silent nothing in logs","tailscale funnel status","api/messages 404","port 3978","curl --http1.1 websocket 404","daily budget","port 9442","port 9444","ClawHub npm","hermes pairing approve teams","TEAMS_ALLOWED_USERS","Graph error 7505","tenant mismatch"]
 ---
 
 The issues below cover almost every failed first call. Work top to bottom: secret, reachability, the
@@ -96,10 +96,10 @@ Read it as a routing table:
 
 ### 2. Check the target for your runtime
 
-The public path is the same on every runtime; only the local port moves. Chat is `127.0.0.1:3978`
-`/api/messages` on **both** OpenClaw and Hermes, because chat is a listener separate from the voice
-bridge (`9442` on OpenClaw, `8443` on Hermes). That separation is the whole reason a perfectly healthy
-voice port tells you nothing about chat. Full table:
+The public path and the local voice port are the same on every runtime: `/msteams/calling` in front
+of `9442`. Chat is `127.0.0.1:3978` `/api/messages` on **both** OpenClaw and Hermes, because chat is
+a listener separate from the voice bridge (`9442`). That separation is the whole reason a perfectly
+healthy voice port tells you nothing about chat. Full table:
 [Wrong port or path](#wrong-port-or-path-and-callid-confusion).
 
 ### 3. Publish the missing lane
@@ -148,7 +148,7 @@ listening":
 curl -si -X POST -H 'Content-Type: application/json' -d '{}' \
   http://127.0.0.1:3978/api/messages | head -1
 
-# voice port: 9442 on OpenClaw, 8443 on Hermes
+# voice port: 9442 on every runtime
 curl -si --http1.1 \
   -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
   -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
@@ -298,21 +298,23 @@ that is the standard setup with your own Teams bot: see the [Quickstart](/quicks
 
 ## Wrong port or path (and callId confusion)
 
-The runtimes listen on **different default ports** but the **same path**:
+Every runtime listens on the **same default port** and the **same path**:
 
 | Runtime | Voice: local bind | Voice: public path | Chat |
 |---|---|---|---|
 | OpenClaw | `127.0.0.1:9442` | `/msteams/calling` | `/api/messages` |
-| Hermes | `127.0.0.1:8443` | `/msteams/calling` | `/api/messages` |
-| LiveKit | `127.0.0.1:8080` | `/msteams/calling` | n/a - voice only |
-| ElevenLabs | `127.0.0.1:8080` | `/msteams/calling` | n/a - voice only |
+| Hermes | `127.0.0.1:9442` | `/msteams/calling` | `/api/messages` |
+| LiveKit | `127.0.0.1:9442` | `/msteams/calling` | n/a - voice only |
+| ElevenLabs | `127.0.0.1:9442` | `/msteams/calling` | n/a - voice only |
+
+All StandIn plugins share this port layout: calling `9442`, managed chat `9444`, Bot Framework `3978`.
 
 The **LiveKit and ElevenLabs bridges have no chat lane at all** - they serve the calling WebSocket,
 `/healthz` and `/metrics`, and nothing else. Leave the **Agent messages URL** empty for those two;
 a messages URL you register there points at nothing.
 
-Both of those bridges take their port from `PORT`, and `8080` is only the built-in default: the Node
-`.env.example` in each repo sets `PORT=8080` outright while the Python one ships it commented, so
+Both of those bridges take their port from `PORT`, and `9442` is only the built-in default: the Node
+`.env.example` in each repo sets `PORT=9442` outright while the Python one ships it commented, so
 either way a local `.env` can move it without you noticing. Read the value you actually run (the bridge logs its listen address
 at startup) rather than assuming. Both also default `BIND` to `0.0.0.0`, so they answer on every
 interface, not only loopback - set `BIND=127.0.0.1` if only the tunnel should reach them.
@@ -321,8 +323,9 @@ Their paths differ too, which matters when you write the mount: LiveKit anchors 
 call id and therefore accepts whatever path you registered. See
 [Expose your agent](/expose) for the mount commands.
 
-Registering the OpenClaw URL with the Hermes port (or vice versa) is a frequent mix-up: the bridge
-connects to a closed port and the call never reaches your agent. Double-check the full URL you
+Registering a URL with a stale or moved port (an old pre-`9442` default, or a bridge you moved with
+`PORT`) is a frequent mix-up: the bridge connects to a closed port and the call never reaches your
+agent. Double-check the full URL you
 registered in the StandIn dashboard, e.g. `wss://<your-public-host>/msteams/calling` for a
 path-mapped funnel, or `wss://<your-public-host>:8443/msteams/calling` when you published a whole
 port. Always the public `wss://` URL, never the local `ws://` bind.

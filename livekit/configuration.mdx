@@ -71,7 +71,7 @@ Relay an avatar agent's video track onto the caller's Teams tile. On by default 
 | `PRE_START_TIMEOUT_MS` | `10000` | Drop a client that authenticates but never sends `session.start`. |
 | `WORKER_IDLE_TIMEOUT_MS` | `90000` | Dead-peer window: end the call after this long with no worker message (the worker heartbeats every 30 s). |
 | `TRUST_PROXY_XFF` | `false` | Trust the first `X-Forwarded-For` hop for the per-IP cap. Enable only behind a single proxy that overwrites the header. |
-| `PORT` / `BIND` / `LOG_LEVEL` | `8080` / `0.0.0.0` / `info` | Listen port, bind address, log verbosity. |
+| `PORT` / `BIND` / `LOG_LEVEL` | `9442` / `0.0.0.0` / `info` | Listen port, bind address, log verbosity. |
 | `WS_PATH` | `/msteams/calling` | Base path the calling WebSocket is anchored on; a call dials `{WS_PATH}/{callId}`. The bridge rejects anything outside that base before the HMAC check, so it can share an origin with another service. `/healthz` and `/metrics` stay at the root. |
 
 <Note>
